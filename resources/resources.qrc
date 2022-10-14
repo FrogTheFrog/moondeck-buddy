@@ -1,0 +1,8 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>icons/app.ico</file>
+        <file>ssl/moondeck_cert.pem</file>
+        <file>ssl/moondeck_key.pem</file>
+    </qresource>
+</RCC>
