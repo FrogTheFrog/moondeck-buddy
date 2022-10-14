@@ -1,0 +1,3 @@
+[submodule "resources/ssl"]
+	path = resources/ssl
+	url = https://github.com/FrogTheFrog/moondeck-keys.git

@@ -1,0 +1,112 @@
+#----------------------------------------------------------------------------------------------------------------------
+# Project config
+#----------------------------------------------------------------------------------------------------------------------
+
+cmake_minimum_required(VERSION 3.21)
+project(MoonDeckBuddy 
+        VERSION 1.0.0
+        DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
+        HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
+        LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+if(MSVC)
+    # warning level 4 and all warnings as errors
+    add_compile_options(/W4 /WX)
+else()
+    # lots of warnings and all warnings as errors
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
+#----------------------------------------------------------------------------------------------------------------------
+# Build type parsing
+#----------------------------------------------------------------------------------------------------------------------
+
+set(DEBUG_MODE FALSE)
+string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
+if(CMAKE_BUILD_TYPE_LOWER MATCHES "debug")
+    set(DEBUG_MODE TRUE)
+endif()
+
+#----------------------------------------------------------------------------------------------------------------------
+# CLang-Tidy
+#----------------------------------------------------------------------------------------------------------------------
+
+if(NOT DEBUG_MODE)
+    if(NOT MSVC)
+        set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+        file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
+    endif()
+endif()
+
+#----------------------------------------------------------------------------------------------------------------------
+# Pre-Install
+#----------------------------------------------------------------------------------------------------------------------
+
+IF (WIN32)
+    set(CPACK_GENERATOR "7Z;NSIS")
+    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
+    set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+    set(CPACK_PACKAGE_VENDOR "MoonDeck")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY ${PROJECT_NAME})
+    set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
+    set(CPACK_OUTPUT_FILE_PREFIX "../dist")
+    set(CPACK_NSIS_IGNORE_LICENSE_PAGE ON)
+    set(CPACK_NSIS_DISPLAY_NAME ${PROJECT_NAME})
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
+    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${PROJECT_NAME}.exe")
+    set(CPACK_NSIS_INSTALL_ROOT "\$LocalAppData\\\\Programs")
+    set(CPACK_NSIS_DEFINES "RequestExecutionLevel user")
+ELSE()
+    message(FATAL_ERROR "OS is not supported!")
+ENDIF()
+
+#----------------------------------------------------------------------------------------------------------------------
+# Subdirectories
+#----------------------------------------------------------------------------------------------------------------------
+
+add_subdirectory(src)
+
+#----------------------------------------------------------------------------------------------------------------------
+# Install
+#----------------------------------------------------------------------------------------------------------------------
+
+if(WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+    set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
+
+    file(GENERATE OUTPUT ${DEPLOY_SCRIPT} CONTENT "
+    include(\"${QT_DEPLOY_SUPPORT}\")
+    message(STATUS \"Running Qt deploy tool for \${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}> in working directory '${QT_DEPLOY_PREFIX}'\")
+    execute_process(
+        COMMAND_ECHO STDOUT
+        COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
+        WORKING_DIRECTORY \"\${QT_DEPLOY_PREFIX}\"
+        RESULT_VARIABLE result
+    )
+    if(result)
+        message(FATAL_ERROR \"Executing \${__QT_DEPLOY_TOOL} failed: \${result}\")
+    endif()
+
+    qt6_deploy_qt_conf(\"\${QT_DEPLOY_PREFIX}/\${QT_DEPLOY_BIN_DIR}/qt.conf\"
+        PREFIX \"../\"
+        BIN_DIR \"\${QT_DEPLOY_BIN_DIR}\"
+        LIB_DIR \"\${QT_DEPLOY_LIB_DIR}\"
+        PLUGINS_DIR \"\${QT_DEPLOY_PLUGINS_DIR}\"
+        QML_DIR \"\${QT_DEPLOY_QML_DIR}\"
+    )
+    ")
+
+    install(TARGETS ${PROJECT_NAME})
+    install(SCRIPT ${DEPLOY_SCRIPT})
+    
+    include(CPack)
+else()
+    message(FATAL_ERROR "OS is not supported!")
+endif()

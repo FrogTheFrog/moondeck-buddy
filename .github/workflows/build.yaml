@@ -1,0 +1,39 @@
+name: Build
+on: [pull_request,workflow_call]
+jobs:
+  Windows:
+    runs-on: windows-latest
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.4.*"
+
+      - name: Install MSCV
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      
+      - name: Clang-format check
+        run: clang-format -style=file --dry-run --Werror $(Get-ChildItem -Path $PWD/src -Recurse | Where Name -Match '\.(?:h|cpp)$' | Select-Object -ExpandProperty FullName)
+
+      - name: CMake configure
+        run: cmake -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+
+      - name: CMake build
+        run: cmake --build build
+
+      - name: CPack bundle
+        run: cd build && cpack -C CPackConfig.cmake && cd ..
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        if: steps.tagstatus.outputs.TAG_EXISTS == 0
+        with:
+          name: dist
+          path: dist/*
+          retention-days: 1
+          if-no-files-found: error
