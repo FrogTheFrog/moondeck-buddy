@@ -19,9 +19,9 @@ std::optional<AbortPairing> AbortPairing::fromJson(const QJsonDocument& data)
 {
     if (data.isObject())
     {
-        const auto obj_v       = data.object();
-        const auto type_v      = obj_v.value(QLatin1String("type"));
-        const auto id_v        = obj_v.value(QLatin1String("id"));
+        const auto obj_v  = data.object();
+        const auto type_v = obj_v.value(QLatin1String("type"));
+        const auto id_v   = obj_v.value(QLatin1String("id"));
 
         if (type_v.isString() && type_v.toString() == TYPE)
         {
@@ -33,4 +33,4 @@ std::optional<AbortPairing> AbortPairing::fromJson(const QJsonDocument& data)
     }
     return std::nullopt;
 }
-}  // namespace msgs::out
+}  // namespace msgs::in

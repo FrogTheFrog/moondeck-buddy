@@ -201,7 +201,7 @@ void JsonServer::slotHandleNewConnection()
         qFatal("Socket is nullptr!");
     }
 
-    QUuid socket_id{QUuid::createUuid()};
+    const QUuid socket_id{QUuid::createUuid()};
     if (!isIdUnique(socket_id, m_pending_sockets, m_steam_socket, m_command_socket))
     {
         qFatal("Socket id is not unique! WTF...");

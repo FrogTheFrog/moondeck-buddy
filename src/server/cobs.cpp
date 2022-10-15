@@ -75,7 +75,7 @@ QByteArray encode(const QByteArray& data)
             {
                 break;
             }
-            
+
             // NOLINTNEXTLINE(*-magic-numbers)
             if (length_code == 0xFF)
             {

@@ -15,7 +15,7 @@ CommandProxy::CommandProxy(PcControlInterface& pc_control)
 
 void CommandProxy::slotHandleMessages(const std::variant<msgs::in::RestartPc, msgs::in::ShutdownPc>& msg)
 {
-    if (const auto *const restart = std::get_if<msgs::in::RestartPc>(&msg); restart)
+    if (const auto* const restart = std::get_if<msgs::in::RestartPc>(&msg); restart)
     {
         qDebug("About to restart the PC");
         m_pc_control.exitSteam(std::nullopt);
@@ -23,7 +23,7 @@ void CommandProxy::slotHandleMessages(const std::variant<msgs::in::RestartPc, ms
         return;
     }
 
-    if (const auto *const shutdown = std::get_if<msgs::in::ShutdownPc>(&msg); shutdown)
+    if (const auto* const shutdown = std::get_if<msgs::in::ShutdownPc>(&msg); shutdown)
     {
         qDebug("About to shutdown the PC");
         m_pc_control.exitSteam(std::nullopt);
