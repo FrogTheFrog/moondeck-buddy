@@ -27,7 +27,7 @@ std::optional<CloseSteam> CloseSteam::fromJson(const QJsonDocument& data)
         {
             if (m_grace_period_v.isDouble() || m_grace_period_v.isNull())
             {
-                const int                max_time_limit{30};
+                const int                 max_time_limit{30};
                 const std::optional<uint> time = m_grace_period_v.isDouble() ? std::make_optional(static_cast<uint>(
                                                      std::max(std::min(m_grace_period_v.toInt(), 0), max_time_limit)))
                                                                              : std::nullopt;

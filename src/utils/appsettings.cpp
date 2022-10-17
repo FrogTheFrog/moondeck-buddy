@@ -52,8 +52,8 @@ bool AppSettings::parseSettingsFile(const QString& filename)
 
         const QByteArray data = file.readAll();
 
-        QJsonParseError parser_error;
-        const QJsonDocument   json_data{QJsonDocument::fromJson(data, &parser_error)};
+        QJsonParseError     parser_error;
+        const QJsonDocument json_data{QJsonDocument::fromJson(data, &parser_error)};
         if (json_data.isNull())
         {
             qFatal("Failed to decode JSON data! Reason: %s. Read data: %s", qUtf8Printable(parser_error.errorString()),
