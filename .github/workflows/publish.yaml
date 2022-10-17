@@ -41,20 +41,11 @@ jobs:
         if: steps.tagstatus.outputs.TAG_EXISTS == 0
         with:
           tag: "v${{ steps.project_version.outputs.VERSION }}"
-          message: "$v{{ steps.project_version.outputs.VERSION }} release"
-
-      - name: Build Changelog
-        id: github_release
-        uses: mikepenz/release-changelog-builder-action@v3
-        if: steps.tagstatus.outputs.TAG_EXISTS == 0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: steps.tagstatus.outputs.TAG_EXISTS == 0
-        with:
-          body: ${{steps.github_release.outputs.changelog}}   
+        with: 
           tag_name: "v${{ steps.project_version.outputs.VERSION }}"
           files: dist/*
           draft: true
