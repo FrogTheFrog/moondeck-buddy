@@ -108,6 +108,7 @@ std::vector<DWORD> enumProcesses()
     }
 
     qFatal("Failed get a list of running processes after 3 tries!");
+    return {};
 }
 
 }  // namespace
