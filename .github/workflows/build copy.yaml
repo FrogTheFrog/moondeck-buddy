@@ -1,0 +1,48 @@
+name: MS Build
+on: [workflow_call]
+jobs:
+  Windows:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.project_version.outputs.version }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          pacboy: >-
+            clang:p
+            clang-tools-extra:p
+            cmake:p
+            ninja:p
+            qt6-base:p
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Clang-format check
+        run: >
+          find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} + && echo "OK"
+
+      - name: CMake configure
+        run: cmake -DCMAKE_CXX_COMPILER:FILEPATH=clang++ -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+
+      - name: CMake build
+        run: cmake --build build
+
+      - name: CPack bundle
+        run: cd build && cpack -C CPackConfig.cmake && cd ..
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        if: steps.tagstatus.outputs.TAG_EXISTS == 0
+        with:
+          name: dist
+          path: dist/*
+          retention-days: 1
+          if-no-files-found: error
