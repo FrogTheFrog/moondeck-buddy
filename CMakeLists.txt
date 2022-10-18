@@ -37,10 +37,10 @@ endif()
 # CLang-Tidy
 #----------------------------------------------------------------------------------------------------------------------
 
-if(NOT DEBUG_MODE)
-    set(CMAKE_CXX_CLANG_TIDY clang-tidy)
-    file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
-endif()
+#if(NOT DEBUG_MODE)
+#    set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+#    file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
+#endif()
 
 #----------------------------------------------------------------------------------------------------------------------
 # Pre-Install
@@ -78,7 +78,7 @@ add_subdirectory(src)
 IF (WIN32)
     find_package(Qt6 REQUIRED COMPONENTS Core)
     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
-    set(ADDITIONAL_LIBS "libgcc_s_seh-1;libwinpthread-1;libstdc++-6")
+    #set(ADDITIONAL_LIBS "libgcc_s_seh-1;libwinpthread-1;libstdc++-6")
 
     # libb2-1;libdouble-conversion;libicuin71;libicuuc71;libpcre2-16-0;zlib1
 
@@ -96,11 +96,11 @@ IF (WIN32)
     install(TARGETS ${PROJECT_NAME})
     install(SCRIPT ${DEPLOY_SCRIPT})
 
-    get_filename_component(LIB_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
-    foreach(LIB IN LISTS ADDITIONAL_LIBS)
-        install(CODE "message(\"Installing ${LIB_DIR}/${LIB} to ${CMAKE_INSTALL_BINDIR}\")")
-        install(FILES "${LIB_DIR}/${LIB}.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
-    endforeach()
+    #get_filename_component(LIB_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+    #foreach(LIB IN LISTS ADDITIONAL_LIBS)
+    #    install(CODE "message(\"Installing ${LIB_DIR}/${LIB} to ${CMAKE_INSTALL_BINDIR}\")")
+    #    install(FILES "${LIB_DIR}/${LIB}.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
+    #endforeach()
     
     include(CPack)
 ELSE()
