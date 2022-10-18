@@ -37,10 +37,10 @@ endif()
 # CLang-Tidy
 #----------------------------------------------------------------------------------------------------------------------
 
-#if(NOT DEBUG_MODE)
-#    set(CMAKE_CXX_CLANG_TIDY clang-tidy)
-#    file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
-#endif()
+if(NOT DEBUG_MODE)
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+    file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
+endif()
 
 #----------------------------------------------------------------------------------------------------------------------
 # Pre-Install
