@@ -67,7 +67,7 @@ QString getProcessName(DWORD pid)
 
             const DWORD written_size = GetModuleBaseNameW(proc_handle, module_handle,
                                                           // NOLINTNEXTLINE(*-reinterpret-cast)
-                                                          reinterpret_cast<wchar_t*>(buffer.data()), buffer.size());
+                                                          reinterpret_cast<wchar_t*>(buffer.data()), static_cast<DWORD>(buffer.size()));
 
             if (written_size > 0)
             {
