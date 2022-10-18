@@ -9,8 +9,7 @@ jobs:
         with:
           version: "6.4.*"
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+      - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Checkout
         uses: actions/checkout@v3
