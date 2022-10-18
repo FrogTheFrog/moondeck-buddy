@@ -9,13 +9,16 @@ jobs:
         with:
           version: "6.4.*"
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.0.1 
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: CMake configure
-        run: cmake -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+        run: cmake -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
       - name: CMake build
         run: cmake --build build
