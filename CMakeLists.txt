@@ -34,18 +34,6 @@ if(CMAKE_BUILD_TYPE_LOWER MATCHES "debug")
 endif()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Static linking
-#----------------------------------------------------------------------------------------------------------------------
-
-if(NOT DEBUG_MODE)
-    if(MINGW)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    else()
-        message(FATAL_ERROR "Compiler is not supported, yet...")
-    endif()
-endif()
-
-#----------------------------------------------------------------------------------------------------------------------
 # CLang-Tidy
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -87,19 +75,34 @@ add_subdirectory(src)
 # Install
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
-set(deploy_script "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
+IF (WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+    set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
+    set(ADDITIONAL_LIBS "libgcc_s_seh-1;libwinpthread-1;libstdc++-6")
 
-file(GENERATE OUTPUT ${deploy_script} CONTENT "
-# Including the file pointed to by QT_DEPLOY_SUPPORT ensures the generated
-# deployment script has access to qt_deploy_runtime_dependencies()
-include(\"${QT_DEPLOY_SUPPORT}\")
-qt_deploy_runtime_dependencies(
-    EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
-    GENERATE_QT_CONF
-    VERBOSE
-)")
+    # libb2-1;libdouble-conversion;libicuin71;libicuuc71;libpcre2-16-0;zlib1
 
-install(TARGETS ${PROJECT_NAME})
-install(SCRIPT ${deploy_script})
-include(CPack)
+    file(GENERATE OUTPUT ${DEPLOY_SCRIPT} CONTENT "
+    # Including the file pointed to by QT_DEPLOY_SUPPORT ensures the generated
+    # deployment script has access to qt_deploy_runtime_dependencies()
+    include(\"${QT_DEPLOY_SUPPORT}\")
+    qt_deploy_runtime_dependencies(
+        EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+        GENERATE_QT_CONF
+        VERBOSE
+    )
+    ")
+
+    install(TARGETS ${PROJECT_NAME})
+    install(SCRIPT ${DEPLOY_SCRIPT})
+
+    get_filename_component(LIB_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+    foreach(LIB IN LISTS ADDITIONAL_LIBS)
+        install(CODE "message(\"Installing ${LIB_DIR}/${LIB} to ${CMAKE_INSTALL_BINDIR}\")")
+        install(FILES "${LIB_DIR}/${LIB}.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endforeach()
+    
+    include(CPack)
+ELSE()
+    message(FATAL_ERROR "OS is not supported!")
+ENDIF()

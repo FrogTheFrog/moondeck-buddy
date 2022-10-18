@@ -195,6 +195,7 @@ void ProcessTracker::slotEnumerateProcesses()
             {
                 qDebug("Steam is not running!");
             }
+            emit signalProcessStateChanged();
         }
         m_is_running = is_running;
     }

@@ -95,8 +95,8 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
 
     if (result != ERROR_SUCCESS)
     {
-        qWarning("Could not read the size of the key value '%s'! Reason: %s", qUtf8Printable(name),
-                 qUtf8Printable(getError(result)));
+        qDebug("Could not read the size of the key value '%s'! Reason: %s", qUtf8Printable(name),
+               qUtf8Printable(getError(result)));
     }
 
     if (data_size <= 0)
@@ -338,14 +338,9 @@ void RegKey::addNotifyOnValueChange(const QStringList& names)
     m_notifier->setHandle(handle);
 
     connect(m_notifier.get(), &QWinEventNotifier::activated, this,
-            [this]()
-            {
-                checkForChangedValues(m_watched_names.keys());
-                resetNotifier(m_notifier, m_key_handle, m_path);
-            });
+            [this]() { handleChangedValues(m_watched_names.keys()); });
 
-    checkForChangedValues(new_names);
-    resetNotifier(m_notifier, m_key_handle, m_path);
+    handleChangedValues(new_names);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -365,7 +360,7 @@ void RegKey::removeNotifyOnValueChange(const QStringList& names)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void RegKey::checkForChangedValues(const QStringList& names)
+void RegKey::handleChangedValues(const QStringList& names)
 {
     QMap<QString, QVariant> changed_values;
 
@@ -379,6 +374,8 @@ void RegKey::checkForChangedValues(const QStringList& names)
         }
     }
 
+    // Signal might destroy us, so reset before it is fired
+    resetNotifier(m_notifier, m_key_handle, m_path);
     if (!changed_values.isEmpty())
     {
         emit signalValuesChanged(changed_values);

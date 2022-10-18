@@ -23,8 +23,9 @@ public:
     virtual void shutdownPC(uint grace_period_in_sec) = 0;
     virtual void restartPC(uint grace_period_in_sec)  = 0;
 
-    virtual uint getRunningApp() const  = 0;
-    virtual bool isSteamRunning() const = 0;
+    virtual uint                getRunningApp() const             = 0;
+    virtual std::optional<uint> isLastLaunchedAppUpdating() const = 0;
+    virtual bool                isSteamRunning() const            = 0;
 
     virtual void setAutoStart(bool enable)  = 0;
     virtual bool isAutoStartEnabled() const = 0;

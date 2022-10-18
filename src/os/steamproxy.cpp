@@ -24,8 +24,9 @@ void SteamProxy::slotHandleMessages(
 
     if (const auto* const steam_status = std::get_if<msgs::in::SteamStatus>(&msg); steam_status)
     {
-        emit signalSendResponse(socket_id,
-                                msgs::out::SteamStatus{m_pc_control.getRunningApp(), m_pc_control.isSteamRunning()});
+        emit signalSendResponse(socket_id, msgs::out::SteamStatus{m_pc_control.getRunningApp(),
+                                                                  m_pc_control.isLastLaunchedAppUpdating(),
+                                                                  m_pc_control.isSteamRunning()});
         return;
     }
 

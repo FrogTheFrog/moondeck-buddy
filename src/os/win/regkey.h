@@ -34,7 +34,7 @@ signals:
     void signalValuesChanged(const QMap<QString, QVariant>& values);
 
 private:
-    void checkForChangedValues(const QStringList& names);
+    void handleChangedValues(const QStringList& names);
 
     QString                            m_path;
     std::unique_ptr<QWinEventNotifier> m_notifier;

@@ -23,6 +23,9 @@ public:
 
     void terminateAll();
 
+signals:
+    void signalProcessStateChanged();
+
 private:
     void slotEnumerateProcesses();
 

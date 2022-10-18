@@ -55,6 +55,13 @@ uint PcControl::getRunningApp() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+std::optional<uint> PcControl::isLastLaunchedAppUpdating() const
+{
+    return m_impl->isLastLaunchedAppUpdating();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool PcControl::isSteamRunning() const
 {
     return m_impl->isSteamRunning();

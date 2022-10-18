@@ -24,8 +24,9 @@ public:
     void shutdownPC(uint grace_period_in_sec) override;
     void restartPC(uint grace_period_in_sec) override;
 
-    uint getRunningApp() const override;
-    bool isSteamRunning() const override;
+    uint                getRunningApp() const override;
+    std::optional<uint> isLastLaunchedAppUpdating() const override;
+    bool                isSteamRunning() const override;
 
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;

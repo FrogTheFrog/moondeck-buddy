@@ -19,9 +19,12 @@ QJsonDocument SteamStatus::toJson(const SteamStatus& data)
 {
     QJsonObject obj;
 
-    obj["type"]             = TYPE;
-    obj["app_id"]           = static_cast<int>(data.m_app_id);
-    obj["steam_is_running"] = data.m_steam_is_running;
+    obj["type"]                          = TYPE;
+    obj["running_app_id"]                = static_cast<int>(data.m_running_app_id);
+    obj["last_launched_app_is_updating"] = data.m_last_launched_app_is_updating
+                                               ? QJsonValue{static_cast<int>(*data.m_last_launched_app_is_updating)}
+                                               : QJsonValue{QJsonValue::Null};
+    obj["steam_is_running"]              = data.m_steam_is_running;
 
     return QJsonDocument{obj};
 }
