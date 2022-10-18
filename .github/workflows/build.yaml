@@ -10,7 +10,7 @@ jobs:
           version: "6.4.*"
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.0.1 
+        uses: microsoft/setup-msbuild@v1.1
 
       - name: Checkout
         uses: actions/checkout@v3
