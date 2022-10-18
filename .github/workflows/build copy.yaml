@@ -26,8 +26,7 @@ jobs:
           submodules: recursive
 
       - name: Clang-format check
-        run: >
-          find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} + && echo "OK"
+        run: find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} +
 
       - name: CMake configure
         run: cmake -DCMAKE_CXX_COMPILER:FILEPATH=clang++ -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
