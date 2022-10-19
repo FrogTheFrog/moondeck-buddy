@@ -33,9 +33,11 @@ signals:
     void signalDataReceived(const QUuid& socket_id, const QJsonDocument& data);
 
 private:
+    static const qsizetype DEFAULT_BUFFER_SIZE{512};
+
     QUuid            m_socket_id;
     QTimer           m_response_timeout;
     QAbstractSocket* m_socket;
-    CobsJsonProtocol m_protocol{512};
+    CobsJsonProtocol m_protocol{DEFAULT_BUFFER_SIZE};
 };
 }  // namespace server

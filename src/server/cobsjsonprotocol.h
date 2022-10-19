@@ -30,6 +30,7 @@ private slots:
     void slotHandleSendingJsonData(const QJsonDocument& data);
     void slotHandleReceivedRawData(const QByteArray& data);
 
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private:
     QByteArray               m_buffer;
     std::optional<qsizetype> m_max_buffer_size;

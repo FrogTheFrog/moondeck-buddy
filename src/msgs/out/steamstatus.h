@@ -7,6 +7,7 @@
 
 namespace msgs::out
 {
+// NOLINTNEXTLINE(*-member-init)
 struct SteamStatus
 {
     static QJsonDocument toJson(const SteamStatus& data);

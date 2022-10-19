@@ -15,7 +15,7 @@ class PcControlInterface : public QObject
     Q_OBJECT
 
 public:
-    virtual ~PcControlInterface() = default;
+    ~PcControlInterface() override = default;
 
     virtual void launchSteamApp(uint app_id)                        = 0;
     virtual void exitSteam(std::optional<uint> grace_period_in_sec) = 0;

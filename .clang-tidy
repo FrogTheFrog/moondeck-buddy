@@ -1,4 +1,4 @@
-Checks: '-*,bugprone-*,modernize-*,-modernize-use-trailing-return-type,-bugprone-suspicious-include,cert-dcl21-cpp,cert-dcl50-cpp,cert-env33-c,cert-err34-c,cert-err52-cpp,cert-err60-cpp,cert-flp30-c,cert-msc50-cpp,cert-msc51-cpp,cppcoreguidelines-*,-cppcoreguidelines-macro-usage,google-build-using-namespace,google-explicit-constructor,google-global-names-in-headers,google-readability-casting,google-runtime-int,google-runtime-operator,hicpp-*,misc-*,performance-*,readability-*'
+Checks: '-*,bugprone-*,modernize-*,-modernize-use-trailing-return-type,-modernize-use-nodiscard,-bugprone-suspicious-include,cert-dcl21-cpp,cert-dcl50-cpp,cert-env33-c,cert-err34-c,cert-err52-cpp,cert-err60-cpp,cert-flp30-c,cert-msc50-cpp,cert-msc51-cpp,cppcoreguidelines-*,-cppcoreguidelines-macro-usage,google-build-using-namespace,google-explicit-constructor,google-global-names-in-headers,google-readability-casting,google-runtime-int,google-runtime-operator,hicpp-*,misc-*,performance-*,readability-*'
 WarningsAsErrors: '*'
 CheckOptions:
     - key: bugprone-argument-comment.StrictMode
@@ -14,3 +14,4 @@ CheckOptions:
     - key: hicpp-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted
       value: 1
 FormatStyle: 'file'
+HeaderFilterRegex: 'src/.*\.(h|c).?.?$'

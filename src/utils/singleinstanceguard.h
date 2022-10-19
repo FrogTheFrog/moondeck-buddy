@@ -14,7 +14,7 @@ class SingleInstanceGuard final
     Q_DISABLE_COPY(SingleInstanceGuard)
 
 public:
-    SingleInstanceGuard(const QString& key);
+    explicit SingleInstanceGuard(const QString& key);
     ~SingleInstanceGuard();
 
     bool isAnotherRunning();

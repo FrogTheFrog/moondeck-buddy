@@ -8,9 +8,7 @@
 
 namespace converter
 {
-namespace internal
-{
-namespace from
+namespace internal::from
 {
 template<class VariantType, class... T>
 struct ConverterHelper;
@@ -49,13 +47,12 @@ struct ConverterHelper<VariantType, T>
 template<class VariantType>
 struct ConverterHelper<VariantType>
 {
-    static bool convert(const QJsonDocument&, VariantType&)
+    static bool convert(const QJsonDocument& /*unused*/, VariantType& /*unused*/)
     {
         return false;
     }
 };
-}  // namespace from
-}  // namespace internal
+}  // namespace internal::from
 
 //---------------------------------------------------------------------------------------------------------------------
 

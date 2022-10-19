@@ -19,10 +19,12 @@ public:
     bool    isVerbose() const;
 
 private:
+    const static quint16 DEFAULT_PORT{59999};
+
     bool parseSettingsFile(const QString& filename);
     void saveDefaultFile(const QString& filename) const;
 
-    quint16 m_port{59999};
+    quint16 m_port{DEFAULT_PORT};
     bool    m_verbose{false};
 };
 }  // namespace utils
