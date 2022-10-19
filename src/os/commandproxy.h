@@ -18,7 +18,7 @@ public:
     explicit CommandProxy(PcControlInterface& pc_control);
     ~CommandProxy() override = default;
 
-// NOLINTNEXTLINE(readability-redundant-access-specifiers)
+    // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 public slots:
     void slotHandleMessages(const std::variant<msgs::in::RestartPc, msgs::in::ShutdownPc>& msg);
 

@@ -38,7 +38,7 @@ private slots:
     void slotHandleRegKeyChanges(const QMap<QString, QVariant>& changed_values);
     void slotHandleExitTimeout();
 
-// NOLINTNEXTLINE(readability-redundant-access-specifiers)
+    // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private:
     struct LaunchedAppData
     {

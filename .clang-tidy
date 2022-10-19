@@ -14,4 +14,4 @@ CheckOptions:
     - key: hicpp-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted
       value: 1
 FormatStyle: 'file'
-HeaderFilterRegex: 'src/.*\.(h|c).?.?$'
+HeaderFilterRegex: 'src/.*\.(?:h|c|hpp|cpp)$'

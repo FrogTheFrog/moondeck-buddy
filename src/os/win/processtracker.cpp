@@ -65,9 +65,10 @@ QString getProcessName(DWORD pid)
         {
             static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
 
-            const DWORD written_size = GetModuleBaseNameW(proc_handle, module_handle,
-                                                          // NOLINTNEXTLINE(*-reinterpret-cast)
-                                                          reinterpret_cast<wchar_t*>(buffer.data()), static_cast<DWORD>(buffer.size()));
+            const DWORD written_size =
+                GetModuleBaseNameW(proc_handle, module_handle,
+                                   // NOLINTNEXTLINE(*-reinterpret-cast)
+                                   reinterpret_cast<wchar_t*>(buffer.data()), static_cast<DWORD>(buffer.size()));
 
             if (written_size > 0)
             {
