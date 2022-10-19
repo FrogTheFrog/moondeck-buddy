@@ -80,14 +80,17 @@ if(WIN32)
     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
 
     file(GENERATE OUTPUT ${DEPLOY_SCRIPT} CONTENT "
-    # Including the file pointed to by QT_DEPLOY_SUPPORT ensures the generated
-    # deployment script has access to qt_deploy_runtime_dependencies()
     include(\"${QT_DEPLOY_SUPPORT}\")
-    qt_deploy_runtime_dependencies(
-        EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
-        GENERATE_QT_CONF
-        VERBOSE
+    message(STATUS \"Running Qt deploy tool for \${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}> in working directory '${QT_DEPLOY_PREFIX}'\")
+    execute_process(
+        COMMAND_ECHO STDOUT
+        COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
+        WORKING_DIRECTORY \"\${QT_DEPLOY_PREFIX}\"
+        RESULT_VARIABLE result
     )
+    if(result)
+        message(FATAL_ERROR \"Executing \${__QT_DEPLOY_TOOL} failed: \${result}\")
+    endif()
     ")
 
     install(TARGETS ${PROJECT_NAME})
