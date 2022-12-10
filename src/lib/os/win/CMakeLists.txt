@@ -2,24 +2,27 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME utilslib)
+set(LIBNAME osspecificlib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
+
+find_library(PSAPI Psapi REQUIRED)
+add_compile_definitions(PSAPI_VERSION=1)
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header files
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    appsettings.h
-    pairinginput.h
-    systemtray.h
-    singleinstanceguard.h
+    messagequeue.h
+    regkey.h
+    processtracker.h
+    pccontrolimpl.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -27,10 +30,10 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
-    appsettings.cpp
-    pairinginput.cpp
-    systemtray.cpp
-    singleinstanceguard.cpp
+    messagequeue.cpp
+    regkey.cpp
+    processtracker.cpp
+    pccontrolimpl.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -38,5 +41,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets oslib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

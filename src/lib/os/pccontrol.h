@@ -1,6 +1,7 @@
 #pragma once
 
 // system/Qt includes
+#include <QCoreApplication>
 #include <memory>
 
 // local includes
@@ -30,6 +31,9 @@ public:
 
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;
+
+    void changeResolution(uint width, uint height, bool immediate) override;
+    void restoreChangedResolution() override;
 
 private:
     std::unique_ptr<PcControlInterface> m_impl;

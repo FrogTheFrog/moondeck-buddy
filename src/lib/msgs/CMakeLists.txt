@@ -2,7 +2,7 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME osspecificlib)
+set(LIBNAME msgslib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
@@ -11,17 +11,33 @@ set(LIBNAME osspecificlib)
 find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
-find_library(PSAPI Psapi REQUIRED)
-add_compile_definitions(PSAPI_VERSION=1)
-
 #----------------------------------------------------------------------------------------------------------------------
 # Header files
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    regkey.h
-    processtracker.h
-    pccontrolimpl.h
+    in/abortpairing.h
+    in/changeresolution.h
+    in/closesteam.h
+    in/hello.h
+    in/launchapp.h
+    in/login.h
+    in/pair.h
+    in/pairstatus.h
+    in/pcstate.h
+    in/restartpc.h
+    in/shutdownpc.h
+    in/steamstatus.h
+    out/controltypetaken.h
+    out/invalidmessage.h
+    out/messageaccepted.h
+    out/notpaired.h
+    out/paired.h
+    out/pairing.h
+    out/pcstate.h
+    out/steamstatus.h
+    out/versionmismatch.h
+    converter.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -29,9 +45,27 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
-    regkey.cpp
-    processtracker.cpp
-    pccontrolimpl.cpp
+    in/abortpairing.cpp
+    in/changeresolution.cpp
+    in/closesteam.cpp
+    in/hello.cpp
+    in/launchapp.cpp
+    in/login.cpp
+    in/pair.cpp
+    in/pairstatus.cpp
+    in/pcstate.cpp
+    in/restartpc.cpp
+    in/shutdownpc.cpp
+    in/steamstatus.cpp
+    out/controltypetaken.cpp
+    out/invalidmessage.cpp
+    out/messageaccepted.cpp
+    out/notpaired.cpp
+    out/paired.cpp
+    out/pairing.cpp
+    out/pcstate.cpp
+    out/steamstatus.cpp
+    out/versionmismatch.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -39,5 +73,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

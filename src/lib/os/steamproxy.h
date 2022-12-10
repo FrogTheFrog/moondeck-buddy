@@ -1,6 +1,7 @@
 #pragma once
 
 // local includes
+#include "msgs/in/changeresolution.h"
 #include "msgs/in/closesteam.h"
 #include "msgs/in/launchapp.h"
 #include "msgs/in/steamstatus.h"
@@ -26,8 +27,9 @@ signals:
                             const std::variant<msgs::out::SteamStatus, msgs::out::MessageAccepted>& msg);
 
 public slots:
-    void slotHandleMessages(const QUuid& socket_id,
-                            const std::variant<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam>& msg);
+    void slotHandleMessages(const QUuid&                                    socket_id,
+                            const std::variant<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam,
+                                               msgs::in::ChangeResolution>& msg);
 
 private:
     PcControlInterface& m_pc_control;

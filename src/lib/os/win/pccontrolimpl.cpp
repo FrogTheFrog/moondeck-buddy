@@ -2,6 +2,7 @@
 #include "pccontrolimpl.h"
 
 // system/Qt includes
+#include <QAbstractNativeEventFilter>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -10,6 +11,8 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
+namespace os
+{
 namespace
 {
 const QString REG_STEAM_PATH{R"(HKEY_CURRENT_USER\Software\Valve\Steam)"};
@@ -35,14 +38,78 @@ std::optional<QString> getLinkLocation()
     const QFileInfo fileInfo(QCoreApplication::applicationFilePath());
     return base + QDir::separator() + "Startup" + QDir::separator() + fileInfo.completeBaseName() + ".lnk";
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+// NOLINTNEXTLINE(*-easily-swappable-parameters)
+void setResolution(uint width, uint height)
+{
+    for (int i = 0;; ++i)
+    {
+        DISPLAY_DEVICEW display_device;
+        ZeroMemory(&display_device, sizeof(display_device));
+        display_device.cb = sizeof(display_device);
+
+        if (EnumDisplayDevicesW(nullptr, i, &display_device, EDD_GET_DEVICE_INTERFACE_NAME) == FALSE)
+        {
+            break;
+        }
+
+        static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
+        // NOLINTNEXTLINE(*-reinterpret-cast)
+        const QString device_name{QString::fromUtf16(reinterpret_cast<char16_t*>(display_device.DeviceName))};
+
+        DEVMODE devmode;
+        ZeroMemory(&devmode, sizeof(devmode));
+        devmode.dmSize = sizeof(devmode);
+
+        if (EnumDisplaySettingsW(static_cast<WCHAR*>(display_device.DeviceName), ENUM_CURRENT_SETTINGS, &devmode)
+            == FALSE)
+        {
+            qDebug("Failed to get display settings for %s.", qUtf8Printable(device_name));
+            continue;
+        }
+
+        if (devmode.dmPelsWidth == width && devmode.dmPelsHeight == height)
+        {
+            qDebug("Display %s resolution is already set - skipping.", qUtf8Printable(device_name));
+            continue;
+        }
+
+        // NOLINTNEXTLINE(*-implicit-bool-conversion,*-signed-bitwise)
+        const bool valid_display{(display_device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)
+                                 // NOLINTNEXTLINE(*-implicit-bool-conversion,*-signed-bitwise)
+                                 && (display_device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)};
+        if (!valid_display)
+        {
+            qDebug("Display %s does not have valid flags: %lu.", qUtf8Printable(device_name),
+                   display_device.StateFlags);
+            continue;
+        }
+
+        devmode.dmPelsWidth  = width;
+        devmode.dmPelsHeight = height;
+        devmode.dmFields     = DM_PELSWIDTH | DM_PELSHEIGHT;
+
+        const LONG result =
+            ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr, 0, nullptr);
+        if (result == DISP_CHANGE_SUCCESSFUL)
+        {
+            qInfo("Changed resolution for %s.", qUtf8Printable(device_name));
+        }
+        else
+        {
+            qInfo("Failed to change resolution for %s. Error code: , %li.", qUtf8Printable(device_name), result);
+        }
+    }
+}
 }  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
 
-namespace os
-{
 PcControlImpl::PcControlImpl(QString app_name)
     : m_process_tracker{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}}
+    , m_message_queue{"MoonDeckBuddyMessageQueueObserver"}
     , m_app_name{std::move(app_name)}
 {
     // App ID notification
@@ -57,6 +124,17 @@ PcControlImpl::PcControlImpl(QString app_name)
     m_pc_delay_timer.setSingleShot(true);
     connect(&m_pc_delay_timer, &QTimer::timeout, this,
             [this]() { emit signalPcStateChanged(shared::PcState::Normal); });
+
+    // Resolution change events
+    connect(&m_message_queue, &MessageQueue::signalResolutionChanged, this,
+            [this]()
+            {
+                qDebug("Resolution change detected!");
+                if (m_pending_resolution_change)
+                {
+                    changeResolution(m_pending_resolution_change->m_width, m_pending_resolution_change->m_height, true);
+                }
+            });
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -241,11 +319,12 @@ bool PcControlImpl::isAutoStartEnabled() const
 
 void PcControlImpl::slotSteamProcessStateChanged()
 {
-    if (!m_process_tracker.isRunning())
+    if (!isSteamRunning())
     {
         m_global_app_id = std::nullopt;
         m_launched_app  = std::nullopt;
         m_app_reg_key   = nullptr;
+        restoreChangedResolution();
     }
 }
 
@@ -280,5 +359,30 @@ void PcControlImpl::slotHandleExitTimeout()
     {
         m_process_tracker.terminateAll();
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PcControlImpl::changeResolution(uint width, uint height, bool immediate)
+{
+    if (immediate)
+    {
+        qDebug("Changing resolution.");
+        m_pending_resolution_change = std::nullopt;
+        setResolution(width, height);
+    }
+    else
+    {
+        qDebug("Preparing to change resolution after change is detected.");
+        m_pending_resolution_change = {width, height};
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PcControlImpl::restoreChangedResolution()
+{
+    // Nothing to do here, NVidia does it for us!
+    m_pending_resolution_change = std::nullopt;
 }
 }  // namespace os

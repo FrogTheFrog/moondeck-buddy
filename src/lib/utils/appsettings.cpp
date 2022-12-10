@@ -50,6 +50,7 @@ bool AppSettings::isVerbose() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filename)
 {
     QFile file{filename};

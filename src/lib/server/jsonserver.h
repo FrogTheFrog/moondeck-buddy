@@ -8,6 +8,7 @@
 // local includes
 #include "clientids.h"
 #include "jsonsocket.h"
+#include "msgs/in/changeresolution.h"
 #include "msgs/in/closesteam.h"
 #include "msgs/in/launchapp.h"
 #include "msgs/in/pair.h"
@@ -42,9 +43,9 @@ public:
 signals:
     void signalCommandMessageReceived(
         const std::variant<msgs::in::RestartPc, msgs::in::ShutdownPc, msgs::in::CloseSteam>& msg);
-    void signalSteamMessageReceived(
-        const QUuid&                                                                          socket_id,
-        const std::variant<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam>& msg);
+    void signalSteamMessageReceived(const QUuid&                                    socket_id,
+                                    const std::variant<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam,
+                                                       msgs::in::ChangeResolution>& msg);
     void signalRequestUserInputForPairing(const QUuid& socket_id);
     void signalAbortPairing();
 

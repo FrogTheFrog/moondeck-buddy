@@ -30,6 +30,9 @@ public:
     virtual void setAutoStart(bool enable)  = 0;
     virtual bool isAutoStartEnabled() const = 0;
 
+    virtual void changeResolution(uint width, uint height, bool immediate) = 0;
+    virtual void restoreChangedResolution()                                = 0;
+
 signals:
     void signalPcStateChanged(shared::PcState state);
 };

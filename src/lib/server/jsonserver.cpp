@@ -283,7 +283,8 @@ void JsonServer::slotHandleNewData(const QUuid& socket_id, const QJsonDocument& 
             return;
         }
 
-        const auto msg = converter::fromJson<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam>(data);
+        const auto msg = converter::fromJson<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam,
+                                             msgs::in::ChangeResolution>(data);
         if (!msg)
         {
             qWarning("Socket (id: %s) send an invalid data: %s", qUtf8Printable(socket_id.toString()),

@@ -4,10 +4,12 @@
 
 cmake_minimum_required(VERSION 3.21)
 project(MoonDeckBuddy 
-        VERSION 1.0.0
+        VERSION 1.1.0
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
         HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
         LANGUAGES CXX)
+
+set(EXEC_NAME_BUDDY ${PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -54,13 +56,13 @@ IF (WIN32)
     set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
     set(CPACK_PACKAGE_VENDOR "MoonDeck")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY ${PROJECT_NAME})
-    set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
+    set(CPACK_PACKAGE_EXECUTABLES "${EXEC_NAME_BUDDY};${EXEC_NAME_BUDDY}")
     set(CPACK_OUTPUT_FILE_PREFIX "../dist")
     set(CPACK_NSIS_IGNORE_LICENSE_PAGE ON)
     set(CPACK_NSIS_DISPLAY_NAME ${PROJECT_NAME})
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
     set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${PROJECT_NAME}.exe")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${EXEC_NAME_BUDDY}.exe")
     set(CPACK_NSIS_INSTALL_ROOT "\$LocalAppData\\\\Programs")
     set(CPACK_NSIS_DEFINES "RequestExecutionLevel user")
 ELSE()
@@ -83,10 +85,11 @@ if(WIN32)
 
     file(GENERATE OUTPUT ${DEPLOY_SCRIPT} CONTENT "
     include(\"${QT_DEPLOY_SUPPORT}\")
-    message(STATUS \"Running Qt deploy tool for \${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}> in working directory '${QT_DEPLOY_PREFIX}'\")
+    message(STATUS \"Running Qt deploy tool in working directory '${QT_DEPLOY_PREFIX}'\")
+
     execute_process(
         COMMAND_ECHO STDOUT
-        COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
+        COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${EXEC_NAME_BUDDY}>\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
         WORKING_DIRECTORY \"\${QT_DEPLOY_PREFIX}\"
         RESULT_VARIABLE result
     )
@@ -103,7 +106,7 @@ if(WIN32)
     )
     ")
 
-    install(TARGETS ${PROJECT_NAME})
+    install(TARGETS ${EXEC_NAME_BUDDY})
     install(SCRIPT ${DEPLOY_SCRIPT})
     
     include(CPack)

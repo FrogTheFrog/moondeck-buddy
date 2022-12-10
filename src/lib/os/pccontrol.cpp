@@ -80,4 +80,18 @@ bool PcControl::isAutoStartEnabled() const
 {
     return m_impl->isAutoStartEnabled();
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PcControl::changeResolution(uint width, uint height, bool immediate)
+{
+    m_impl->changeResolution(width, height, immediate);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PcControl::restoreChangedResolution()
+{
+    return m_impl->restoreChangedResolution();
+}
 }  // namespace os

@@ -25,7 +25,7 @@ std::optional<LaunchApp> LaunchApp::fromJson(const QJsonDocument& data)
 
         if (type_v.isString() && type_v.toString() == TYPE)
         {
-            if (app_id_v.isDouble())
+            if (app_id_v.isDouble() && app_id_v.toInt(-1) > 0)
             {
                 return LaunchApp{static_cast<uint>(app_id_v.toInt())};
             }
