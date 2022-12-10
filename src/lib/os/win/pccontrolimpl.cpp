@@ -372,7 +372,7 @@ void PcControlImpl::changeResolution(uint width, uint height, bool immediate)
         m_pending_resolution_change = std::nullopt;
         setResolution(width, height);
     }
-    else if (!m_steam_process_tracker.isRunningNow())
+    else if (!m_steam_process_tracker.isRunningNow() || getRunningApp() == 0)
     {
         qDebug("Preparing to change resolution after change is detected.");
         m_pending_resolution_change = {width, height};
