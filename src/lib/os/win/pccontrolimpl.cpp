@@ -135,8 +135,6 @@ PcControlImpl::PcControlImpl(QString app_name)
                     changeResolution(m_pending_resolution_change->m_width, m_pending_resolution_change->m_height, true);
                 }
             });
-
-    changeResolution(1280, 800, false);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -383,9 +381,17 @@ void PcControlImpl::changeResolution(uint width, uint height, bool immediate)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void PcControlImpl::abortPendingResolutionChange()
+{
+    qDebug("Clearing pending resolution change (if any).");
+    m_pending_resolution_change = std::nullopt;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void PcControlImpl::restoreChangedResolution()
 {
     // Nothing to do here, NVidia does it for us!
-    m_pending_resolution_change = std::nullopt;
+    abortPendingResolutionChange();
 }
 }  // namespace os

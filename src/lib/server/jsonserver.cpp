@@ -232,6 +232,7 @@ void JsonServer::slotHandleDisconnect(const QUuid& socket_id)
     {
         qDebug("Steam socket (id: %s) has disconnected.", qUtf8Printable(socket_id.toString()));
         m_steam_socket.reset();
+        emit signalSteamClientConnectionStateChanged(false);
     }
     else
     {
@@ -383,6 +384,7 @@ void JsonServer::slotHandleNewData(const QUuid& socket_id, const QJsonDocument& 
                     qDebug("Socket (id: %s) got STEAM control.", qUtf8Printable(socket_id.toString()));
                     m_steam_socket = std::move(m_pending_sockets[socket_id].m_socket);
                     m_steam_socket->write(converter::toJson(msgs::out::MessageAccepted{}));
+                    emit signalSteamClientConnectionStateChanged(true);
                 }
                 break;
                 case msgs::in::Login::ControlType::Pc:

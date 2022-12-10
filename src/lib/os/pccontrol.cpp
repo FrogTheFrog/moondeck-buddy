@@ -90,6 +90,13 @@ void PcControl::changeResolution(uint width, uint height, bool immediate)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void PcControl::abortPendingResolutionChange()
+{
+    m_impl->abortPendingResolutionChange();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void PcControl::restoreChangedResolution()
 {
     return m_impl->restoreChangedResolution();

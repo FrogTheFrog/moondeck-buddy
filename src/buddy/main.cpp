@@ -67,6 +67,8 @@ int main(int argc, char* argv[])
     // Server + steam proxy
     QObject::connect(&server, &server::JsonServer::signalSteamMessageReceived, &steam_proxy,
                      &os::SteamProxy::slotHandleMessages);
+    QObject::connect(&server, &server::JsonServer::signalSteamClientConnectionStateChanged, &steam_proxy,
+                     &os::SteamProxy::slotHandleConnectivityChange);
     QObject::connect(&steam_proxy, &os::SteamProxy::signalSendResponse, &server,
                      &server::JsonServer::slotSendSteamResponse);
 

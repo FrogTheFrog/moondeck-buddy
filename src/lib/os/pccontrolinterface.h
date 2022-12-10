@@ -31,6 +31,7 @@ public:
     virtual bool isAutoStartEnabled() const = 0;
 
     virtual void changeResolution(uint width, uint height, bool immediate) = 0;
+    virtual void abortPendingResolutionChange()                            = 0;
     virtual void restoreChangedResolution()                                = 0;
 
 signals:

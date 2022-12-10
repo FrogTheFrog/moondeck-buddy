@@ -41,6 +41,7 @@ public:
     bool isAutoStartEnabled() const override;
 
     void changeResolution(uint width, uint height, bool immediate) override;
+    void abortPendingResolutionChange() override;
     void restoreChangedResolution() override;
 
 private slots:

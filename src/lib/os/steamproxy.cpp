@@ -46,4 +46,14 @@ void SteamProxy::slotHandleMessages(const QUuid&                                
         return;
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SteamProxy::slotHandleConnectivityChange(bool connected)
+{
+    if (!connected)
+    {
+        m_pc_control.abortPendingResolutionChange();
+    }
+}
 }  // namespace os

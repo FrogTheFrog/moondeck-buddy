@@ -48,6 +48,7 @@ signals:
                                                        msgs::in::ChangeResolution>& msg);
     void signalRequestUserInputForPairing(const QUuid& socket_id);
     void signalAbortPairing();
+    void signalSteamClientConnectionStateChanged(bool connected);
 
 private slots:
     void slotHandleNewConnection();

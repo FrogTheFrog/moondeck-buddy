@@ -30,6 +30,7 @@ public slots:
     void slotHandleMessages(const QUuid&                                    socket_id,
                             const std::variant<msgs::in::LaunchApp, msgs::in::SteamStatus, msgs::in::CloseSteam,
                                                msgs::in::ChangeResolution>& msg);
+    void slotHandleConnectivityChange(bool connected);
 
 private:
     PcControlInterface& m_pc_control;
