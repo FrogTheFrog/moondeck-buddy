@@ -65,7 +65,7 @@ private:
 
     RegKey                                 m_reg_key;
     std::unique_ptr<RegKey>                m_app_reg_key;
-    ProcessTracker                         m_process_tracker;
+    ProcessTracker                         m_steam_process_tracker;
     MessageQueue                           m_message_queue;
     QString                                m_steam_exec;
     QString                                m_app_name;

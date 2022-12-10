@@ -108,7 +108,7 @@ void setResolution(uint width, uint height)
 //---------------------------------------------------------------------------------------------------------------------
 
 PcControlImpl::PcControlImpl(QString app_name)
-    : m_process_tracker{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}}
+    : m_steam_process_tracker{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}}
     , m_message_queue{"MoonDeckBuddyMessageQueueObserver"}
     , m_app_name{std::move(app_name)}
 {
@@ -135,6 +135,8 @@ PcControlImpl::PcControlImpl(QString app_name)
                     changeResolution(m_pending_resolution_change->m_width, m_pending_resolution_change->m_height, true);
                 }
             });
+
+    changeResolution(1280, 800, false);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -181,6 +183,7 @@ void PcControlImpl::launchSteamApp(uint app_id)
                         // The app was closed, we are no longer watching it
                         m_launched_app = std::nullopt;
                         m_app_reg_key  = nullptr;
+                        restoreChangedResolution();
                         return;
                     }
 
@@ -198,7 +201,7 @@ void PcControlImpl::launchSteamApp(uint app_id)
 
 void PcControlImpl::exitSteam(std::optional<uint> grace_period_in_sec)
 {
-    if (!m_process_tracker.isRunningNow())
+    if (!m_steam_process_tracker.isRunningNow())
     {
         m_exit_timer.stop();
     }
@@ -274,7 +277,7 @@ std::optional<uint> PcControlImpl::isLastLaunchedAppUpdating() const
 
 bool PcControlImpl::isSteamRunning() const
 {
-    return m_process_tracker.isRunning();
+    return m_steam_process_tracker.isRunning();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -319,7 +322,7 @@ bool PcControlImpl::isAutoStartEnabled() const
 
 void PcControlImpl::slotSteamProcessStateChanged()
 {
-    if (!isSteamRunning())
+    if (!m_steam_process_tracker.isRunning())
     {
         m_global_app_id = std::nullopt;
         m_launched_app  = std::nullopt;
@@ -355,9 +358,9 @@ void PcControlImpl::slotHandleRegKeyChanges(const QMap<QString, QVariant>& chang
 
 void PcControlImpl::slotHandleExitTimeout()
 {
-    if (m_process_tracker.isRunningNow())
+    if (m_steam_process_tracker.isRunningNow())
     {
-        m_process_tracker.terminateAll();
+        m_steam_process_tracker.terminateAll();
     }
 }
 
@@ -371,7 +374,7 @@ void PcControlImpl::changeResolution(uint width, uint height, bool immediate)
         m_pending_resolution_change = std::nullopt;
         setResolution(width, height);
     }
-    else
+    else if (!m_steam_process_tracker.isRunningNow())
     {
         qDebug("Preparing to change resolution after change is detected.");
         m_pending_resolution_change = {width, height};
