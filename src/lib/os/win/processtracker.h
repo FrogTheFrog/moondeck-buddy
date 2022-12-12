@@ -1,5 +1,8 @@
 #pragma once
 
+// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
+#include <windows.h>
+
 // system/Qt includes
 #include <QObject>
 #include <QRegularExpression>
@@ -18,19 +21,22 @@ public:
     explicit ProcessTracker(QRegularExpression name_regex);
     ~ProcessTracker() override = default;
 
+    void startObserving();
+
     bool isRunning() const;
     bool isRunningNow();
 
-    void terminateAll();
+    void close();
+    void terminate();
 
 signals:
-    void signalProcessStateChanged();
+    void signalProcessStateChanged(bool is_running);
 
 private:
     void slotEnumerateProcesses();
 
     QRegularExpression m_name_regex;
     QTimer             m_update_timer;
-    bool               m_is_running{false};
+    DWORD              m_pid{0};
 };
 }  // namespace os

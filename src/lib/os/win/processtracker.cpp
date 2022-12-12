@@ -1,9 +1,6 @@
 // header file include
 #include "processtracker.h"
 
-// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
-#include <windows.h>
-
 // system/Qt includes
 #include <psapi.h>
 #include <system_error>
@@ -16,6 +13,43 @@ namespace
 QString getError(LSTATUS status)
 {
     return QString::fromStdString(std::system_category().message(status));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool closeProcess(DWORD pid)
+{
+    std::vector<HWND> hwnds;
+
+    {
+        HWND hwnd{nullptr};
+        do
+        {
+            DWORD owner_pid{0};
+
+            hwnd = FindWindowExW(nullptr, hwnd, nullptr, nullptr);
+            GetWindowThreadProcessId(hwnd, &owner_pid);
+
+            if (pid == owner_pid)
+            {
+                hwnds.push_back(hwnd);
+            }
+        } while (hwnd != nullptr);
+    }
+
+    bool message_sent{false};
+    for (const auto& hwnd : hwnds)
+    {
+        if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
+        {
+            qDebug("Failed to post message to process (pid: %lu)! Reason: %s", pid,
+                   qUtf8Printable(getError(GetLastError())));
+            continue;
+        }
+
+        message_sent = true;
+    }
+    return message_sent;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -118,14 +152,24 @@ ProcessTracker::ProcessTracker(QRegularExpression name_regex)
     connect(&m_update_timer, &QTimer::timeout, this, &ProcessTracker::slotEnumerateProcesses);
 
     m_update_timer.setSingleShot(true);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void ProcessTracker::startObserving()
+{
     slotEnumerateProcesses();
+    if (!isRunning())
+    {
+        emit signalProcessStateChanged(false);
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 bool ProcessTracker::isRunning() const
 {
-    return m_is_running;
+    return m_pid != 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -133,29 +177,33 @@ bool ProcessTracker::isRunning() const
 bool ProcessTracker::isRunningNow()
 {
     slotEnumerateProcesses();
-    return m_is_running;
+    return isRunning();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void ProcessTracker::terminateAll()
+void ProcessTracker::close()
 {
-    const auto pids{enumProcesses()};
-    for (const auto pid : pids)
+    if (isRunningNow())
     {
-        const auto name{getProcessName(pid)};
-        if (name.isEmpty())
+        if (!closeProcess(m_pid))
         {
-            continue;
+            qDebug("No HWND messages were sent, trying to terminate %lu instead!", m_pid);
+            killProcess(m_pid);
         }
-
-        if (name.contains(m_name_regex))
-        {
-            killProcess(pid);
-        }
+        slotEnumerateProcesses();
     }
+}
 
-    slotEnumerateProcesses();
+//---------------------------------------------------------------------------------------------------------------------
+
+void ProcessTracker::terminate()
+{
+    if (isRunningNow())
+    {
+        killProcess(m_pid);
+        slotEnumerateProcesses();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -165,7 +213,7 @@ void ProcessTracker::slotEnumerateProcesses()
     m_update_timer.stop();
     {
         const auto pids{enumProcesses()};
-        bool       is_running{false};
+        DWORD      new_pid{0};
         for (const auto pid : pids)
         {
             const auto name{getProcessName(pid)};
@@ -176,27 +224,19 @@ void ProcessTracker::slotEnumerateProcesses()
 
             if (name.contains(m_name_regex))
             {
-                is_running = true;
+                new_pid = pid;
                 break;
             }
         }
 
-        if (m_is_running != is_running)
+        if (m_pid != new_pid)
         {
-            if (is_running)
-            {
-                qDebug("Steam is running!");
-            }
-            else
-            {
-                qDebug("Steam is not running!");
-            }
-            m_is_running = is_running;
-            emit signalProcessStateChanged();
+            m_pid = new_pid;
+            emit signalProcessStateChanged(isRunning());
         }
     }
 
-    const int timeout_time{5000};
+    const int timeout_time{2500};
     m_update_timer.start(timeout_time);
 }
 }  // namespace os

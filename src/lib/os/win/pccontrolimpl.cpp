@@ -135,6 +135,21 @@ PcControlImpl::PcControlImpl(QString app_name)
                     changeResolution(m_pending_resolution_change->m_width, m_pending_resolution_change->m_height, true);
                 }
             });
+
+    // Process state notification
+    connect(&m_steam_process_tracker, &ProcessTracker::signalProcessStateChanged, this,
+            [](bool is_running)
+            {
+                if (is_running)
+                {
+                    qDebug("Steam is running!");
+                }
+                else
+                {
+                    qDebug("Steam is not running!");
+                }
+            });
+    m_steam_process_tracker.startObserving();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -356,10 +371,7 @@ void PcControlImpl::slotHandleRegKeyChanges(const QMap<QString, QVariant>& chang
 
 void PcControlImpl::slotHandleExitTimeout()
 {
-    if (m_steam_process_tracker.isRunningNow())
-    {
-        m_steam_process_tracker.terminateAll();
-    }
+    m_steam_process_tracker.terminate();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
