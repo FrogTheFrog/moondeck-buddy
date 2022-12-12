@@ -4,3 +4,4 @@
 
 add_subdirectory(buddy)
 add_subdirectory(lib)
+add_subdirectory(stream)
