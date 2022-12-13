@@ -5,15 +5,9 @@
 
 // local includes
 #include "../pccontrolinterface.h"
-#include "messagequeue.h"
-#include "processtracker.h"
-#include "regkey.h"
-
-// forward declarations
-namespace os
-{
-class WinEventFilter;
-}
+#include "resolutionhandler.h"
+#include "steamhandler.h"
+#include "streamstatehandler.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -45,35 +39,17 @@ public:
     void restoreChangedResolution() override;
 
 private slots:
-    void slotSteamProcessStateChanged();
-    void slotHandleRegKeyChanges(const QMap<QString, QVariant>& changed_values);
-    void slotHandleExitTimeout();
+    void slotHandleSteamStart();
+    void slotHandleSteamExit();
 
-    // NOLINTNEXTLINE(readability-redundant-access-specifiers)
+    void slotHandleStreamStart();
+    void slotHandleStreamEnd();
+
 private:
-    struct LaunchedAppData
-    {
-        uint m_app_id;
-        bool m_is_running;
-        bool m_is_updating;
-    };
-
-    struct PendingResolutionChange
-    {
-        uint m_width;
-        uint m_height;
-    };
-
-    RegKey                                 m_reg_key;
-    std::unique_ptr<RegKey>                m_app_reg_key;
-    ProcessTracker                         m_steam_process_tracker;
-    MessageQueue                           m_message_queue;
-    QString                                m_steam_exec;
-    QString                                m_app_name;
-    QTimer                                 m_exit_timer;
-    QTimer                                 m_pc_delay_timer;
-    std::optional<uint>                    m_global_app_id;
-    std::optional<LaunchedAppData>         m_launched_app;
-    std::optional<PendingResolutionChange> m_pending_resolution_change;
+    QString            m_app_name;
+    ResolutionHandler  m_resolution_handler;
+    SteamHandler       m_steam_handler;
+    StreamStateHandler m_stream_state_handler;
+    QTimer             m_pc_delay_timer;
 };
 }  // namespace os

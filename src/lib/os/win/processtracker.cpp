@@ -159,10 +159,6 @@ ProcessTracker::ProcessTracker(QRegularExpression name_regex)
 void ProcessTracker::startObserving()
 {
     slotEnumerateProcesses();
-    if (!isRunning())
-    {
-        emit signalProcessStateChanged(false);
-    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -232,7 +228,7 @@ void ProcessTracker::slotEnumerateProcesses()
         if (m_pid != new_pid)
         {
             m_pid = new_pid;
-            emit signalProcessStateChanged(isRunning());
+            emit signalProcessStateChanged();
         }
     }
 

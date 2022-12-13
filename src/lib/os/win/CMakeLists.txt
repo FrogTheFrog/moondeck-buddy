@@ -23,6 +23,9 @@ set(HEADERS
     regkey.h
     processtracker.h
     pccontrolimpl.h
+    resolutionhandler.h
+    steamhandler.h
+    streamstatehandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -34,6 +37,9 @@ set(SOURCES
     regkey.cpp
     processtracker.cpp
     pccontrolimpl.cpp
+    resolutionhandler.cpp
+    steamhandler.cpp
+    streamstatehandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ public:
     void terminate();
 
 signals:
-    void signalProcessStateChanged(bool is_running);
+    void signalProcessStateChanged();
 
 private:
     void slotEnumerateProcesses();
