@@ -4,7 +4,7 @@
 #include <QObject>
 
 // local includes
-#include "shared/pcstate.h"
+#include "shared/enums.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -26,6 +26,8 @@ public:
     virtual uint                getRunningApp() const             = 0;
     virtual std::optional<uint> isLastLaunchedAppUpdating() const = 0;
     virtual bool                isSteamRunning() const            = 0;
+
+    virtual shared::StreamState getStreamState() const = 0;
 
     virtual void setAutoStart(bool enable)  = 0;
     virtual bool isAutoStartEnabled() const = 0;

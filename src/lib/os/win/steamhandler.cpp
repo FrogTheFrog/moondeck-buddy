@@ -58,6 +58,7 @@ void SteamHandler::close(std::optional<uint> grace_period_in_sec)
     if (!m_steam_process.isRunningNow())
     {
         m_steam_close_timer.stop();
+        return;
     }
 
     // Try to shutdown steam gracefully first
@@ -84,7 +85,7 @@ void SteamHandler::close(std::optional<uint> grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void SteamHandler::launchApp(uint app_id)
+void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
 {
     if (m_steam_exec_path.isEmpty())
     {
@@ -114,7 +115,8 @@ void SteamHandler::launchApp(uint app_id)
         m_app_reg_key->open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(app_id),
                             QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
 
-        QProcess::execute(m_steam_exec_path, {"-applaunch", QString::number(app_id)});
+        QStringList args{steam_args + QStringList{"-applaunch", QString::number(app_id)}};
+        QProcess::startDetached(m_steam_exec_path, args);
     }
 }
 

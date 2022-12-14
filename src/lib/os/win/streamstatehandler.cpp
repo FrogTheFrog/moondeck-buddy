@@ -5,6 +5,7 @@
 
 namespace os
 {
+// TODO: replace with const
 StreamStateHandler::StreamStateHandler()
     : m_helper_process{QRegularExpression{R"([\\/]MoonDeckStream\.exe$)", QRegularExpression::CaseInsensitiveOption}}
     , m_streamer_process{QRegularExpression{R"([\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption}}
@@ -21,28 +22,55 @@ StreamStateHandler::StreamStateHandler()
 
 void StreamStateHandler::endStream()
 {
-    if (streaming_started)
+    if (m_state == shared::StreamState::Streaming)
     {
         m_helper_process.close();
         m_streamer_process.close();
+
+        m_state = shared::StreamState::StreamEnding;
+        emit signalStreamStateChanged();
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+shared::StreamState StreamStateHandler::getCurrentState() const
+{
+    return m_state;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 void StreamStateHandler::slotHandleProcessStateChanges()
 {
-    if (m_helper_process.isRunning() && m_streamer_process.isRunning())
+    switch (m_state)
     {
-        streaming_started = true;
-        emit signalStreamStarted();
-    }
-    else if (streaming_started)
-    {
-        streaming_started = false;
-        m_helper_process.close();
-        m_streamer_process.close();
-        emit signalStreamEnded();
+        case shared::StreamState::NotStreaming:
+        {
+            if (m_helper_process.isRunning() && m_streamer_process.isRunning())
+            {
+                m_state = shared::StreamState::Streaming;
+                emit signalStreamStateChanged();
+            }
+            break;
+        }
+        case shared::StreamState::Streaming:
+        {
+            if (!m_helper_process.isRunning() || !m_streamer_process.isRunning())
+            {
+                endStream();
+            }
+            break;
+        }
+        case shared::StreamState::StreamEnding:
+        {
+            if (!m_helper_process.isRunning() && !m_streamer_process.isRunning())
+            {
+                m_state = shared::StreamState::NotStreaming;
+                emit signalStreamStateChanged();
+            }
+            break;
+        }
     }
 }
 }  // namespace os

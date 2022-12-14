@@ -69,6 +69,13 @@ bool PcControl::isSteamRunning() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+shared::StreamState PcControl::getStreamState() const
+{
+    return m_impl->getStreamState();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void PcControl::setAutoStart(bool enable)
 {
     m_impl->setAutoStart(enable);

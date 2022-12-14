@@ -17,7 +17,7 @@
 #include "msgs/in/steamstatus.h"
 #include "msgs/out/messageaccepted.h"
 #include "msgs/out/steamstatus.h"
-#include "shared/pcstate.h"
+#include "shared/enums.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

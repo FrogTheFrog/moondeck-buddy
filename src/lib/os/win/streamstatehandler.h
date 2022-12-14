@@ -5,6 +5,7 @@
 
 // local includes
 #include "processtracker.h"
+#include "shared/enums.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -19,18 +20,18 @@ public:
     explicit StreamStateHandler();
     ~StreamStateHandler() override = default;
 
-    void endStream();
+    void                endStream();
+    shared::StreamState getCurrentState() const;
 
 signals:
-    void signalStreamStarted();
-    void signalStreamEnded();
+    void signalStreamStateChanged();
 
 private slots:
     void slotHandleProcessStateChanges();
 
 private:
-    bool           streaming_started{false};
-    ProcessTracker m_helper_process;
-    ProcessTracker m_streamer_process;
+    shared::StreamState m_state{shared::StreamState::NotStreaming};
+    ProcessTracker      m_helper_process;
+    ProcessTracker      m_streamer_process;
 };
 }  // namespace os

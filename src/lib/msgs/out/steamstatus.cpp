@@ -25,6 +25,7 @@ QJsonDocument SteamStatus::toJson(const SteamStatus& data)
                                                ? QJsonValue{static_cast<int>(*data.m_last_launched_app_is_updating)}
                                                : QJsonValue{QJsonValue::Null};
     obj["steam_is_running"]              = data.m_steam_is_running;
+    obj["stream_state"]                  = QVariant::fromValue(data.m_stream_state).toString();
 
     return QJsonDocument{obj};
 }

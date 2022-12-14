@@ -45,16 +45,20 @@ PcControlImpl::PcControlImpl(QString app_name)
     connect(&m_steam_handler, &SteamHandler::signalSteamStarted, this, &PcControlImpl::slotHandleSteamStart);
     connect(&m_steam_handler, &SteamHandler::signalSteamClosed, this, &PcControlImpl::slotHandleSteamExit);
 
-    connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStarted, this,
-            &PcControlImpl::slotHandleStreamStart);
-    connect(&m_stream_state_handler, &StreamStateHandler::signalStreamEnded, this, &PcControlImpl::slotHandleStreamEnd);
+    connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
+            &PcControlImpl::slotHandleStreamStateChange);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 void PcControlImpl::launchSteamApp(uint app_id)
 {
-    m_steam_handler.launchApp(app_id);
+    QStringList steam_args;
+    if (m_stream_state_handler.getCurrentState() == shared::StreamState::Streaming)
+    {
+        steam_args += "-bigpicture";
+    }
+    m_steam_handler.launchApp(app_id, steam_args);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -117,6 +121,13 @@ std::optional<uint> PcControlImpl::isLastLaunchedAppUpdating() const
 bool PcControlImpl::isSteamRunning() const
 {
     return m_steam_handler.isRunning();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+shared::StreamState PcControlImpl::getStreamState() const
+{
+    return m_stream_state_handler.getCurrentState();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -193,6 +204,7 @@ void PcControlImpl::restoreChangedResolution()
 
 void PcControlImpl::slotHandleSteamStart()
 {
+    qDebug("Handling Steam start.");
     m_resolution_handler.clearPendingResolution();
 }
 
@@ -200,22 +212,35 @@ void PcControlImpl::slotHandleSteamStart()
 
 void PcControlImpl::slotHandleSteamExit()
 {
+    qDebug("Handling Steam exit.");
     m_stream_state_handler.endStream();
     m_resolution_handler.restoreResolution();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControlImpl::slotHandleStreamStart()
+void PcControlImpl::slotHandleStreamStateChange()
 {
-    m_resolution_handler.applyPendingChange();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void PcControlImpl::slotHandleStreamEnd()
-{
-    m_steam_handler.close(std::nullopt);
-    m_resolution_handler.restoreResolution();
+    switch (m_stream_state_handler.getCurrentState())
+    {
+        case shared::StreamState::NotStreaming:
+        {
+            qDebug("Stream has ended.");
+            break;
+        }
+        case shared::StreamState::Streaming:
+        {
+            qDebug("Stream started.");
+            m_resolution_handler.applyPendingChange();
+            break;
+        }
+        case shared::StreamState::StreamEnding:
+        {
+            qDebug("Stream is ending.");
+            m_steam_handler.close(std::nullopt);
+            m_resolution_handler.restoreResolution();
+            break;
+        }
+    }
 }
 }  // namespace os

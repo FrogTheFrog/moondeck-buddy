@@ -29,6 +29,8 @@ public:
     std::optional<uint> isLastLaunchedAppUpdating() const override;
     bool                isSteamRunning() const override;
 
+    shared::StreamState getStreamState() const override;
+
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;
 
