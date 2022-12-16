@@ -70,7 +70,7 @@ void ResolutionHandler::changeResolution(uint width, uint height)
             continue;
         }
 
-        Resolution previous_resolution{devmode.dmPelsWidth, devmode.dmPelsHeight};
+        const Resolution previous_resolution{devmode.dmPelsWidth, devmode.dmPelsHeight};
 
         devmode.dmPelsWidth  = width;
         devmode.dmPelsHeight = height;
@@ -97,6 +97,11 @@ void ResolutionHandler::changeResolution(uint width, uint height)
 
 void ResolutionHandler::restoreResolution()
 {
+    if (m_original_resolutions.empty())
+    {
+        return;
+    }
+
     qDebug("Trying to restore resolution.");
     for (int i = 0;; ++i)
     {

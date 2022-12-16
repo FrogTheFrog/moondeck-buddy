@@ -41,7 +41,10 @@ LRESULT QT_WIN_CALLBACK wndProcCallback(HWND hwnd, UINT message, WPARAM wParam, 
 
     if (pThis == nullptr)
     {
-        qDebug("Failed to get long ptr from window class! Message: %u", message);
+        if (message != WM_GETMINMAXINFO)
+        {
+            qDebug("Failed to get long ptr from window class! Message: %u", message);
+        }
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
 

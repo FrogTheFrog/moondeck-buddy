@@ -1,52 +1,24 @@
 // header file include
 #include "pccontrolimpl.h"
 
-// system/Qt includes
-#include <QCoreApplication>
-#include <QDir>
-#include <QFileInfo>
-#include <QProcess>
-#include <QStandardPaths>
-
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-namespace
+PcControlImpl::PcControlImpl()
+    : m_enumerator{std::make_shared<ProcessEnumerator>()}
+    , m_steam_handler{m_enumerator}
+    , m_stream_state_handler{m_enumerator}
 {
-std::optional<QString> getLinkLocation()
-{
-    const QString base = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
-    if (base.isEmpty())
-    {
-        return std::nullopt;
-    }
+    assert(m_enumerator != nullptr);
 
-    const QFileInfo fileInfo(QCoreApplication::applicationFilePath());
-    return base + QDir::separator() + "Startup" + QDir::separator() + fileInfo.completeBaseName() + ".lnk";
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-const int EXTRA_DELAY_SECS{10};
-const int MS_TO_SEC{1000};
-}  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
-
-PcControlImpl::PcControlImpl(QString app_name)
-    : m_app_name{std::move(app_name)}
-{
-    // Delay timer
-    m_pc_delay_timer.setSingleShot(true);
-    connect(&m_pc_delay_timer, &QTimer::timeout, this,
-            [this]() { emit signalPcStateChanged(shared::PcState::Normal); });
-
-    connect(&m_steam_handler, &SteamHandler::signalSteamStarted, this, &PcControlImpl::slotHandleSteamStart);
-    connect(&m_steam_handler, &SteamHandler::signalSteamClosed, this, &PcControlImpl::slotHandleSteamExit);
-
+    connect(&m_pc_state_handler, &PcStateHandler::signalPcStateChanged, this, &PcControlImpl::signalPcStateChanged);
+    connect(&m_steam_handler, &SteamHandler::signalSteamStateChanged, this, &PcControlImpl::slotHandleSteamStateChange);
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
             &PcControlImpl::slotHandleStreamStateChange);
+
+    const auto default_enumeration_interval{1000};
+    m_enumerator->start(default_enumeration_interval);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -72,34 +44,14 @@ void PcControlImpl::exitSteam(std::optional<uint> grace_period_in_sec)
 
 void PcControlImpl::shutdownPC(uint grace_period_in_sec)
 {
-    if (m_pc_delay_timer.isActive())
-    {
-        qDebug("PC is already being shut down. Aborting request.");
-        return;
-    }
-
-    QProcess::execute("shutdown", {"-s", "-t", QString::number(grace_period_in_sec), "-f", "-c",
-                                   m_app_name + " is putting you to sleep :)", "-y"});
-
-    m_pc_delay_timer.start(static_cast<int>(grace_period_in_sec + EXTRA_DELAY_SECS) * MS_TO_SEC);
-    emit signalPcStateChanged(shared::PcState::ShuttingDown);
+    m_pc_state_handler.shutdownPC(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 void PcControlImpl::restartPC(uint grace_period_in_sec)
 {
-    if (m_pc_delay_timer.isActive())
-    {
-        qDebug("PC is already being restarted. Aborting request.");
-        return;
-    }
-
-    QProcess::execute("shutdown", {"-r", "-t", QString::number(grace_period_in_sec), "-f", "-c",
-                                   m_app_name + " is giving you new live :?", "-y"});
-
-    m_pc_delay_timer.start(static_cast<int>(grace_period_in_sec + EXTRA_DELAY_SECS) * MS_TO_SEC);
-    emit signalPcStateChanged(shared::PcState::Restarting);
+    m_pc_state_handler.restartPC(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -134,38 +86,14 @@ shared::StreamState PcControlImpl::getStreamState() const
 
 void PcControlImpl::setAutoStart(bool enable)
 {
-    const auto location{getLinkLocation()};
-    if (!location)
-    {
-        qWarning("Could not determine autostart location!");
-        return;
-    }
-
-    if (QFile::exists(*location))
-    {
-        if (!QFile::remove(*location))
-        {
-            qWarning("Failed to remove %s!", qUtf8Printable(*location));
-            return;
-        }
-    }
-
-    if (enable)
-    {
-        if (!QFile::link(QCoreApplication::applicationFilePath(), *location))
-        {
-            qWarning("Failed to create link for %s!", qUtf8Printable(*location));
-            return;
-        }
-    }
+    m_auto_start_handler.setAutoStart(enable);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 bool PcControlImpl::isAutoStartEnabled() const
 {
-    const auto location{getLinkLocation()};
-    return location && QFile::exists(*location);
+    return m_auto_start_handler.isAutoStartEnabled();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -202,19 +130,19 @@ void PcControlImpl::restoreChangedResolution()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControlImpl::slotHandleSteamStart()
+void PcControlImpl::slotHandleSteamStateChange()
 {
-    qDebug("Handling Steam start.");
-    m_resolution_handler.clearPendingResolution();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void PcControlImpl::slotHandleSteamExit()
-{
-    qDebug("Handling Steam exit.");
-    m_stream_state_handler.endStream();
-    m_resolution_handler.restoreResolution();
+    if (m_steam_handler.isRunning())
+    {
+        qDebug("Handling Steam start.");
+        m_resolution_handler.clearPendingResolution();
+    }
+    else
+    {
+        qDebug("Handling Steam exit.");
+        m_stream_state_handler.endStream();
+        m_resolution_handler.restoreResolution();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------

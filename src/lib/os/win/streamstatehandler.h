@@ -17,7 +17,7 @@ class StreamStateHandler : public QObject
     Q_DISABLE_COPY(StreamStateHandler)
 
 public:
-    explicit StreamStateHandler();
+    explicit StreamStateHandler(std::shared_ptr<ProcessEnumerator>& enumerator);
     ~StreamStateHandler() override = default;
 
     void                endStream();

@@ -17,7 +17,7 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler();
+    explicit SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator);
     ~SteamHandler() override = default;
 
     bool isRunning() const;
@@ -29,8 +29,7 @@ public:
     std::optional<uint> isLastLaunchedAppUpdating() const;
 
 signals:
-    void signalSteamStarted();
-    void signalSteamClosed();
+    void signalSteamStateChanged();
 
 private slots:
     void slotSteamProcessStateChanged();

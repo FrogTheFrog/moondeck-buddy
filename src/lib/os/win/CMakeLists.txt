@@ -19,10 +19,13 @@ add_compile_definitions(PSAPI_VERSION=1)
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
+    autostarthandler.h
     messagequeue.h
     regkey.h
     processtracker.h
     pccontrolimpl.h
+    pcstatehandler.h
+    processenumerator.h
     resolutionhandler.h
     steamhandler.h
     streamstatehandler.h
@@ -33,10 +36,13 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
+    autostarthandler.cpp
     messagequeue.cpp
     regkey.cpp
     processtracker.cpp
     pccontrolimpl.cpp
+    pcstatehandler.cpp
+    processenumerator.cpp
     resolutionhandler.cpp
     steamhandler.cpp
     streamstatehandler.cpp

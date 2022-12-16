@@ -16,7 +16,7 @@ class PcControl : public PcControlInterface
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(QString app_name);
+    explicit PcControl();
     ~PcControl() override = default;
 
     void launchSteamApp(uint app_id) override;

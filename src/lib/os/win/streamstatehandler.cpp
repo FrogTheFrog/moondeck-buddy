@@ -1,21 +1,24 @@
 // header file include
 #include "streamstatehandler.h"
 
+// local includes
+#include "shared/constants.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-// TODO: replace with const
-StreamStateHandler::StreamStateHandler()
-    : m_helper_process{QRegularExpression{R"([\\/]MoonDeckStream\.exe$)", QRegularExpression::CaseInsensitiveOption}}
-    , m_streamer_process{QRegularExpression{R"([\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption}}
+StreamStateHandler::StreamStateHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
+    : m_helper_process{QRegularExpression{R"([\\/])" + shared::APP_NAME_STREAM + R"(\.exe$)",
+                                          QRegularExpression::CaseInsensitiveOption},
+                       enumerator}
+    , m_streamer_process{QRegularExpression{R"([\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption},
+                         enumerator}
 {
     connect(&m_helper_process, &os::ProcessTracker::signalProcessStateChanged, this,
             &StreamStateHandler::slotHandleProcessStateChanges);
     connect(&m_streamer_process, &os::ProcessTracker::signalProcessStateChanged, this,
             &StreamStateHandler::slotHandleProcessStateChanges);
-    m_helper_process.startObserving();
-    m_streamer_process.startObserving();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

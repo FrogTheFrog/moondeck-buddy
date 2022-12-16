@@ -23,12 +23,11 @@ const int  MS_TO_SEC{1000};
 
 namespace os
 {
-SteamHandler::SteamHandler()
-    : m_steam_process{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}}
+SteamHandler::SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
+    : m_steam_process{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}, enumerator}
 {
     connect(&m_steam_process, &ProcessTracker::signalProcessStateChanged, this,
             &SteamHandler::slotSteamProcessStateChanged);
-    m_steam_process.startObserving();
 
     connect(&m_global_reg_key, &RegKey::signalValuesChanged, this, &SteamHandler::slotHandleGlobalRegKeyChanges);
     m_global_reg_key.open(REG_STEAM_PATH, {REG_APP_ID, REG_EXEC});
@@ -64,7 +63,13 @@ void SteamHandler::close(std::optional<uint> grace_period_in_sec)
     // Try to shutdown steam gracefully first
     if (!m_steam_exec_path.isEmpty())
     {
-        QProcess::execute(m_steam_exec_path, {"-shutdown"});
+        const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
+        if (!result)
+        {
+            qWarning("Failed to start Steam shutdown sequence!");
+            m_steam_process.close();
+            return;
+        }
     }
     else
     {
@@ -107,6 +112,14 @@ void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
 
     if (!m_steam_process.isRunningNow() || getRunningApp() != app_id)
     {
+        const QStringList args{steam_args + QStringList{"-applaunch", QString::number(app_id)}};
+        const auto  result = QProcess::startDetached(m_steam_exec_path, args);
+        if (!result)
+        {
+            qWarning("Failed to start Steam app launch sequence!");
+            return;
+        }
+
         m_app_reg_key = std::make_unique<RegKey>();
         connect(m_app_reg_key.get(), &RegKey::signalValuesChanged, this,
                 [this, app_id](const QMap<QString, QVariant>& changed_values)
@@ -114,9 +127,6 @@ void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
 
         m_app_reg_key->open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(app_id),
                             QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
-
-        QStringList args{steam_args + QStringList{"-applaunch", QString::number(app_id)}};
-        QProcess::startDetached(m_steam_exec_path, args);
     }
 }
 
@@ -142,7 +152,6 @@ void SteamHandler::slotSteamProcessStateChanged()
     if (m_steam_process.isRunning())
     {
         qDebug("Steam is running!");
-        emit signalSteamStarted();
     }
     else
     {
@@ -151,8 +160,9 @@ void SteamHandler::slotSteamProcessStateChanged()
         m_tracked_app   = std::nullopt;
         m_app_reg_key   = nullptr;
         m_steam_close_timer.stop();
-        emit signalSteamClosed();
     }
+
+    emit signalSteamStateChanged();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
