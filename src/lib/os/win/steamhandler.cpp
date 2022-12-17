@@ -24,7 +24,7 @@ const int  MS_TO_SEC{1000};
 namespace os
 {
 SteamHandler::SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
-    : m_steam_process{QRegularExpression{R"([\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}, enumerator}
+    : m_steam_process{QRegularExpression{R"([\\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}, enumerator}
 {
     connect(&m_steam_process, &ProcessTracker::signalProcessStateChanged, this,
             &SteamHandler::slotSteamProcessStateChanged);

@@ -6,6 +6,7 @@
 // local includes
 #include "processtracker.h"
 #include "shared/enums.h"
+#include "utils/heartbeat.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -17,7 +18,7 @@ class StreamStateHandler : public QObject
     Q_DISABLE_COPY(StreamStateHandler)
 
 public:
-    explicit StreamStateHandler(std::shared_ptr<ProcessEnumerator>& enumerator);
+    explicit StreamStateHandler();
     ~StreamStateHandler() override = default;
 
     void                endStream();
@@ -31,7 +32,6 @@ private slots:
 
 private:
     shared::StreamState m_state{shared::StreamState::NotStreaming};
-    ProcessTracker      m_helper_process;
-    ProcessTracker      m_streamer_process;
+    utils::Heartbeat    m_helper_heartbeat;
 };
 }  // namespace os

@@ -8,7 +8,6 @@ namespace os
 PcControlImpl::PcControlImpl()
     : m_enumerator{std::make_shared<ProcessEnumerator>()}
     , m_steam_handler{m_enumerator}
-    , m_stream_state_handler{m_enumerator}
 {
     assert(m_enumerator != nullptr);
 

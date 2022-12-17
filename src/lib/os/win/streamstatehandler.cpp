@@ -8,17 +8,12 @@
 
 namespace os
 {
-StreamStateHandler::StreamStateHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
-    : m_helper_process{QRegularExpression{R"([\\/])" + shared::APP_NAME_STREAM + R"(\.exe$)",
-                                          QRegularExpression::CaseInsensitiveOption},
-                       enumerator}
-    , m_streamer_process{QRegularExpression{R"([\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption},
-                         enumerator}
+StreamStateHandler::StreamStateHandler()
+    : m_helper_heartbeat{shared::APP_NAME_STREAM}
 {
-    connect(&m_helper_process, &os::ProcessTracker::signalProcessStateChanged, this,
+    connect(&m_helper_heartbeat, &utils::Heartbeat::signalStateChanged, this,
             &StreamStateHandler::slotHandleProcessStateChanges);
-    connect(&m_streamer_process, &os::ProcessTracker::signalProcessStateChanged, this,
-            &StreamStateHandler::slotHandleProcessStateChanges);
+    m_helper_heartbeat.startListening();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -27,9 +22,7 @@ void StreamStateHandler::endStream()
 {
     if (m_state == shared::StreamState::Streaming)
     {
-        m_helper_process.close();
-        m_streamer_process.close();
-
+        m_helper_heartbeat.terminate();
         m_state = shared::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
@@ -50,7 +43,7 @@ void StreamStateHandler::slotHandleProcessStateChanges()
     {
         case shared::StreamState::NotStreaming:
         {
-            if (m_helper_process.isRunning() && m_streamer_process.isRunning())
+            if (m_helper_heartbeat.isAlive())
             {
                 m_state = shared::StreamState::Streaming;
                 emit signalStreamStateChanged();
@@ -58,16 +51,9 @@ void StreamStateHandler::slotHandleProcessStateChanges()
             break;
         }
         case shared::StreamState::Streaming:
-        {
-            if (!m_helper_process.isRunning() || !m_streamer_process.isRunning())
-            {
-                endStream();
-            }
-            break;
-        }
         case shared::StreamState::StreamEnding:
         {
-            if (!m_helper_process.isRunning() && !m_streamer_process.isRunning())
+            if (!m_helper_heartbeat.isAlive())
             {
                 m_state = shared::StreamState::NotStreaming;
                 emit signalStreamStateChanged();

@@ -62,7 +62,7 @@ void PcStateHandler::restartPC(uint grace_period_in_sec)
 
     const auto result =
         QProcess::startDetached("shutdown", {"-r", "-t", QString::number(grace_period_in_sec), "-f", "-c",
-                                             shared::APP_NAME_BUDDY + " is giving you new live :?", "-y"});
+                                             shared::APP_NAME_BUDDY + " is giving you new life :?", "-y"});
 
     if (!result)
     {
