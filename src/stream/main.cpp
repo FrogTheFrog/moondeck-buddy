@@ -4,6 +4,7 @@
 // local includes
 #include "shared/constants.h"
 #include "utils/heartbeat.h"
+#include "utils/logsettings.h"
 #include "utils/singleinstanceguard.h"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -17,11 +18,12 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
-    QApplication     app{argc, argv};
+    QApplication app{argc, argv};
+    utils::LogSettings::getInstance().init("stream.log");
+
     utils::Heartbeat heartbeat{shared::APP_NAME_STREAM};
-
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
-
     heartbeat.startBeating();
+
     return QCoreApplication::exec();
 }

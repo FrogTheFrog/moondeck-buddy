@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     }
 
     QApplication app{argc, argv};
-    utils::LogSettings::getInstance().init("output.log");
+    utils::LogSettings::getInstance().init("buddy.log");
 
     const utils::AppSettings app_settings{utils::getExecDir() + "settings.json"};
     if (app_settings.isVerbose())
