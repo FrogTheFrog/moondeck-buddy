@@ -71,3 +71,13 @@ It's a very simple process where all it does is notifies the Buddy, if it's aliv
 All you have to do is to set the application name to **MoonDeckStream** (no other name) and set the command to the executable, like this:
 
 ![Sunshine](.github/assets/sunshine.png)
+
+#### No audio on fresh stream
+
+Due to the way Buddy currently works, it needs to restart Steam after each stream. Sunshine, however, might default to using "Steam Streaming Speakers" as the default virtual sink.
+
+When Steam is started and the audio device is set to "Steam Streaming Speakers", it resets the audio device to the system's default one (for whatever reason). Simply put, you'll have no audio when you start streaming via Buddy.
+
+The solution is to use a virtual sink other than "Steam Streaming Speakers" in Sunshine. It can be the same sink as your actual audio device if it is turned off during stream or any other virtual sink. For example, [VB-CABLE Virtual Audio Device](https://vb-audio.com/Cable/) works nicely as a virtual sink for Sunshine.
+
+![Audio](.github/assets/audio.png)
