@@ -55,3 +55,19 @@ The port to be opened by the app for communication.
 #### Verbose (default: false)
 
 Enables verbose logging for debugging issues.
+
+## Sunshine setup
+
+Since the NVidia has discontinued its Gamestream service, the Sunshine has now become the primary target for MoonDeckBuddy.
+
+For this reason another process is distributed alongside the Buddy, called **MoonDeckStream**.
+
+### What is MoonDeckStream?
+
+It's a very simple process where all it does is notifies the Buddy, if it's alive (the stream is active) or not. That's it. It does nothing else...
+
+### How to configure it?
+
+All you have to do is to set the application name to **MoonDeckStream** (no other name) and set the command to the executable, like this:
+
+![Sunshine](.github/assets/sunshine.png)

@@ -9,7 +9,7 @@ qt_standard_project_setup()
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(EXEC_NAME MoonDeckStream)
+set(EXEC_NAME ${EXEC_NAME_STREAM})
 set(RESOURCES "../../resources/resources.qrc")
 
 if(WIN32)
