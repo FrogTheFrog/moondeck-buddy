@@ -4,12 +4,13 @@
 
 cmake_minimum_required(VERSION 3.21)
 project(MoonDeckBuddy 
-        VERSION 1.1.0
+        VERSION 1.2.0
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
         HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
         LANGUAGES CXX)
 
-set(EXEC_NAME_BUDDY ${PROJECT_NAME})
+set(EXEC_NAME_BUDDY MoonDeckBuddy)
+set(EXEC_NAME_STREAM MoonDeckStream)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -82,20 +83,24 @@ add_subdirectory(src)
 if(WIN32)
     find_package(Qt6 REQUIRED COMPONENTS Core)
     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
+    set(BINARIES "${EXEC_NAME_BUDDY};${EXEC_NAME_STREAM}")
 
     file(GENERATE OUTPUT ${DEPLOY_SCRIPT} CONTENT "
     include(\"${QT_DEPLOY_SUPPORT}\")
     message(STATUS \"Running Qt deploy tool in working directory '${QT_DEPLOY_PREFIX}'\")
 
-    execute_process(
-        COMMAND_ECHO STDOUT
-        COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:${EXEC_NAME_BUDDY}>\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
-        WORKING_DIRECTORY \"\${QT_DEPLOY_PREFIX}\"
-        RESULT_VARIABLE result
-    )
-    if(result)
-        message(FATAL_ERROR \"Executing \${__QT_DEPLOY_TOOL} failed: \${result}\")
-    endif()
+    set(BINARIES \"${BINARIES}\")
+    foreach(BINARY \${BINARIES})
+        execute_process(
+            COMMAND_ECHO STDOUT
+            COMMAND \"\${__QT_DEPLOY_TOOL}\" \"\${QT_DEPLOY_BIN_DIR}/\${BINARY}.exe\" --verbose 2 --dir . --libdir bin --plugindir plugins --force --no-compiler-runtime
+            WORKING_DIRECTORY \"\${QT_DEPLOY_PREFIX}\"
+            RESULT_VARIABLE result
+        )
+        if(result)
+            message(FATAL_ERROR \"Executing \${__QT_DEPLOY_TOOL} failed: \${result}\")
+        endif()
+    endforeach()
 
     qt6_deploy_qt_conf(\"\${QT_DEPLOY_PREFIX}/\${QT_DEPLOY_BIN_DIR}/qt.conf\"
         PREFIX \"../\"
@@ -106,7 +111,9 @@ if(WIN32)
     )
     ")
 
-    install(TARGETS ${EXEC_NAME_BUDDY})
+    foreach(BINARY ${BINARIES})
+        install(TARGETS ${BINARY})
+    endforeach()
     install(SCRIPT ${DEPLOY_SCRIPT})
     
     include(CPack)

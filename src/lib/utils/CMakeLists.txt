@@ -17,6 +17,7 @@ qt_standard_project_setup()
 
 set(HEADERS
     appsettings.h
+    heartbeat.h
     helpers.h
     logsettings.h
     pairinginput.h
@@ -30,6 +31,7 @@ set(HEADERS
 
 set(SOURCES
     appsettings.cpp
+    heartbeat.cpp
     helpers.cpp
     logsettings.cpp
     pairinginput.cpp

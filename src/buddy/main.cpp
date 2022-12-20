@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     }
 
     QApplication app{argc, argv};
-    utils::LogSettings::getInstance().init("output.log");
+    utils::LogSettings::getInstance().init("buddy.log");
 
     const utils::AppSettings app_settings{utils::getExecDir() + "settings.json"};
     if (app_settings.isVerbose())
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
         utils::LogSettings::getInstance().enableVerboseMode();
     }
 
-    os::PcControl      pc_control{shared::APP_NAME_BUDDY};
+    os::PcControl      pc_control;
     server::JsonServer server{shared::MSG_VERSION, utils::getExecDir() + "clients.json"};
 
     const os::CommandProxy command_proxy{pc_control};

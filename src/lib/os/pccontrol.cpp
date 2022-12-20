@@ -12,8 +12,8 @@
 
 namespace os
 {
-PcControl::PcControl(QString app_name)
-    : m_impl{std::make_unique<PcControlImpl>(std::move(app_name))}
+PcControl::PcControl()
+    : m_impl{std::make_unique<PcControlImpl>()}
 {
     connect(m_impl.get(), &PcControlInterface::signalPcStateChanged, this, &PcControlInterface::signalPcStateChanged);
 }
@@ -65,6 +65,13 @@ std::optional<uint> PcControl::isLastLaunchedAppUpdating() const
 bool PcControl::isSteamRunning() const
 {
     return m_impl->isSteamRunning();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+shared::StreamState PcControl::getStreamState() const
+{
+    return m_impl->getStreamState();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

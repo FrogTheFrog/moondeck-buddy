@@ -16,7 +16,7 @@ class PcControl : public PcControlInterface
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(QString app_name);
+    explicit PcControl();
     ~PcControl() override = default;
 
     void launchSteamApp(uint app_id) override;
@@ -28,6 +28,8 @@ public:
     uint                getRunningApp() const override;
     std::optional<uint> isLastLaunchedAppUpdating() const override;
     bool                isSteamRunning() const override;
+
+    shared::StreamState getStreamState() const override;
 
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;

@@ -1,9 +1,11 @@
 #pragma once
 
 // system/Qt includes
-#include <QObject>
 #include <QRegularExpression>
-#include <QTimer>
+#include <memory>
+
+// local includes
+#include "processenumerator.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -15,22 +17,24 @@ class ProcessTracker : public QObject
     Q_DISABLE_COPY(ProcessTracker)
 
 public:
-    explicit ProcessTracker(QRegularExpression name_regex);
+    explicit ProcessTracker(QRegularExpression name_regex, std::shared_ptr<ProcessEnumerator> enumerator);
     ~ProcessTracker() override = default;
 
     bool isRunning() const;
     bool isRunningNow();
 
-    void terminateAll();
+    void close();
+    void terminate();
 
 signals:
     void signalProcessStateChanged();
 
-private:
-    void slotEnumerateProcesses();
+private slots:
+    void slotUpdateProcessState(const std::vector<ProcessEnumerator::ProcessData>& data);
 
-    QRegularExpression m_name_regex;
-    QTimer             m_update_timer;
-    bool               m_is_running{false};
+private:
+    QRegularExpression                 m_name_regex;
+    std::shared_ptr<ProcessEnumerator> m_enumerator;
+    DWORD                              m_pid{0};
 };
 }  // namespace os

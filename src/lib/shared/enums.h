@@ -16,7 +16,17 @@ enum class PcState
 {
     Normal,
     Restarting,
-    ShuttingDown,
+    ShuttingDown
 };
 Q_ENUM_NS(PcState)
+
+//---------------------------------------------------------------------------------------------------------------------
+
+enum class StreamState
+{
+    NotStreaming,
+    Streaming,
+    StreamEnding
+};
+Q_ENUM_NS(StreamState)
 }  // namespace shared

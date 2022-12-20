@@ -4,7 +4,7 @@
 #include <QJsonDocument>
 
 // local includes
-#include "shared/pcstate.h"
+#include "shared/enums.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
