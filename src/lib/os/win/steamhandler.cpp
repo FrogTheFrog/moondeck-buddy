@@ -113,7 +113,7 @@ void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
     if (!m_steam_process.isRunningNow() || getRunningApp() != app_id)
     {
         const QStringList args{steam_args + QStringList{"-applaunch", QString::number(app_id)}};
-        const auto  result = QProcess::startDetached(m_steam_exec_path, args);
+        const auto        result = QProcess::startDetached(m_steam_exec_path, args);
         if (!result)
         {
             qWarning("Failed to start Steam app launch sequence!");
