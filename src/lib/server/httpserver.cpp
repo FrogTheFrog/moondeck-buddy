@@ -17,9 +17,10 @@ QString HttpServer::getAuthorizationId(const QHttpServerRequest& request)
 {
     auto auth = request.value("authorization").simplified();
 
-    if (auth.size() > 6 && auth.first(6).toLower() == "basic ")
+    const int id_start_index{6};
+    if (auth.size() > id_start_index && auth.first(id_start_index).toLower() == "basic ")
     {
-        auto token     = auth.sliced(6);
+        auto token     = auth.sliced(id_start_index);
         auto client_id = QByteArray::fromBase64(token);
 
         if (!client_id.isEmpty())
@@ -62,7 +63,7 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
         m_server.sslSetup(QSslCertificate{cert_file.readAll()}, QSslKey{key_file.readAll(), QSsl::Rsa});
     }
 
-    if (!m_server.listen(QHostAddress::Any, port))
+    if (m_server.listen(QHostAddress::Any, port) == 0)
     {
         qCWarning(lc::server) << "Server could not start listening at port" << port;
         return false;

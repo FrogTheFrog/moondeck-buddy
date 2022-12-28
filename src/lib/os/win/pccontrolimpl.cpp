@@ -124,7 +124,8 @@ bool PcControlImpl::changeResolution(uint width, uint height, bool immediate)
     {
         return m_resolution_handler.changeResolution(width, height);
     }
-    else if (!m_steam_handler.isRunningNow() || getRunningApp() == 0)
+
+    if (!m_steam_handler.isRunningNow() || getRunningApp() == 0)
     {
         m_resolution_handler.setPendingResolution(width, height);
         return true;

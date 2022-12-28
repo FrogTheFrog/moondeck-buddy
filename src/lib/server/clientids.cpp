@@ -20,6 +20,7 @@ ClientIds::ClientIds(QString filename)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 void ClientIds::load()
 {
     m_ids.clear();  // Clear the ids regardless of whether the file exists or not
@@ -52,7 +53,7 @@ void ClientIds::load()
             const QJsonArray ids = json_data.array();
             for (const auto& client_id : ids)
             {
-                QString client_id_string{client_id.isString() ? client_id.toString() : QString{}};
+                const QString client_id_string{client_id.isString() ? client_id.toString() : QString{}};
                 if (client_id_string.isEmpty())
                 {
                     some_ids_were_skipped = true;

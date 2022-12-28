@@ -15,6 +15,7 @@ ResolutionHandler::~ResolutionHandler()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 bool ResolutionHandler::changeResolution(uint width, uint height)
 {
     clearPendingResolution();
@@ -94,6 +95,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 void ResolutionHandler::restoreResolution()
 {
     if (m_original_resolutions.empty())

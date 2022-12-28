@@ -26,7 +26,7 @@ void removeLogFile(const QString& filename)
 
 void messageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
-    QString formatted_msg{qFormatLogMessage(type, context, msg)};
+    const QString formatted_msg{qFormatLogMessage(type, context, msg)};
     {
         QTextStream stream(stdout);
         stream << formatted_msg << Qt::endl;
@@ -82,6 +82,7 @@ const QString& LogSettings::getFilename() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-to-static)
 void LogSettings::setLoggingRules(const QString& rules)
 {
     if (!rules.isEmpty())

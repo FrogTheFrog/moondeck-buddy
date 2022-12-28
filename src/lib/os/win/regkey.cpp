@@ -154,7 +154,7 @@ void deleteNotifier(std::unique_ptr<QWinEventNotifier>& notifier)
         notifier->disconnect();
         if (CloseHandle(notifier->handle()) == FALSE)
         {
-            qCWarning(lc::os) << "Failed to close handle! Reason: " << getError(GetLastError());
+            qCWarning(lc::os) << "Failed to close handle! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
         }
         notifier.reset();
     }

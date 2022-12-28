@@ -16,8 +16,8 @@ namespace
 {
 QJsonDocument requestToJson(const QHttpServerRequest& request)
 {
-    QJsonParseError     parser_error;
-    const QJsonDocument json_data{QJsonDocument::fromJson(request.body(), &parser_error)};
+    QJsonParseError parser_error;
+    QJsonDocument   json_data{QJsonDocument::fromJson(request.body(), &parser_error)};
     if (json_data.isNull())
     {
         qCWarning(lc::buddyMain) << "Failed to decode JSON data! Reason:" << parser_error.errorString()
@@ -87,6 +87,7 @@ void setupApiVersion(server::HttpServer& server)
 void setupPairing(server::HttpServer& server, server::PairingManager& pairing_manager)
 {
     server.route("/pairingState/<arg>", QHttpServerRequest::Method::Get,
+                 // NOLINTNEXTLINE(*-identifier-length)
                  [&pairing_manager](const QString& id)
                  {
                      const PairingState state{pairing_manager.isPaired(id)    ? PairingState::Paired
@@ -105,6 +106,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
+                     // NOLINTNEXTLINE(*-identifier-length)
                      const auto id{utils::getJsonValue<QString>(json, "id")};
                      const auto hashed_id{utils::getJsonValue<QString>(json, "hashed_id")};
                      if (!id || !hashed_id)
@@ -125,6 +127,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
+                     // NOLINTNEXTLINE(*-identifier-length)
                      const auto id{utils::getJsonValue<QString>(json, "id")};
                      if (!id)
                      {

@@ -37,6 +37,7 @@ bool PairingManager::isPairing() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-identifier-length)
 bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
 {
     if (m_pairing_data)
@@ -64,6 +65,7 @@ bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-identifier-length)
 bool PairingManager::abortPairing(const QString& id)
 {
     if (!isPairing())

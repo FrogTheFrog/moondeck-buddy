@@ -23,7 +23,6 @@ namespace utils
 {
 AppSettings::AppSettings(const QString& filename)
     : m_port{DEFAULT_PORT}
-    , m_logging_rules{}
 {
     if (!parseSettingsFile(filename))
     {
