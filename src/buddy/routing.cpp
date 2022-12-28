@@ -21,7 +21,7 @@ QJsonDocument requestToJson(const QHttpServerRequest& request)
     if (json_data.isNull())
     {
         qCWarning(lc::buddyMain) << "Failed to decode JSON data! Reason:" << parser_error.errorString()
-                                << "| Body:" << request.body();
+                                 << "| Body:" << request.body();
         return {};
     }
 
@@ -303,8 +303,8 @@ void setupRouteLogging(server::HttpServer& server)
         [](const QHttpServerRequest& request, QHttpServerResponse&& resp)
         {
             qCDebug(lc::buddyMain) << Qt::endl
-                                  << "Request:" << request << "|" << request.body() << Qt::endl
-                                  << "Response:" << resp.statusCode() << "|" << resp.data();
+                                   << "Request:" << request << "|" << request.body() << Qt::endl
+                                   << "Response:" << resp.statusCode() << "|" << resp.data();
             return std::move(resp);
         });
 }

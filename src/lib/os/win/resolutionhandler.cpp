@@ -60,7 +60,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         if (!valid_display)
         {
             qCDebug(lc::os).nospace() << "Display " << device_name
-                                     << " does not have valid flags: " << display_device.StateFlags;
+                                      << " does not have valid flags: " << display_device.StateFlags;
             continue;
         }
 
@@ -85,7 +85,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         else
         {
             qCWarning(lc::os).nospace() << "Failed to change resolution for " << device_name
-                                       << ". Error code: " << result;
+                                        << ". Error code: " << result;
         }
     }
 
@@ -161,7 +161,7 @@ void ResolutionHandler::restoreResolution()
         else
         {
             qCWarning(lc::os).nospace() << "Failed to restore resolution for " << device_name
-                                       << ". Error code: " << result;
+                                        << ". Error code: " << result;
         }
     }
 

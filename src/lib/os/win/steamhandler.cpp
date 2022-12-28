@@ -189,7 +189,7 @@ void SteamHandler::slotHandleGlobalRegKeyChanges(const QMap<QString, QVariant>& 
         if (prev_app_id != m_global_app_id)
         {
             qCDebug(lc::os) << "Running appID change detected (via global key):"
-                           << m_global_app_id.value_or(FALLBACK_APP_ID);
+                            << m_global_app_id.value_or(FALLBACK_APP_ID);
         }
     }
 }

@@ -45,7 +45,7 @@ bool closeProcess(DWORD pid)
         if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
         {
             qCDebug(lc::os).nospace() << "Failed to post message to process (pid: " << pid
-                                     << ")! Reason: " << getError(GetLastError());
+                                      << ")! Reason: " << getError(GetLastError());
             continue;
         }
 
@@ -71,7 +71,7 @@ void killProcess(DWORD pid)
     if (TerminateProcess(proc_handle, 1) == FALSE)
     {
         qCWarning(lc::os).nospace() << "Failed to terminate process (pid: " << pid
-                                   << ")! Reason: " << getError(GetLastError());
+                                    << ")! Reason: " << getError(GetLastError());
     }
 }
 }  // namespace

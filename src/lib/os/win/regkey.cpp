@@ -99,7 +99,7 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     if (result != ERROR_SUCCESS)
     {
         qCDebug(lc::os).nospace() << "Could not read the size of the key value " << name
-                                 << "! Reason: " << getError(result);
+                                  << "! Reason: " << getError(result);
     }
 
     if (data_size <= 0)
@@ -117,7 +117,7 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     if (result != ERROR_SUCCESS)
     {
         qCWarning(lc::os).nospace() << "Could not read the data of the key value " << name
-                                   << "! Reason: " << getError(result);
+                                    << "! Reason: " << getError(result);
     }
 
     return data;
