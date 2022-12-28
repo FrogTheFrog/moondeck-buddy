@@ -5,6 +5,9 @@
 #include <system_error>
 #include <unordered_map>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -41,8 +44,8 @@ bool closeProcess(DWORD pid)
     {
         if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
         {
-            qDebug("Failed to post message to process (pid: %lu)! Reason: %s", pid,
-                   qUtf8Printable(getError(GetLastError())));
+            qCDebug(lc::os).nospace() << "Failed to post message to process (pid: " << pid
+                                     << ")! Reason: " << getError(GetLastError());
             continue;
         }
 
@@ -67,7 +70,8 @@ void killProcess(DWORD pid)
 
     if (TerminateProcess(proc_handle, 1) == FALSE)
     {
-        qWarning("Failed to terminate process (pid: %lu)! Reason: %s", pid, qUtf8Printable(getError(GetLastError())));
+        qCWarning(lc::os).nospace() << "Failed to terminate process (pid: " << pid
+                                   << ")! Reason: " << getError(GetLastError());
     }
 }
 }  // namespace
@@ -107,7 +111,7 @@ void ProcessTracker::close()
     {
         if (!closeProcess(m_pid))
         {
-            qDebug("No HWND messages were sent, trying to terminate %lu instead!", m_pid);
+            qCDebug(lc::os).nospace() << "No HWND messages were sent, trying to terminate " << m_pid << " instead!";
             killProcess(m_pid);
         }
         m_enumerator->slotEnumerate();

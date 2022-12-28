@@ -6,6 +6,7 @@
 
 // local includes
 #include "shared/constants.h"
+#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 {
     if (m_state_change_back_timer.isActive())
     {
-        qDebug("PC is already being shut down. Aborting request.");
+        qCDebug(lc::os) << "PC is already being shut down. Aborting request.";
         return false;
     }
 
@@ -48,7 +49,7 @@ bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 
     if (!result)
     {
-        qWarning("Failed to start shutdown sequence!");
+        qCWarning(lc::os) << "Failed to start shutdown sequence!";
         return false;
     }
 
@@ -64,7 +65,7 @@ bool PcStateHandler::restartPC(uint grace_period_in_sec)
 {
     if (m_state_change_back_timer.isActive())
     {
-        qDebug("PC is already being restarted. Aborting request.");
+        qCDebug(lc::os) << "PC is already being restarted. Aborting request.";
         return false;
     }
 
@@ -74,7 +75,7 @@ bool PcStateHandler::restartPC(uint grace_period_in_sec)
 
     if (!result)
     {
-        qWarning("Failed to start restart sequence!");
+        qCWarning(lc::os) << "Failed to start restart sequence!";
         return false;
     }
 

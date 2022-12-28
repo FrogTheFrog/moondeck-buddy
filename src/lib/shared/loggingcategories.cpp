@@ -5,7 +5,8 @@
 
 namespace lc
 {
-Q_LOGGING_CATEGORY(buddyRouting, "buddy.routing");
-Q_LOGGING_CATEGORY(httpServer, "buddy.server.http_server");
-Q_LOGGING_CATEGORY(pairingManager, "buddy.server.pairing_manager");
+Q_LOGGING_CATEGORY(buddyMain, "buddy.main", QtInfoMsg);
+Q_LOGGING_CATEGORY(server, "buddy.server", QtInfoMsg);
+Q_LOGGING_CATEGORY(utils, "buddy.utils", QtInfoMsg);
+Q_LOGGING_CATEGORY(os, "buddy.os", QtInfoMsg);
 }  // namespace lc

@@ -7,6 +7,9 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -34,7 +37,7 @@ void AutoStartHandler::setAutoStart(bool enable)
     const auto location{getLinkLocation()};
     if (!location)
     {
-        qWarning("Could not determine autostart location!");
+        qCWarning(lc::os) << "Could not determine autostart location!";
         return;
     }
 
@@ -42,7 +45,7 @@ void AutoStartHandler::setAutoStart(bool enable)
     {
         if (!QFile::remove(*location))
         {
-            qWarning("Failed to remove %s!", qUtf8Printable(*location));
+            qCWarning(lc::os) << "Failed to remove" << *location;
             return;
         }
     }
@@ -51,7 +54,7 @@ void AutoStartHandler::setAutoStart(bool enable)
     {
         if (!QFile::link(QCoreApplication::applicationFilePath(), *location))
         {
-            qWarning("Failed to create link for %s!", qUtf8Printable(*location));
+            qCWarning(lc::os) << "Failed to create link for" << *location;
             return;
         }
     }

@@ -48,14 +48,14 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
         QFile cert_file{ssl_cert_file};
         if (!cert_file.open(QFile::ReadOnly))
         {
-            qWarning(lc::httpServer) << "Failed to load SSL certificate from" << ssl_cert_file;
+            qCWarning(lc::server) << "Failed to load SSL certificate from" << ssl_cert_file;
             return false;
         }
 
         QFile key_file{ssl_key_file};
         if (!key_file.open(QFile::ReadOnly))
         {
-            qWarning(lc::httpServer) << "Failed to load SSL key from" << ssl_key_file;
+            qCWarning(lc::server) << "Failed to load SSL key from" << ssl_key_file;
             return false;
         }
 
@@ -64,11 +64,11 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
 
     if (!m_server.listen(QHostAddress::Any, port))
     {
-        qWarning(lc::httpServer) << "Server could not start listening at port" << port;
+        qCWarning(lc::server) << "Server could not start listening at port" << port;
         return false;
     }
 
-    qInfo(lc::httpServer) << "Server started listening at port" << port;
+    qCInfo(lc::server) << "Server started listening at port" << port;
     return true;
 }
 

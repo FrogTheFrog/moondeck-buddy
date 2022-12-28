@@ -41,20 +41,19 @@ bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
 {
     if (m_pairing_data)
     {
-        qWarning(lc::pairingManager) << "Cannot start pairing as" << m_pairing_data->m_id
-                                     << "is currently being paired!";
+        qCWarning(lc::server) << "Cannot start pairing as" << m_pairing_data->m_id << "is currently being paired!";
         return false;
     }
 
     if (id.isEmpty() || hashed_id.isEmpty())
     {
-        qWarning(lc::pairingManager) << "Invalid id or hashed_id provided for pairing!";
+        qCWarning(lc::server) << "Invalid id or hashed_id provided for pairing!";
         return false;
     }
 
     if (m_client_ids.containsId(id))
     {
-        qWarning(lc::pairingManager) << "Id" << id << "is already paired!";
+        qCWarning(lc::server) << "Id" << id << "is already paired!";
         return false;
     }
 
@@ -74,11 +73,11 @@ bool PairingManager::abortPairing(const QString& id)
 
     if (!isPairing(id))
     {
-        qWarning(lc::pairingManager) << "Cannot abort pairing for other id than" << id;
+        qCWarning(lc::server) << "Cannot abort pairing for other id than" << id;
         return false;
     }
 
-    qDebug(lc::pairingManager) << "Aborting pairing for" << id;
+    qCDebug(lc::server) << "Aborting pairing for" << id;
     emit signalAbortPairing();
     m_pairing_data = std::nullopt;
     return true;
@@ -90,14 +89,14 @@ void PairingManager::slotFinishPairing(uint pin)
 {
     if (!m_pairing_data)
     {
-        qWarning(lc::pairingManager) << "Pairing is not in progress!";
+        qCWarning(lc::server) << "Pairing is not in progress!";
         return;
     }
 
     const QString string_for_hashing{m_pairing_data->m_id + QString::number(pin)};
     if (string_for_hashing.toUtf8().toBase64() != m_pairing_data->m_hashed_id)
     {
-        qWarning(lc::pairingManager) << "Pairing code does not match.";
+        qCWarning(lc::server) << "Pairing code does not match.";
         return;
     }
 
@@ -111,7 +110,7 @@ void PairingManager::slotFinishPairing(uint pin)
 
 void PairingManager::slotPairingRejected()
 {
-    qDebug(lc::pairingManager) << "Pairing was rejected.";
+    qCDebug(lc::server) << "Pairing was rejected.";
     m_pairing_data = std::nullopt;
 }
 

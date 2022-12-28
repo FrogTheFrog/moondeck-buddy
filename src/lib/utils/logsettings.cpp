@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QDateTime>
 #include <QFile>
+#include <QLoggingCategory>
 
 // local includes
 #include "helpers.h"
@@ -23,37 +24,9 @@ void removeLogFile(const QString& filename)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void messageHandler(QtMsgType type, const QMessageLogContext& /*unused*/, const QString& msg)
+void messageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
-    QString formatted_msg;
-    {
-        const QString now{QDateTime::currentDateTime().toString("hh:mm:ss.zzz")};
-        QTextStream   stream(&formatted_msg);
-        switch (type)
-        {
-            case QtDebugMsg:
-                if (!utils::LogSettings::getInstance().isVerboseModeEnabled())
-                {
-                    return;
-                }
-
-                stream << "[" << now << "] DEBUG:    " << msg;
-                break;
-            case QtInfoMsg:
-                stream << "[" << now << "] INFO:     " << msg;
-                break;
-            case QtWarningMsg:
-                stream << "[" << now << "] WARNING:  " << msg;
-                break;
-            case QtCriticalMsg:
-                stream << "[" << now << "] CRITICAL: " << msg;
-                break;
-            case QtFatalMsg:
-                stream << "[" << now << "] FATAL:    " << msg;
-                break;
-        }
-    }
-
+    QString formatted_msg{qFormatLogMessage(type, context, msg)};
     {
         QTextStream stream(stdout);
         stream << formatted_msg << Qt::endl;
@@ -89,6 +62,14 @@ void LogSettings::init(const QString& filename)
 
     m_filename = getExecDir() + filename;
     removeLogFile(m_filename);
+
+    qSetMessagePattern("[%{time hh:mm:ss.zzz}] "
+                       "%{if-debug}DEBUG    %{endif}"
+                       "%{if-info}INFO     %{endif}"
+                       "%{if-warning}WARNING  %{endif}"
+                       "%{if-critical}CRITICAL %{endif}"
+                       "%{if-fatal}FATAL    %{endif}"
+                       "%{if-category}%{category}: %{endif}%{message}");
     qInstallMessageHandler(messageHandler);
 }
 
@@ -101,15 +82,11 @@ const QString& LogSettings::getFilename() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void LogSettings::enableVerboseMode()
+void LogSettings::setLoggingRules(const QString& rules)
 {
-    m_is_verbose = true;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-bool LogSettings::isVerboseModeEnabled() const
-{
-    return m_is_verbose;
+    if (!rules.isEmpty())
+    {
+        QLoggingCategory::setFilterRules(rules);
+    }
 }
 }  // namespace utils

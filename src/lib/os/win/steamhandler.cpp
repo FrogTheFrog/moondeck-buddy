@@ -4,6 +4,9 @@
 // system/Qt includes
 #include <QProcess>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -66,13 +69,13 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
         const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
         if (!result)
         {
-            qWarning("Failed to start Steam shutdown sequence! Using others means to close steam...");
+            qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
             m_steam_process.close();
         }
     }
     else
     {
-        qWarning("Steam EXEC path is not available yet, using other means of closing!");
+        qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
         m_steam_process.close();
     }
 
@@ -95,19 +98,19 @@ bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
 {
     if (m_steam_exec_path.isEmpty())
     {
-        qWarning("Steam EXEC path is not available yet!");
+        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
         return false;
     }
 
     if (m_steam_close_timer.isActive())
     {
-        qWarning("Already closing Steam, will not launch new app!");
+        qCWarning(lc::os) << "Already closing Steam, will not launch new app!";
         return false;
     }
 
     if (app_id == FALLBACK_APP_ID)
     {
-        qWarning("Will not launch app with 0 ID!");
+        qCWarning(lc::os) << "Will not launch app with 0 ID!";
         return false;
     }
 
@@ -117,7 +120,7 @@ bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
         const auto        result = QProcess::startDetached(m_steam_exec_path, args);
         if (!result)
         {
-            qWarning("Failed to start Steam app launch sequence!");
+            qCWarning(lc::os) << "Failed to start Steam app launch sequence!";
             return false;
         }
 
@@ -154,11 +157,11 @@ void SteamHandler::slotSteamProcessStateChanged()
 {
     if (m_steam_process.isRunning())
     {
-        qDebug("Steam is running!");
+        qCDebug(lc::os) << "Steam is running!";
     }
     else
     {
-        qDebug("Steam is not running!");
+        qCDebug(lc::os) << "Steam is not running!";
         m_global_app_id = std::nullopt;
         m_tracked_app   = std::nullopt;
         m_app_reg_key   = nullptr;
@@ -175,7 +178,7 @@ void SteamHandler::slotHandleGlobalRegKeyChanges(const QMap<QString, QVariant>& 
     if (changed_values.contains(REG_EXEC))
     {
         m_steam_exec_path = changed_values[REG_EXEC].isValid() ? changed_values[REG_EXEC].toString() : QString();
-        qDebug("Steam exec path: %s", qUtf8Printable(m_steam_exec_path));
+        qCDebug(lc::os) << "Steam exec path:" << m_steam_exec_path;
     }
     if (changed_values.contains(REG_APP_ID))
     {
@@ -185,8 +188,8 @@ void SteamHandler::slotHandleGlobalRegKeyChanges(const QMap<QString, QVariant>& 
 
         if (prev_app_id != m_global_app_id)
         {
-            qDebug("Running appID change detected (via global key): %s",
-                   qUtf8Printable(QString::number(m_global_app_id.value_or(FALLBACK_APP_ID))));
+            qCDebug(lc::os) << "Running appID change detected (via global key):"
+                           << m_global_app_id.value_or(FALLBACK_APP_ID);
         }
     }
 }
@@ -201,14 +204,12 @@ void SteamHandler::slotHandleAppRegKeyChanges(const QMap<QString, QVariant>& cha
     if (changed_values.contains(REG_APP_RUNNING))
     {
         is_running = (changed_values[REG_APP_RUNNING].isValid() ? changed_values[REG_APP_RUNNING].toBool() : false);
-        qDebug("App %s \"running\" value change detected: %s", qUtf8Printable(QString::number(app_id)),
-               qUtf8Printable(is_running ? QStringLiteral("true") : QStringLiteral("false")));
+        qCDebug(lc::os).nospace() << "App " << app_id << " \"running\" value change detected: " << is_running;
     }
     if (changed_values.contains(REG_APP_UPDATING))
     {
         is_updating = (changed_values[REG_APP_UPDATING].isValid() ? changed_values[REG_APP_UPDATING].toBool() : false);
-        qDebug("App %s \"updating\" value change detected: %s", qUtf8Printable(QString::number(app_id)),
-               qUtf8Printable(is_updating ? QStringLiteral("true") : QStringLiteral("false")));
+        qCDebug(lc::os).nospace() << "App " << app_id << " \"updating\" value change detected: " << is_running;
     }
 
     if (m_tracked_app && m_tracked_app->m_is_running && !is_running)

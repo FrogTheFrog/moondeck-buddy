@@ -20,14 +20,14 @@ QJsonDocument requestToJson(const QHttpServerRequest& request)
     const QJsonDocument json_data{QJsonDocument::fromJson(request.body(), &parser_error)};
     if (json_data.isNull())
     {
-        qWarning(lc::buddyRouting) << "Failed to decode JSON data! Reason:" << parser_error.errorString()
-                                   << "| Body:" << request.body();
+        qCWarning(lc::buddyMain) << "Failed to decode JSON data! Reason:" << parser_error.errorString()
+                                << "| Body:" << request.body();
         return {};
     }
 
     if (!request.body().isEmpty() && json_data.isEmpty())
     {
-        qDebug(lc::buddyRouting) << "Parsed empty JSON data from:" << request.body();
+        qCDebug(lc::buddyMain) << "Parsed empty JSON data from:" << request.body();
         return {};
     }
 
@@ -302,9 +302,9 @@ void setupRouteLogging(server::HttpServer& server)
     server.afterRequest(
         [](const QHttpServerRequest& request, QHttpServerResponse&& resp)
         {
-            qDebug(lc::buddyRouting) << Qt::endl
-                                     << "Request:" << request << "|" << request.body() << Qt::endl
-                                     << "Response:" << resp.statusCode() << "|" << resp.data();
+            qCDebug(lc::buddyMain) << Qt::endl
+                                  << "Request:" << request << "|" << request.body() << Qt::endl
+                                  << "Response:" << resp.statusCode() << "|" << resp.data();
             return std::move(resp);
         });
 }

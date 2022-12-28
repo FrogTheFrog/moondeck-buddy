@@ -6,6 +6,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace server
@@ -61,7 +64,7 @@ void ClientIds::load()
 
             if (some_ids_were_skipped)
             {
-                qWarning("Client Ids file contained ids that were skipped!");
+                qCWarning(lc::server) << "Client Ids file contained ids that were skipped!";
             }
         }
     }
@@ -85,7 +88,7 @@ void ClientIds::save()
 
     const QJsonDocument file_data{json_data};
     ids_file.write(file_data.toJson(QJsonDocument::Indented));
-    qDebug("Finished saving: \"%s\"", qUtf8Printable(m_filename));
+    qCDebug(lc::server) << "Finished saving:" << m_filename;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

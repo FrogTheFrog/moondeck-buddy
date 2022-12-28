@@ -8,7 +8,8 @@
 //! LC - logging categories
 namespace lc
 {
-Q_DECLARE_LOGGING_CATEGORY(buddyRouting);
-Q_DECLARE_LOGGING_CATEGORY(httpServer);
-Q_DECLARE_LOGGING_CATEGORY(pairingManager);
+Q_DECLARE_LOGGING_CATEGORY(buddyMain);
+Q_DECLARE_LOGGING_CATEGORY(server);
+Q_DECLARE_LOGGING_CATEGORY(utils);
+Q_DECLARE_LOGGING_CATEGORY(os);
 }  // namespace lc

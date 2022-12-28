@@ -1,6 +1,9 @@
 // header file include
 #include "pccontrolimpl.h"
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
@@ -127,7 +130,7 @@ bool PcControlImpl::changeResolution(uint width, uint height, bool immediate)
         return true;
     }
 
-    qDebug("Non-immediate change is discarded.");
+    qCDebug(lc::os) << "Non-immediate change is discarded.";
     return false;
 }
 
@@ -151,12 +154,12 @@ void PcControlImpl::slotHandleSteamStateChange()
 {
     if (m_steam_handler.isRunning())
     {
-        qDebug("Handling Steam start.");
+        qCDebug(lc::os) << "Handling Steam start.";
         m_resolution_handler.clearPendingResolution();
     }
     else
     {
-        qDebug("Handling Steam exit.");
+        qCDebug(lc::os) << "Handling Steam exit.";
         m_stream_state_handler.endStream();
         m_resolution_handler.restoreResolution();
     }
@@ -170,18 +173,18 @@ void PcControlImpl::slotHandleStreamStateChange()
     {
         case shared::StreamState::NotStreaming:
         {
-            qDebug("Stream has ended.");
+            qCDebug(lc::os) << "Stream has ended.";
             break;
         }
         case shared::StreamState::Streaming:
         {
-            qDebug("Stream started.");
+            qCDebug(lc::os) << "Stream started.";
             m_resolution_handler.applyPendingChange();
             break;
         }
         case shared::StreamState::StreamEnding:
         {
-            qDebug("Stream is ending.");
+            qCDebug(lc::os) << "Stream is ending.";
             m_steam_handler.close(std::nullopt);
             m_resolution_handler.restoreResolution();
             break;

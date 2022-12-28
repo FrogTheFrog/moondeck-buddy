@@ -1,6 +1,9 @@
 // header file include
 #include "resolutionhandler.h"
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
@@ -16,7 +19,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
 {
     clearPendingResolution();
 
-    qDebug("Trying to change resolution.");
+    qCDebug(lc::os) << "Trying to change resolution.";
     bool changed_at_least_one{false};
     for (int i = 0;; ++i)
     {
@@ -40,13 +43,13 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         if (EnumDisplaySettingsW(static_cast<WCHAR*>(display_device.DeviceName), ENUM_CURRENT_SETTINGS, &devmode)
             == FALSE)
         {
-            qDebug("Failed to get display settings for %s.", qUtf8Printable(device_name));
+            qCDebug(lc::os) << "Failed to get display settings for" << device_name;
             continue;
         }
 
         if (devmode.dmPelsWidth == width && devmode.dmPelsHeight == height)
         {
-            qDebug("Display %s resolution is already set - skipping.", qUtf8Printable(device_name));
+            qCDebug(lc::os).nospace() << "Display " << device_name << " resolution is already set - skipping.";
             continue;
         }
 
@@ -56,8 +59,8 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
                                  && (display_device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)};
         if (!valid_display)
         {
-            qDebug("Display %s does not have valid flags: %lu.", qUtf8Printable(device_name),
-                   display_device.StateFlags);
+            qCDebug(lc::os).nospace() << "Display " << device_name
+                                     << " does not have valid flags: " << display_device.StateFlags;
             continue;
         }
 
@@ -73,7 +76,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         {
             changed_at_least_one = true;
 
-            qInfo("Changed resolution for %s.", qUtf8Printable(device_name));
+            qCInfo(lc::os) << "Changed resolution for" << device_name;
             if (!m_original_resolutions.contains(device_name))
             {
                 m_original_resolutions[device_name] = previous_resolution;
@@ -81,7 +84,8 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         }
         else
         {
-            qInfo("Failed to change resolution for %s. Error code: , %li.", qUtf8Printable(device_name), result);
+            qCWarning(lc::os).nospace() << "Failed to change resolution for " << device_name
+                                       << ". Error code: " << result;
         }
     }
 
@@ -97,7 +101,7 @@ void ResolutionHandler::restoreResolution()
         return;
     }
 
-    qDebug("Trying to restore resolution.");
+    qCDebug(lc::os) << "Trying to restore resolution.";
     for (int i = 0;; ++i)
     {
         if (m_original_resolutions.empty())
@@ -131,14 +135,15 @@ void ResolutionHandler::restoreResolution()
         if (EnumDisplaySettingsW(static_cast<WCHAR*>(display_device.DeviceName), ENUM_CURRENT_SETTINGS, &devmode)
             == FALSE)
         {
-            qDebug("Failed to get display settings for %s.", qUtf8Printable(device_name));
+            qCDebug(lc::os) << "Failed to get display settings for" << device_name;
             continue;
         }
 
         if (devmode.dmPelsWidth == resolution_it->second.m_width
             && devmode.dmPelsHeight == resolution_it->second.m_height)
         {
-            qDebug("Display %s resolution is already restored - skipping.", qUtf8Printable(device_name));
+            qCDebug(lc::os).nospace() << "Display " << device_name << " resolution is already restored - skipping.";
+            m_original_resolutions.erase(resolution_it);
             continue;
         }
 
@@ -150,21 +155,22 @@ void ResolutionHandler::restoreResolution()
             ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr, 0, nullptr);
         if (result == DISP_CHANGE_SUCCESSFUL)
         {
-            qInfo("Restored resolution for %s.", qUtf8Printable(device_name));
+            qCInfo(lc::os) << "Changed resolution for" << device_name;
             m_original_resolutions.erase(resolution_it);
         }
         else
         {
-            qInfo("Failed to restore resolution for %s. Error code: , %li.", qUtf8Printable(device_name), result);
+            qCWarning(lc::os).nospace() << "Failed to restore resolution for " << device_name
+                                       << ". Error code: " << result;
         }
     }
 
     if (!m_original_resolutions.empty())
     {
-        qWarning("Failed to restore resolution for:");
+        qCWarning(lc::os) << "Failed to restore resolution for:";
         for (const auto& item : m_original_resolutions)
         {
-            qWarning("  * %s", qUtf8Printable(item.first));
+            qCWarning(lc::os) << "  *" << item.first;
         }
         m_original_resolutions.clear();
     }
@@ -174,7 +180,7 @@ void ResolutionHandler::restoreResolution()
 
 void ResolutionHandler::setPendingResolution(uint width, uint height)
 {
-    qDebug("Setting a pending resolution.");
+    qCDebug(lc::os) << "Setting a pending resolution.";
     m_pending_change = {width, height};
 }
 
@@ -184,7 +190,7 @@ void ResolutionHandler::applyPendingChange()
 {
     if (m_pending_change)
     {
-        qDebug("Applying pending resolution.");
+        qCDebug(lc::os) << "Applying pending resolution.";
         changeResolution(m_pending_change->m_width, m_pending_change->m_height);
     }
 }
@@ -195,7 +201,7 @@ void ResolutionHandler::clearPendingResolution()
 {
     if (m_pending_change)
     {
-        qDebug("Clearing pending resolution.");
+        qCDebug(lc::os) << "Clearing pending resolution.";
         m_pending_change = std::nullopt;
     }
 }

@@ -7,12 +7,14 @@
 #include <QJsonObject>
 #include <limits>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
 {
 const quint16 DEFAULT_PORT{59999};
-const bool    IS_VERBOSE_BY_DEFAULT{false};
 }  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -21,11 +23,11 @@ namespace utils
 {
 AppSettings::AppSettings(const QString& filename)
     : m_port{DEFAULT_PORT}
-    , m_verbose{IS_VERBOSE_BY_DEFAULT}
+    , m_logging_rules{}
 {
     if (!parseSettingsFile(filename))
     {
-        qInfo("Saving default settings to \"%s\".", qUtf8Printable(filename));
+        qCInfo(lc::utils) << "Saving default settings to" << filename;
         saveDefaultFile(filename);
         if (!parseSettingsFile(filename))
         {
@@ -43,9 +45,9 @@ quint16 AppSettings::getPort() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool AppSettings::isVerbose() const
+const QString& AppSettings::getLoggingRules() const
 {
-    return m_verbose;
+    return m_logging_rules;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -72,9 +74,9 @@ bool AppSettings::parseSettingsFile(const QString& filename)
         }
         else if (!json_data.isEmpty())
         {
-            const auto obj_v     = json_data.object();
-            const auto port_v    = obj_v.value(QLatin1String("port"));
-            const auto verbose_v = obj_v.value(QLatin1String("verbose"));
+            const auto obj_v           = json_data.object();
+            const auto port_v          = obj_v.value(QLatin1String("port"));
+            const auto logging_rules_v = obj_v.value(QLatin1String("logging_rules"));
 
             constexpr int current_entries{2};
             int           valid_entries{0};
@@ -94,9 +96,9 @@ bool AppSettings::parseSettingsFile(const QString& filename)
                 valid_entries++;
             }
 
-            if (verbose_v.isBool())
+            if (logging_rules_v.isString())
             {
-                m_verbose = verbose_v.toBool();
+                m_logging_rules = logging_rules_v.toString();
                 valid_entries++;
             }
 
@@ -113,8 +115,8 @@ void AppSettings::saveDefaultFile(const QString& filename) const
 {
     QJsonObject obj;
 
-    obj["port"]    = m_port;
-    obj["verbose"] = m_verbose;
+    obj["port"]          = m_port;
+    obj["logging_rules"] = m_logging_rules;
 
     QFile file{filename};
     if (!file.open(QFile::WriteOnly))

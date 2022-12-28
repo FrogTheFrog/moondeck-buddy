@@ -31,10 +31,7 @@ int main(int argc, char* argv[])
     utils::LogSettings::getInstance().init("buddy.log");
 
     const utils::AppSettings app_settings{utils::getExecDir() + "settings.json"};
-    if (app_settings.isVerbose())
-    {
-        utils::LogSettings::getInstance().enableVerboseMode();
-    }
+    utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
 
     server::ClientIds      client_ids{utils::getExecDir() + "clients.json"};
     server::HttpServer     new_server{shared::API_VERSION, client_ids};
@@ -60,9 +57,9 @@ int main(int argc, char* argv[])
                      &server::PairingManager::slotPairingRejected);
 
     // HERE WE GO!!! (a.k.a. starting point)
-    client_ids.load();  // TODO: refactor load fn
-
     setupRoutes(new_server, pairing_manager, pc_control);
+
+    client_ids.load();
     if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))
     {
         qFatal("Failed to start server!");
