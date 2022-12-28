@@ -17,7 +17,7 @@ if(WIN32)
 endif()
 
 add_executable(${EXEC_NAME} main.cpp ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets utilslib serverlib oslib)
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets utilslib)
 
 if(NOT DEBUG_MODE)
     if(WIN32)

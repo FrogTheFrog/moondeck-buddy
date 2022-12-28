@@ -20,7 +20,6 @@ add_compile_definitions(PSAPI_VERSION=1)
 
 set(HEADERS
     autostarthandler.h
-    messagequeue.h
     regkey.h
     processtracker.h
     pccontrolimpl.h
@@ -37,7 +36,6 @@ set(HEADERS
 
 set(SOURCES
     autostarthandler.cpp
-    messagequeue.cpp
     regkey.cpp
     processtracker.cpp
     pccontrolimpl.cpp

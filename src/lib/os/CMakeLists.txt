@@ -26,10 +26,8 @@ ENDIF()
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    commandproxy.h
     pccontrolinterface.h
     pccontrol.h
-    steamproxy.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -37,9 +35,7 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
-    commandproxy.cpp
     pccontrol.cpp
-    steamproxy.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -47,5 +43,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core osspecificlib msgslib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core osspecificlib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

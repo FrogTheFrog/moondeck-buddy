@@ -5,16 +5,6 @@
 
 namespace os
 {
-ResolutionHandler::ResolutionHandler()
-    : m_message_queue{"MoonDeckBuddyResolutionObserver"}
-
-{
-    connect(&m_message_queue, &MessageQueue::signalResolutionChanged, this,
-            &ResolutionHandler::slotHandleDetectedChange);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 ResolutionHandler::~ResolutionHandler()
 {
     restoreResolution();
@@ -22,11 +12,12 @@ ResolutionHandler::~ResolutionHandler()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void ResolutionHandler::changeResolution(uint width, uint height)
+bool ResolutionHandler::changeResolution(uint width, uint height)
 {
     clearPendingResolution();
 
     qDebug("Trying to change resolution.");
+    bool changed_at_least_one{false};
     for (int i = 0;; ++i)
     {
         DISPLAY_DEVICEW display_device;
@@ -80,6 +71,8 @@ void ResolutionHandler::changeResolution(uint width, uint height)
             ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr, 0, nullptr);
         if (result == DISP_CHANGE_SUCCESSFUL)
         {
+            changed_at_least_one = true;
+
             qInfo("Changed resolution for %s.", qUtf8Printable(device_name));
             if (!m_original_resolutions.contains(device_name))
             {
@@ -91,6 +84,8 @@ void ResolutionHandler::changeResolution(uint width, uint height)
             qInfo("Failed to change resolution for %s. Error code: , %li.", qUtf8Printable(device_name), result);
         }
     }
+
+    return changed_at_least_one;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -203,13 +198,5 @@ void ResolutionHandler::clearPendingResolution()
         qDebug("Clearing pending resolution.");
         m_pending_change = std::nullopt;
     }
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void ResolutionHandler ::slotHandleDetectedChange()
-{
-    qDebug("Resolution change detected!");
-    applyPendingChange();
 }
 }  // namespace os

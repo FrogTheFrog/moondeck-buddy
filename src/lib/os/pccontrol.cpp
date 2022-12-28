@@ -15,35 +15,34 @@ namespace os
 PcControl::PcControl()
     : m_impl{std::make_unique<PcControlImpl>()}
 {
-    connect(m_impl.get(), &PcControlInterface::signalPcStateChanged, this, &PcControlInterface::signalPcStateChanged);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::launchSteamApp(uint app_id)
+bool PcControl::launchSteamApp(uint app_id)
 {
-    m_impl->launchSteamApp(app_id);
+    return m_impl->launchSteamApp(app_id);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::exitSteam(std::optional<uint> grace_period_in_sec)
+bool PcControl::closeSteam(std::optional<uint> grace_period_in_sec)
 {
-    m_impl->exitSteam(grace_period_in_sec);
+    return m_impl->closeSteam(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::shutdownPC(uint grace_period_in_sec)
+bool PcControl::shutdownPC(uint grace_period_in_sec)
 {
-    m_impl->shutdownPC(grace_period_in_sec);
+    return m_impl->shutdownPC(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::restartPC(uint grace_period_in_sec)
+bool PcControl::restartPC(uint grace_period_in_sec)
 {
-    m_impl->restartPC(grace_period_in_sec);
+    return m_impl->restartPC(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -55,9 +54,9 @@ uint PcControl::getRunningApp() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::optional<uint> PcControl::isLastLaunchedAppUpdating() const
+std::optional<uint> PcControl::getTrackedUpdatingApp() const
 {
-    return m_impl->isLastLaunchedAppUpdating();
+    return m_impl->getTrackedUpdatingApp();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -76,6 +75,13 @@ shared::StreamState PcControl::getStreamState() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+shared::PcState PcControl::getPcState() const
+{
+    return m_impl->getPcState();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void PcControl::setAutoStart(bool enable)
 {
     m_impl->setAutoStart(enable);
@@ -90,9 +96,9 @@ bool PcControl::isAutoStartEnabled() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::changeResolution(uint width, uint height, bool immediate)
+bool PcControl::changeResolution(uint width, uint height, bool immediate)
 {
-    m_impl->changeResolution(width, height, immediate);
+    return m_impl->changeResolution(width, height, immediate);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

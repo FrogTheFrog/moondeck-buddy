@@ -20,14 +20,14 @@ public:
     explicit PcStateHandler();
     ~PcStateHandler() override = default;
 
-    void shutdownPC(uint grace_period_in_sec);
-    void restartPC(uint grace_period_in_sec);
+    shared::PcState getState() const;
 
-signals:
-    void signalPcStateChanged(shared::PcState state);
+    bool shutdownPC(uint grace_period_in_sec);
+    bool restartPC(uint grace_period_in_sec);
 
 private:
-    QString m_app_name;
-    QTimer  m_state_change_back_timer;
+    QString         m_app_name;
+    QTimer          m_state_change_back_timer;
+    shared::PcState m_state{shared::PcState::Normal};
 };
 }  // namespace os

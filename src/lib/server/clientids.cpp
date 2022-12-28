@@ -49,13 +49,14 @@ void ClientIds::load()
             const QJsonArray ids = json_data.array();
             for (const auto& client_id : ids)
             {
-                if (!client_id.isString())
+                QString client_id_string{client_id.isString() ? client_id.toString() : QString{}};
+                if (client_id_string.isEmpty())
                 {
                     some_ids_were_skipped = true;
                     continue;
                 }
 
-                m_ids.emplace(client_id.toString());
+                m_ids.emplace(client_id_string);
             }
 
             if (some_ids_were_skipped)

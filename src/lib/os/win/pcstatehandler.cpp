@@ -22,18 +22,24 @@ namespace os
 PcStateHandler::PcStateHandler()
 {
     m_state_change_back_timer.setSingleShot(true);
-    connect(&m_state_change_back_timer, &QTimer::timeout, this,
-            [this]() { emit signalPcStateChanged(shared::PcState::Normal); });
+    connect(&m_state_change_back_timer, &QTimer::timeout, this, [this]() { m_state = shared::PcState::Normal; });
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcStateHandler::shutdownPC(uint grace_period_in_sec)
+shared::PcState PcStateHandler::getState() const
+{
+    return m_state;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 {
     if (m_state_change_back_timer.isActive())
     {
         qDebug("PC is already being shut down. Aborting request.");
-        return;
+        return false;
     }
 
     const auto result =
@@ -43,21 +49,23 @@ void PcStateHandler::shutdownPC(uint grace_period_in_sec)
     if (!result)
     {
         qWarning("Failed to start shutdown sequence!");
-        return;
+        return false;
     }
 
     m_state_change_back_timer.start(static_cast<int>(grace_period_in_sec + EXTRA_DELAY_SECS) * MS_TO_SEC);
-    emit signalPcStateChanged(shared::PcState::ShuttingDown);
+    m_state = shared::PcState::ShuttingDown;
+
+    return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcStateHandler::restartPC(uint grace_period_in_sec)
+bool PcStateHandler::restartPC(uint grace_period_in_sec)
 {
     if (m_state_change_back_timer.isActive())
     {
         qDebug("PC is already being restarted. Aborting request.");
-        return;
+        return false;
     }
 
     const auto result =
@@ -67,10 +75,12 @@ void PcStateHandler::restartPC(uint grace_period_in_sec)
     if (!result)
     {
         qWarning("Failed to start restart sequence!");
-        return;
+        return false;
     }
 
     m_state_change_back_timer.start(static_cast<int>(grace_period_in_sec + EXTRA_DELAY_SECS) * MS_TO_SEC);
-    emit signalPcStateChanged(shared::PcState::Restarting);
+    m_state = shared::PcState::Restarting;
+
+    return true;
 }
 }  // namespace os

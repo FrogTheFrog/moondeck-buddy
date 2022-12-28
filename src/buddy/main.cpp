@@ -3,10 +3,11 @@
 #include <QMainWindow>
 
 // local includes
-#include "os/commandproxy.h"
 #include "os/pccontrol.h"
-#include "os/steamproxy.h"
-#include "server/jsonserver.h"
+#include "routing.h"
+#include "server/clientids.h"
+#include "server/httpserver.h"
+#include "server/pairingmanager.h"
 #include "shared/constants.h"
 #include "utils/appsettings.h"
 #include "utils/helpers.h"
@@ -35,45 +36,34 @@ int main(int argc, char* argv[])
         utils::LogSettings::getInstance().enableVerboseMode();
     }
 
-    os::PcControl      pc_control;
-    server::JsonServer server{shared::MSG_VERSION, utils::getExecDir() + "clients.json"};
+    server::ClientIds      client_ids{utils::getExecDir() + "clients.json"};
+    server::HttpServer     new_server{shared::API_VERSION, client_ids};
+    server::PairingManager pairing_manager{client_ids};
 
-    const os::CommandProxy command_proxy{pc_control};
-    const os::SteamProxy   steam_proxy{pc_control};
+    os::PcControl pc_control;
 
     const QIcon               icon{":/icons/app.ico"};
     const utils::SystemTray   tray{icon, shared::APP_NAME_BUDDY, pc_control};
-    const utils::PairingInput pairing;
+    const utils::PairingInput pairing_input;
 
     // Utils + app
     QObject::connect(&tray, &utils::SystemTray::signalQuitApp, &app, &QApplication::quit);
 
-    // Server + pairing
-    QObject::connect(&server, &server::JsonServer::signalRequestUserInputForPairing, &pairing,
+    // Pairing manager + pairing input
+    QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing, &pairing_input,
                      &utils::PairingInput::slotRequestUserInputForPairing);
-    QObject::connect(&server, &server::JsonServer::signalAbortPairing, &pairing,
+    QObject::connect(&pairing_manager, &server::PairingManager::signalAbortPairing, &pairing_input,
                      &utils::PairingInput::slotAbortPairing);
-    QObject::connect(&pairing, &utils::PairingInput::signalFinishPairing, &server,
-                     &server::JsonServer::slotFinishPairing);
-    QObject::connect(&pairing, &utils::PairingInput::signalPairingRejected, &server,
-                     &server::JsonServer::slotPairingRejected);
-
-    // Server + command proxy
-    QObject::connect(&server, &server::JsonServer::signalCommandMessageReceived, &command_proxy,
-                     &os::CommandProxy::slotHandleMessages);
-    QObject::connect(&command_proxy, &os::CommandProxy::signalPcStateChanged, &server,
-                     &server::JsonServer::slotPcStateChanged);
-
-    // Server + steam proxy
-    QObject::connect(&server, &server::JsonServer::signalSteamMessageReceived, &steam_proxy,
-                     &os::SteamProxy::slotHandleMessages);
-    QObject::connect(&server, &server::JsonServer::signalSteamClientConnectionStateChanged, &steam_proxy,
-                     &os::SteamProxy::slotHandleConnectivityChange);
-    QObject::connect(&steam_proxy, &os::SteamProxy::signalSendResponse, &server,
-                     &server::JsonServer::slotSendSteamResponse);
+    QObject::connect(&pairing_input, &utils::PairingInput::signalFinishPairing, &pairing_manager,
+                     &server::PairingManager::slotFinishPairing);
+    QObject::connect(&pairing_input, &utils::PairingInput::signalPairingRejected, &pairing_manager,
+                     &server::PairingManager::slotPairingRejected);
 
     // HERE WE GO!!! (a.k.a. starting point)
-    if (!server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))
+    client_ids.load();  // TODO: refactor load fn
+
+    setupRoutes(new_server, pairing_manager, pc_control);
+    if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))
     {
         qFatal("Failed to start server!");
     }

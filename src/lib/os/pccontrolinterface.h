@@ -17,26 +17,24 @@ class PcControlInterface : public QObject
 public:
     ~PcControlInterface() override = default;
 
-    virtual void launchSteamApp(uint app_id)                        = 0;
-    virtual void exitSteam(std::optional<uint> grace_period_in_sec) = 0;
+    virtual bool launchSteamApp(uint app_id)                         = 0;
+    virtual bool closeSteam(std::optional<uint> grace_period_in_sec) = 0;
 
-    virtual void shutdownPC(uint grace_period_in_sec) = 0;
-    virtual void restartPC(uint grace_period_in_sec)  = 0;
+    virtual bool shutdownPC(uint grace_period_in_sec) = 0;
+    virtual bool restartPC(uint grace_period_in_sec)  = 0;
 
-    virtual uint                getRunningApp() const             = 0;
-    virtual std::optional<uint> isLastLaunchedAppUpdating() const = 0;
-    virtual bool                isSteamRunning() const            = 0;
+    virtual uint                getRunningApp() const         = 0;
+    virtual std::optional<uint> getTrackedUpdatingApp() const = 0;
+    virtual bool                isSteamRunning() const        = 0;
 
     virtual shared::StreamState getStreamState() const = 0;
+    virtual shared::PcState     getPcState() const     = 0;
 
     virtual void setAutoStart(bool enable)  = 0;
     virtual bool isAutoStartEnabled() const = 0;
 
-    virtual void changeResolution(uint width, uint height, bool immediate) = 0;
+    virtual bool changeResolution(uint width, uint height, bool immediate) = 0;
     virtual void abortPendingResolutionChange()                            = 0;
     virtual void restoreChangedResolution()                                = 0;
-
-signals:
-    void signalPcStateChanged(shared::PcState state);
 };
 }  // namespace os

@@ -22,11 +22,11 @@ public:
 
     bool isRunning() const;
     bool isRunningNow();
-    void close(std::optional<uint> grace_period_in_sec);
+    bool close(std::optional<uint> grace_period_in_sec);
 
-    void                launchApp(uint app_id, const QStringList& steam_args);
+    bool                launchApp(uint app_id, const QStringList& steam_args);
     uint                getRunningApp() const;
-    std::optional<uint> isLastLaunchedAppUpdating() const;
+    std::optional<uint> getTrackedUpdatingApp() const;
 
 signals:
     void signalSteamStateChanged();

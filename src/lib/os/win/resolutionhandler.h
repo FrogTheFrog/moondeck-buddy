@@ -1,10 +1,10 @@
 #pragma once
 
+// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
+#include <windows.h>
+
 // system/Qt includes
 #include <QObject>
-
-// local includes
-#include "messagequeue.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -16,18 +16,15 @@ class ResolutionHandler : public QObject
     Q_DISABLE_COPY(ResolutionHandler)
 
 public:
-    explicit ResolutionHandler();
+    explicit ResolutionHandler() = default;
     ~ResolutionHandler() override;
 
-    void changeResolution(uint width, uint height);
+    bool changeResolution(uint width, uint height);
     void restoreResolution();
 
     void setPendingResolution(uint width, uint height);
     void applyPendingChange();
     void clearPendingResolution();
-
-private slots:
-    void slotHandleDetectedChange();
 
 private:
     struct Resolution
@@ -36,7 +33,6 @@ private:
         uint m_height;
     };
 
-    MessageQueue                  m_message_queue;
     std::optional<Resolution>     m_pending_change;
     std::map<QString, Resolution> m_original_resolutions;
 };

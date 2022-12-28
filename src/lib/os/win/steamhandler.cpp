@@ -52,12 +52,12 @@ bool SteamHandler::isRunningNow()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void SteamHandler::close(std::optional<uint> grace_period_in_sec)
+bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 {
     if (!m_steam_process.isRunningNow())
     {
         m_steam_close_timer.stop();
-        return;
+        return true;
     }
 
     // Try to shutdown steam gracefully first
@@ -66,9 +66,8 @@ void SteamHandler::close(std::optional<uint> grace_period_in_sec)
         const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
         if (!result)
         {
-            qWarning("Failed to start Steam shutdown sequence!");
+            qWarning("Failed to start Steam shutdown sequence! Using others means to close steam...");
             m_steam_process.close();
-            return;
         }
     }
     else
@@ -86,28 +85,30 @@ void SteamHandler::close(std::optional<uint> grace_period_in_sec)
             m_steam_close_timer.start(static_cast<int>(time_in_msec));
         }
     }
+
+    return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
+bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
 {
     if (m_steam_exec_path.isEmpty())
     {
         qWarning("Steam EXEC path is not available yet!");
-        return;
+        return false;
     }
 
     if (m_steam_close_timer.isActive())
     {
         qWarning("Already closing Steam, will not launch new app!");
-        return;
+        return false;
     }
 
     if (app_id == FALLBACK_APP_ID)
     {
         qWarning("Will not launch app with 0 ID!");
-        return;
+        return false;
     }
 
     if (!m_steam_process.isRunningNow() || getRunningApp() != app_id)
@@ -117,7 +118,7 @@ void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
         if (!result)
         {
             qWarning("Failed to start Steam app launch sequence!");
-            return;
+            return false;
         }
 
         m_app_reg_key = std::make_unique<RegKey>();
@@ -128,6 +129,8 @@ void SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
         m_app_reg_key->open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(app_id),
                             QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
     }
+
+    return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -140,7 +143,7 @@ uint SteamHandler::getRunningApp() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::optional<uint> SteamHandler::isLastLaunchedAppUpdating() const
+std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
 {
     return m_tracked_app && m_tracked_app->m_is_updating ? std::make_optional(m_tracked_app->m_app_id) : std::nullopt;
 }

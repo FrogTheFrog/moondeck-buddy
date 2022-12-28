@@ -1,6 +1,9 @@
 // header file include
 #include "helpers.h"
 
+// system/Qt includes
+#include <QCoreApplication>
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace utils
