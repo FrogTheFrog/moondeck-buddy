@@ -12,10 +12,12 @@ find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
-# OS-specific stuff
+# Subdirectories
 #----------------------------------------------------------------------------------------------------------------------
 
-IF (WIN32)
+add_subdirectory(shared)
+
+IF(WIN32)
     add_subdirectory(win)
 ELSE()
     message(FATAL_ERROR "OS is not supported!")
@@ -26,8 +28,12 @@ ENDIF()
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    pccontrolinterface.h
+    autostarthandlerinterface.h
     pccontrol.h
+    pcstatehandlerinterface.h
+    resolutionhandlerinterface.h
+    steamhandlerinterface.h
+    streamstatehandlerinterface.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -43,5 +49,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib ossharedlib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

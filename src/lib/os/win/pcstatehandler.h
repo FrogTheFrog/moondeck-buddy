@@ -5,13 +5,15 @@
 #include <QTimer>
 
 // local includes
-#include "shared/enums.h"
+#include "../pcstatehandlerinterface.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-class PcStateHandler : public QObject
+class PcStateHandler
+    : public QObject
+    , public PcStateHandlerInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(PcStateHandler)
@@ -20,11 +22,11 @@ public:
     explicit PcStateHandler();
     ~PcStateHandler() override = default;
 
-    shared::PcState getState() const;
+    shared::PcState getState() const override;
 
-    bool shutdownPC(uint grace_period_in_sec);
-    bool restartPC(uint grace_period_in_sec);
-    bool suspendPC(uint grace_period_in_sec);
+    bool shutdownPC(uint grace_period_in_sec) override;
+    bool restartPC(uint grace_period_in_sec) override;
+    bool suspendPC(uint grace_period_in_sec) override;
 
 public slots:
     void slotResetState();

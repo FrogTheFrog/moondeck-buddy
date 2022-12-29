@@ -2,13 +2,13 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME serverlib)
+set(LIBNAME ossharedlib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core HttpServer REQUIRED)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -16,9 +16,7 @@ qt_standard_project_setup()
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    clientids.h
-    httpserver.h
-    pairingmanager.h
+    streamstatehandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -26,9 +24,7 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
-    clientids.cpp
-    httpserver.cpp
-    pairingmanager.cpp
+    streamstatehandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -36,5 +32,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::HttpServer sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

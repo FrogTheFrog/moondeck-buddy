@@ -23,12 +23,10 @@ set(HEADERS
     autostarthandler.h
     regkey.h
     processtracker.h
-    pccontrolimpl.h
     pcstatehandler.h
     processenumerator.h
     resolutionhandler.h
     steamhandler.h
-    streamstatehandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -39,12 +37,10 @@ set(SOURCES
     autostarthandler.cpp
     regkey.cpp
     processtracker.cpp
-    pccontrolimpl.cpp
     pcstatehandler.cpp
     processenumerator.cpp
     resolutionhandler.cpp
     steamhandler.cpp
-    streamstatehandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

@@ -142,7 +142,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupPcState(server::HttpServer& server, os::PcControlInterface& pc_control)
+void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route(
         "/pcState", QHttpServerRequest::Method::Get,
@@ -196,7 +196,7 @@ void setupPcState(server::HttpServer& server, os::PcControlInterface& pc_control
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupHostInfo(server::HttpServer& server, os::PcControlInterface& pc_control)
+void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/hostInfo", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -219,7 +219,7 @@ void setupHostInfo(server::HttpServer& server, os::PcControlInterface& pc_contro
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupSteamControl(server::HttpServer& server, os::PcControlInterface& pc_control)
+void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/launchSteamApp", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -273,7 +273,7 @@ void setupSteamControl(server::HttpServer& server, os::PcControlInterface& pc_co
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupResolution(server::HttpServer& server, os::PcControlInterface& pc_control)
+void setupResolution(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/changeResolution", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -319,8 +319,7 @@ void setupRouteLogging(server::HttpServer& server)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager,
-                 os::PcControlInterface& pc_control)
+void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);

@@ -26,8 +26,10 @@ const int  MS_TO_SEC{1000};
 
 namespace os
 {
-SteamHandler::SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
-    : m_steam_process{QRegularExpression{R"([\\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption}, enumerator}
+SteamHandler::SteamHandler()
+    : m_enumerator{std::make_shared<ProcessEnumerator>()}
+    , m_steam_process{QRegularExpression{R"([\\\/]steam\.exe$)", QRegularExpression::CaseInsensitiveOption},
+                      m_enumerator}
 {
     connect(&m_steam_process, &ProcessTracker::signalProcessStateChanged, this,
             &SteamHandler::slotSteamProcessStateChanged);
@@ -37,6 +39,9 @@ SteamHandler::SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator)
 
     connect(&m_steam_close_timer, &QTimer::timeout, this, &SteamHandler::slotForceCloseSteam);
     m_steam_close_timer.setSingleShot(true);
+
+    const auto default_enumeration_interval{1000};
+    m_enumerator->start(default_enumeration_interval);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

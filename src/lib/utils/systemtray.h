@@ -5,7 +5,7 @@
 #include <QtWidgets/QSystemTrayIcon>
 
 // local includes
-#include "os/pccontrolinterface.h"
+#include "os/pccontrol.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ class SystemTray : public QObject
     Q_DISABLE_COPY(SystemTray)
 
 public:
-    explicit SystemTray(const QIcon& icon, const QString& app_name, os::PcControlInterface& pc_control);
+    explicit SystemTray(const QIcon& icon, const QString& app_name, os::PcControl& pc_control);
     ~SystemTray() override = default;
 
 signals:
@@ -29,10 +29,10 @@ public slots:
 
 private:
     // Note: ctor/dtor order is important!
-    QAction                 m_autostart_action;
-    QAction                 m_quit_action;
-    QMenu                   m_menu;
-    QSystemTrayIcon         m_tray_icon;
-    os::PcControlInterface& m_pc_control;
+    QAction         m_autostart_action;
+    QAction         m_quit_action;
+    QMenu           m_menu;
+    QSystemTrayIcon m_tray_icon;
+    os::PcControl&  m_pc_control;
 };
 }  // namespace utils

@@ -4,7 +4,7 @@
 #include <QObject>
 
 // local includes
-#include "processtracker.h"
+#include "../streamstatehandlerinterface.h"
 #include "shared/enums.h"
 #include "utils/heartbeat.h"
 
@@ -12,7 +12,7 @@
 
 namespace os
 {
-class StreamStateHandler : public QObject
+class StreamStateHandler : public StreamStateHandlerInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(StreamStateHandler)
@@ -21,11 +21,8 @@ public:
     explicit StreamStateHandler();
     ~StreamStateHandler() override = default;
 
-    void                endStream();
-    shared::StreamState getCurrentState() const;
-
-signals:
-    void signalStreamStateChanged();
+    void                endStream() override;
+    shared::StreamState getCurrentState() const override;
 
 private slots:
     void slotHandleProcessStateChanges();

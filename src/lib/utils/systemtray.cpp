@@ -5,7 +5,7 @@
 
 namespace utils
 {
-SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControlInterface& pc_control)
+SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControl& pc_control)
     : m_autostart_action{"Start on system startup"}
     , m_quit_action{"Exit"}
     , m_pc_control{pc_control}
