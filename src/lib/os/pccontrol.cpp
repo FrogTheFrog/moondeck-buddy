@@ -15,6 +15,7 @@ namespace os
 PcControl::PcControl()
     : m_impl{std::make_unique<PcControlImpl>()}
 {
+    connect(m_impl.get(), &PcControlInterface::signalShowTrayMessage, this, &PcControlInterface::signalShowTrayMessage);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -43,6 +44,13 @@ bool PcControl::shutdownPC(uint grace_period_in_sec)
 bool PcControl::restartPC(uint grace_period_in_sec)
 {
     return m_impl->restartPC(grace_period_in_sec);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool PcControl::suspendPC(uint grace_period_in_sec)
+{
+    return m_impl->suspendPC(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

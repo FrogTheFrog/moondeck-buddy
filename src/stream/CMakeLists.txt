@@ -13,7 +13,7 @@ set(EXEC_NAME ${EXEC_NAME_STREAM})
 set(RESOURCES "../../resources/resources.qrc")
 
 if(WIN32)
-    list(APPEND RESOURCES "../../resources/windows.rc")
+    list(APPEND RESOURCES "../../resources/windows/resources.rc")
 endif()
 
 add_executable(${EXEC_NAME} main.cpp ${RESOURCES})

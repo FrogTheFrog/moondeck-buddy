@@ -8,7 +8,7 @@ set(LIBNAME oslib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -43,5 +43,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core osspecificlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

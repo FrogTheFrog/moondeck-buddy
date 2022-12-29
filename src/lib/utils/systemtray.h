@@ -23,6 +23,10 @@ public:
 signals:
     void signalQuitApp();
 
+public slots:
+    void slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                             int millisecondsTimeoutHint);
+
 private:
     // Note: ctor/dtor order is important!
     QAction                 m_autostart_action;

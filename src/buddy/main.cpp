@@ -43,8 +43,12 @@ int main(int argc, char* argv[])
     const utils::SystemTray   tray{icon, shared::APP_NAME_BUDDY, pc_control};
     const utils::PairingInput pairing_input;
 
-    // Utils + app
+    // Tray + app
     QObject::connect(&tray, &utils::SystemTray::signalQuitApp, &app, &QApplication::quit);
+
+    // Tray + pc control
+    QObject::connect(&pc_control, &os::PcControlInterface::signalShowTrayMessage, &tray,
+                     &utils::SystemTray::slotShowTrayMessage);
 
     // Pairing manager + pairing input
     QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing, &pairing_input,

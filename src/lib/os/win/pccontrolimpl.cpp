@@ -2,7 +2,15 @@
 #include "pccontrolimpl.h"
 
 // local includes
+#include "shared/constants.h"
 #include "shared/loggingcategories.h"
+
+//---------------------------------------------------------------------------------------------------------------------
+
+namespace
+{
+const int SEC_TO_MS{1000};
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -48,6 +56,9 @@ bool PcControlImpl::shutdownPC(uint grace_period_in_sec)
     if (m_pc_state_handler.shutdownPC(grace_period_in_sec))
     {
         closeSteam(std::nullopt);
+        emit signalShowTrayMessage("Shutdown in progress", shared::APP_NAME_BUDDY + " is putting you to sleep :)",
+                                   QSystemTrayIcon::MessageIcon::Information,
+                                   static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
 
@@ -61,6 +72,25 @@ bool PcControlImpl::restartPC(uint grace_period_in_sec)
     if (m_pc_state_handler.restartPC(grace_period_in_sec))
     {
         closeSteam(std::nullopt);
+        emit signalShowTrayMessage("Restart in progress", shared::APP_NAME_BUDDY + " is giving you new life :?",
+                                   QSystemTrayIcon::MessageIcon::Information,
+                                   static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        return true;
+    }
+
+    return false;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool PcControlImpl::suspendPC(uint grace_period_in_sec)
+{
+    if (m_pc_state_handler.suspendPC(grace_period_in_sec))
+    {
+        closeSteam(std::nullopt);
+        emit signalShowTrayMessage(
+            "Suspend in progress", shared::APP_NAME_BUDDY + " is about to suspend you real hard :P",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
 

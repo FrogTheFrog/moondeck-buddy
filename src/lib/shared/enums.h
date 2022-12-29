@@ -16,7 +16,8 @@ enum class PcState
 {
     Normal,
     Restarting,
-    ShuttingDown
+    ShuttingDown,
+    Suspending
 };
 Q_ENUM_NS(PcState)
 

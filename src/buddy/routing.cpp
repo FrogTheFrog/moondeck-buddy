@@ -68,7 +68,8 @@ Q_ENUM_NS(PairingState)
 enum class ChangePcState
 {
     Restart,
-    Shutdown
+    Shutdown,
+    Suspend
 };
 Q_ENUM_NS(ChangePcState)
 
@@ -184,6 +185,9 @@ void setupPcState(server::HttpServer& server, os::PcControlInterface& pc_control
                              break;
                          case ChangePcState::Shutdown:
                              result = pc_control.shutdownPC(*grace_period);
+                             break;
+                         case ChangePcState::Suspend:
+                             result = pc_control.suspendPC(*grace_period);
                              break;
                      }
                      return QHttpServerResponse{QJsonObject{{"result", result}}};

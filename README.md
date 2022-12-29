@@ -10,7 +10,7 @@ The main goal is to have reliable information about Steam state:
 Additionally, it allows to:
  * launch a Steam game;
  * close the Steam process;
- * shutdown or restart the PC.
+ * shutdown, restart or suspend the PC.
 
 ## How to install it?
 

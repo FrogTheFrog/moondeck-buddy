@@ -24,10 +24,15 @@ public:
 
     bool shutdownPC(uint grace_period_in_sec);
     bool restartPC(uint grace_period_in_sec);
+    bool suspendPC(uint grace_period_in_sec);
+
+public slots:
+    void slotResetState();
 
 private:
     QString         m_app_name;
     QTimer          m_state_change_back_timer;
+    bool            m_privilege_acquired;
     shared::PcState m_state{shared::PcState::Normal};
 };
 }  // namespace os

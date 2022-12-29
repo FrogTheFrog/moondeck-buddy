@@ -29,7 +29,7 @@ set(EXEC_NAME ${EXEC_NAME_BUDDY})
 set(RESOURCES "../../resources/resources.qrc")
 
 if(WIN32)
-    list(APPEND RESOURCES "../../resources/windows.rc")
+    list(APPEND RESOURCES "../../resources/windows/resources.rc")
 endif()
 
 add_executable(${EXEC_NAME} main.cpp ${HEADERS} ${SOURCES} ${RESOURCES})

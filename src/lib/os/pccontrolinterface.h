@@ -2,6 +2,7 @@
 
 // system/Qt includes
 #include <QObject>
+#include <QtWidgets/QSystemTrayIcon>
 
 // local includes
 #include "shared/enums.h"
@@ -22,6 +23,7 @@ public:
 
     virtual bool shutdownPC(uint grace_period_in_sec) = 0;
     virtual bool restartPC(uint grace_period_in_sec)  = 0;
+    virtual bool suspendPC(uint grace_period_in_sec)  = 0;
 
     virtual uint                getRunningApp() const         = 0;
     virtual std::optional<uint> getTrackedUpdatingApp() const = 0;
@@ -36,5 +38,9 @@ public:
     virtual bool changeResolution(uint width, uint height, bool immediate) = 0;
     virtual void abortPendingResolutionChange()                            = 0;
     virtual void restoreChangedResolution()                                = 0;
+
+signals:
+    void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                               int millisecondsTimeoutHint);
 };
 }  // namespace os

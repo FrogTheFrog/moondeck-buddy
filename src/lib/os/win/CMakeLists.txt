@@ -12,6 +12,7 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
 find_library(PSAPI Psapi REQUIRED)
+find_library(POWRPROF PowrProf REQUIRED)
 add_compile_definitions(PSAPI_VERSION=1)
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -51,5 +52,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

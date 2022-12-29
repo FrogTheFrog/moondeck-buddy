@@ -24,6 +24,7 @@ public:
 
     bool shutdownPC(uint grace_period_in_sec) override;
     bool restartPC(uint grace_period_in_sec) override;
+    bool suspendPC(uint grace_period_in_sec) override;
 
     uint                getRunningApp() const override;
     std::optional<uint> getTrackedUpdatingApp() const override;

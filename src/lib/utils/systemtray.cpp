@@ -29,4 +29,12 @@ SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControl
     m_tray_icon.setVisible(true);
     m_tray_icon.setToolTip(app_name);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SystemTray::slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                                     int millisecondsTimeoutHint)
+{
+    m_tray_icon.showMessage(title, message, icon, millisecondsTimeoutHint);
+}
 }  // namespace utils
