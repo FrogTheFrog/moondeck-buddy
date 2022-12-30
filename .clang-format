@@ -38,7 +38,7 @@ FixNamespaceComments: 'true'
 IncludeBlocks: Preserve
 IndentCaseLabels: 'true'
 IndentPPDirectives: BeforeHash
-IndentRequiresClause: 'false'
+#IndentRequiresClause: 'false'
 IndentWidth: '4'
 IndentWrappedFunctionNames: 'true'
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
