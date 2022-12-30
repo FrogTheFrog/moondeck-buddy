@@ -19,7 +19,7 @@ struct JsonValueConverter;
 //---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
-    requires std::is_enum_v<T>
+requires std::is_enum_v<T>
 struct JsonValueConverter<T>
 {
     static std::optional<T> convert(const QJsonValue& json)
