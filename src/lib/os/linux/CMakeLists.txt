@@ -17,6 +17,7 @@ qt_standard_project_setup()
 
 set(HEADERS
     autostarthandler.h
+    cursorhandler.h
     pcstatehandler.h
     resolutionhandler.h
     steamhandler.h
@@ -28,6 +29,7 @@ set(HEADERS
 
 set(SOURCES
     autostarthandler.cpp
+    cursorhandler.cpp
     pcstatehandler.cpp
     resolutionhandler.cpp
     steamhandler.cpp

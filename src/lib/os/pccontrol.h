@@ -6,6 +6,7 @@
 
 // local includes
 #include "autostarthandlerinterface.h"
+#include "cursorhandlerinterface.h"
 #include "pcstatehandlerinterface.h"
 #include "resolutionhandlerinterface.h"
 #include "steamhandlerinterface.h"
@@ -55,6 +56,7 @@ private slots:
 
 private:
     std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
+    std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
     std::unique_ptr<PcStateHandlerInterface>     m_pc_state_handler;
     std::unique_ptr<ResolutionHandlerInterface>  m_resolution_handler;
     std::unique_ptr<SteamHandlerInterface>       m_steam_handler;

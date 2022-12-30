@@ -21,6 +21,7 @@ add_compile_definitions(PSAPI_VERSION=1)
 
 set(HEADERS
     autostarthandler.h
+    cursorhandler.h
     regkey.h
     processtracker.h
     pcstatehandler.h
@@ -35,6 +36,7 @@ set(HEADERS
 
 set(SOURCES
     autostarthandler.cpp
+    cursorhandler.cpp
     regkey.cpp
     processtracker.cpp
     pcstatehandler.cpp

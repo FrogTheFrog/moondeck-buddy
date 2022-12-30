@@ -4,11 +4,13 @@
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "win/autostarthandler.h"
+    #include "win/cursorhandler.h"
     #include "win/pcstatehandler.h"
     #include "win/resolutionhandler.h"
     #include "win/steamhandler.h"
 #elif defined(Q_OS_LINUX)
     #include "linux/autostarthandler.h"
+    #include "linux/cursorhandler.h"
     #include "linux/pcstatehandler.h"
     #include "linux/resolutionhandler.h"
     #include "linux/steamhandler.h"
@@ -34,6 +36,7 @@ namespace os
 {
 PcControl::PcControl()
     : m_auto_start_handler{std::make_unique<AutoStartHandler>()}
+    , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<PcStateHandler>()}
     , m_resolution_handler{std::make_unique<ResolutionHandler>()}
     , m_steam_handler{std::make_unique<SteamHandler>()}
@@ -226,6 +229,7 @@ void PcControl::slotHandleStreamStateChange()
         {
             qCDebug(lc::os) << "Stream started.";
             m_resolution_handler->applyPendingChange();
+            m_cursor_handler->hideCursor();
             break;
         }
         case shared::StreamState::StreamEnding:

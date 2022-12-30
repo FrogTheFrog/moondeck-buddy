@@ -31,6 +31,7 @@ ENDIF()
 
 set(HEADERS
     autostarthandlerinterface.h
+    cursorhandlerinterface.h
     pccontrol.h
     pcstatehandlerinterface.h
     resolutionhandlerinterface.h
