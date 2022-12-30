@@ -6,6 +6,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace server
@@ -17,6 +20,7 @@ ClientIds::ClientIds(QString filename)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 void ClientIds::load()
 {
     m_ids.clear();  // Clear the ids regardless of whether the file exists or not
@@ -49,18 +53,19 @@ void ClientIds::load()
             const QJsonArray ids = json_data.array();
             for (const auto& client_id : ids)
             {
-                if (!client_id.isString())
+                const QString client_id_string{client_id.isString() ? client_id.toString() : QString{}};
+                if (client_id_string.isEmpty())
                 {
                     some_ids_were_skipped = true;
                     continue;
                 }
 
-                m_ids.emplace(client_id.toString());
+                m_ids.emplace(client_id_string);
             }
 
             if (some_ids_were_skipped)
             {
-                qWarning("Client Ids file contained ids that were skipped!");
+                qCWarning(lc::server) << "Client Ids file contained ids that were skipped!";
             }
         }
     }
@@ -84,7 +89,7 @@ void ClientIds::save()
 
     const QJsonDocument file_data{json_data};
     ids_file.write(file_data.toJson(QJsonDocument::Indented));
-    qDebug("Finished saving: \"%s\"", qUtf8Printable(m_filename));
+    qCDebug(lc::server) << "Finished saving:" << m_filename;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

@@ -2,7 +2,6 @@
 
 // system/Qt includes
 #include <QObject>
-#include <QTimer>
 
 // local includes
 #include "../pcstatehandlerinterface.h"
@@ -19,7 +18,7 @@ class PcStateHandler
     Q_DISABLE_COPY(PcStateHandler)
 
 public:
-    explicit PcStateHandler();
+    explicit PcStateHandler()  = default;
     ~PcStateHandler() override = default;
 
     shared::PcState getState() const override;
@@ -27,14 +26,5 @@ public:
     bool shutdownPC(uint grace_period_in_sec) override;
     bool restartPC(uint grace_period_in_sec) override;
     bool suspendPC(uint grace_period_in_sec) override;
-
-public slots:
-    void slotResetState();
-
-private:
-    QString         m_app_name;
-    QTimer          m_state_change_back_timer;
-    bool            m_privilege_acquired;
-    shared::PcState m_state{shared::PcState::Normal};
 };
 }  // namespace os

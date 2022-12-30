@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 project(MoonDeckBuddy 
-        VERSION 1.2.0
+        VERSION 1.3.0
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
         HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
         LANGUAGES CXX)
@@ -66,6 +66,8 @@ IF (WIN32)
     set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${EXEC_NAME_BUDDY}.exe")
     set(CPACK_NSIS_INSTALL_ROOT "\$LocalAppData\\\\Programs")
     set(CPACK_NSIS_DEFINES "RequestExecutionLevel user")
+ELSEIF(UNIX)
+    message(WARNING "OS packaging is not supported, yet...")
 ELSE()
     message(FATAL_ERROR "OS is not supported!")
 ENDIF()
@@ -80,7 +82,7 @@ add_subdirectory(src)
 # Install
 #----------------------------------------------------------------------------------------------------------------------
 
-if(WIN32)
+IF(WIN32)
     find_package(Qt6 REQUIRED COMPONENTS Core)
     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
     set(BINARIES "${EXEC_NAME_BUDDY};${EXEC_NAME_STREAM}")
@@ -117,6 +119,8 @@ if(WIN32)
     install(SCRIPT ${DEPLOY_SCRIPT})
     
     include(CPack)
-else()
+ELSEIF(UNIX)
+    message(WARNING "OS install is not supported, yet...")
+ELSE()
     message(FATAL_ERROR "OS is not supported!")
-endif()
+ENDIF()

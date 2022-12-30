@@ -17,13 +17,11 @@ public:
     void           init(const QString& filename);
     const QString& getFilename() const;
 
-    void enableVerboseMode();
-    bool isVerboseModeEnabled() const;
+    void setLoggingRules(const QString& rules);
 
 private:
     explicit LogSettings() = default;
 
     QString m_filename;
-    bool    m_is_verbose{false};
 };
 }  // namespace utils

@@ -1,44 +1,63 @@
 #pragma once
 
 // system/Qt includes
-#include <QCoreApplication>
+#include <QtWidgets/QSystemTrayIcon>
 #include <memory>
 
 // local includes
-#include "pccontrolinterface.h"
+#include "autostarthandlerinterface.h"
+#include "pcstatehandlerinterface.h"
+#include "resolutionhandlerinterface.h"
+#include "steamhandlerinterface.h"
+#include "streamstatehandlerinterface.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-class PcControl : public PcControlInterface
+class PcControl : public QObject
 {
+    Q_OBJECT
     Q_DISABLE_COPY(PcControl)
 
 public:
     explicit PcControl();
     ~PcControl() override = default;
 
-    void launchSteamApp(uint app_id) override;
-    void exitSteam(std::optional<uint> grace_period_in_sec) override;
+    bool launchSteamApp(uint app_id);
+    bool closeSteam(std::optional<uint> grace_period_in_sec);
 
-    void shutdownPC(uint grace_period_in_sec) override;
-    void restartPC(uint grace_period_in_sec) override;
+    bool shutdownPC(uint grace_period_in_sec);
+    bool restartPC(uint grace_period_in_sec);
+    bool suspendPC(uint grace_period_in_sec);
 
-    uint                getRunningApp() const override;
-    std::optional<uint> isLastLaunchedAppUpdating() const override;
-    bool                isSteamRunning() const override;
+    uint                getRunningApp() const;
+    std::optional<uint> getTrackedUpdatingApp() const;
+    bool                isSteamRunning() const;
 
-    shared::StreamState getStreamState() const override;
+    shared::StreamState getStreamState() const;
+    shared::PcState     getPcState() const;
 
-    void setAutoStart(bool enable) override;
-    bool isAutoStartEnabled() const override;
+    void setAutoStart(bool enable);
+    bool isAutoStartEnabled() const;
 
-    void changeResolution(uint width, uint height, bool immediate) override;
-    void abortPendingResolutionChange() override;
-    void restoreChangedResolution() override;
+    bool changeResolution(uint width, uint height, bool immediate);
+    void abortPendingResolutionChange();
+    void restoreChangedResolution();
+
+signals:
+    void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                               int millisecondsTimeoutHint);
+
+private slots:
+    void slotHandleSteamStateChange();
+    void slotHandleStreamStateChange();
 
 private:
-    std::unique_ptr<PcControlInterface> m_impl;
+    std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
+    std::unique_ptr<PcStateHandlerInterface>     m_pc_state_handler;
+    std::unique_ptr<ResolutionHandlerInterface>  m_resolution_handler;
+    std::unique_ptr<SteamHandlerInterface>       m_steam_handler;
+    std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
 };
 }  // namespace os

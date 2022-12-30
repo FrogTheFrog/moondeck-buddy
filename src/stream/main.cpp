@@ -1,5 +1,5 @@
 // system/Qt includes
-#include <QApplication>
+#include <QCoreApplication>
 
 // local includes
 #include "shared/constants.h"
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
-    QApplication app{argc, argv};
+    QCoreApplication app{argc, argv};
     utils::LogSettings::getInstance().init("stream.log");
 
     utils::Heartbeat heartbeat{shared::APP_NAME_STREAM};

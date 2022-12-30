@@ -4,6 +4,7 @@
 #include <QObject>
 
 // local includes
+#include "../steamhandlerinterface.h"
 #include "processtracker.h"
 #include "regkey.h"
 
@@ -11,25 +12,22 @@
 
 namespace os
 {
-class SteamHandler : public QObject
+class SteamHandler : public SteamHandlerInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(std::shared_ptr<ProcessEnumerator>& enumerator);
+    explicit SteamHandler();
     ~SteamHandler() override = default;
 
-    bool isRunning() const;
-    bool isRunningNow();
-    void close(std::optional<uint> grace_period_in_sec);
+    bool isRunning() const override;
+    bool isRunningNow() override;
+    bool close(std::optional<uint> grace_period_in_sec) override;
 
-    void                launchApp(uint app_id, const QStringList& steam_args);
-    uint                getRunningApp() const;
-    std::optional<uint> isLastLaunchedAppUpdating() const;
-
-signals:
-    void signalSteamStateChanged();
+    bool                launchApp(uint app_id, const QStringList& steam_args) override;
+    uint                getRunningApp() const override;
+    std::optional<uint> getTrackedUpdatingApp() const override;
 
 private slots:
     void slotSteamProcessStateChanged();
@@ -45,9 +43,10 @@ private:
         bool m_is_updating;
     };
 
-    ProcessTracker m_steam_process;
-    RegKey         m_global_reg_key;
-    QString        m_steam_exec_path;
+    std::shared_ptr<ProcessEnumerator> m_enumerator;
+    ProcessTracker                     m_steam_process;
+    RegKey                             m_global_reg_key;
+    QString                            m_steam_exec_path;
 
     // Short-lived states
     std::unique_ptr<RegKey>       m_app_reg_key;

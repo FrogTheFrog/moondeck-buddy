@@ -8,7 +8,7 @@ set(LIBNAME serverlib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core Network REQUIRED)
+find_package(Qt6 COMPONENTS Core HttpServer REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -17,10 +17,8 @@ qt_standard_project_setup()
 
 set(HEADERS
     clientids.h
-    cobs.h
-    cobsjsonprotocol.h
-    jsonsocket.h
-    jsonserver.h
+    httpserver.h
+    pairingmanager.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -29,10 +27,8 @@ set(HEADERS
 
 set(SOURCES
     clientids.cpp
-    cobs.cpp
-    cobsjsonprotocol.cpp
-    jsonsocket.cpp
-    jsonserver.cpp
+    httpserver.cpp
+    pairingmanager.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -40,5 +36,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Network msgslib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::HttpServer sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

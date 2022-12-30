@@ -2,7 +2,7 @@
 
 A server-side part of the [MoonDeck](https://github.com/FrogTheFrog/moondeck) plugin for the SteamDeck.
 
-The main goal is to have reliable information about steam state:
+The main goal is to have reliable information about Steam state:
  * is Steam running or not;
  * what Steam game is running and whether the game we want is updating or not;
    * **note:** Non-Steam games are not supported.
@@ -10,7 +10,7 @@ The main goal is to have reliable information about steam state:
 Additionally, it allows to:
  * launch a Steam game;
  * close the Steam process;
- * shutdown or restart the PC.
+ * shutdown, restart or suspend the PC.
 
 ## How to install it?
 
@@ -52,9 +52,11 @@ After changing any of them, the app needs to be restarted.
 
 The port to be opened by the app for communication.
 
-#### Verbose (default: false)
+#### Logging rules (default: "")
 
-Enables verbose logging for debugging issues.
+Can be used to enable/disable logging for various categories.
+
+By default, Buddy logs information that is of severity **INFO** or above. To enable Buddy's debug logs, set the parameter value to `"buddy.*.debug=true"`.
 
 ## Sunshine setup
 

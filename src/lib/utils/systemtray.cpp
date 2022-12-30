@@ -5,7 +5,7 @@
 
 namespace utils
 {
-SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControlInterface& pc_control)
+SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControl& pc_control)
     : m_autostart_action{"Start on system startup"}
     , m_quit_action{"Exit"}
     , m_pc_control{pc_control}
@@ -28,5 +28,13 @@ SystemTray::SystemTray(const QIcon& icon, const QString& app_name, os::PcControl
     m_tray_icon.setContextMenu(&m_menu);
     m_tray_icon.setVisible(true);
     m_tray_icon.setToolTip(app_name);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SystemTray::slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                                     int millisecondsTimeoutHint)
+{
+    m_tray_icon.showMessage(title, message, icon, millisecondsTimeoutHint);
 }
 }  // namespace utils

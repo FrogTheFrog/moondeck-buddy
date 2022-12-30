@@ -5,6 +5,9 @@
 #include <system_error>
 #include <unordered_map>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -95,8 +98,8 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
 
     if (result != ERROR_SUCCESS)
     {
-        qDebug("Could not read the size of the key value '%s'! Reason: %s", qUtf8Printable(name),
-               qUtf8Printable(getError(result)));
+        qCDebug(lc::os).nospace() << "Could not read the size of the key value " << name
+                                  << "! Reason: " << getError(result);
     }
 
     if (data_size <= 0)
@@ -113,8 +116,8 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
 
     if (result != ERROR_SUCCESS)
     {
-        qWarning("Could not read the data of the key value '%s'! Reason: %s", qUtf8Printable(name),
-                 qUtf8Printable(getError(result)));
+        qCWarning(lc::os).nospace() << "Could not read the data of the key value " << name
+                                    << "! Reason: " << getError(result);
     }
 
     return data;
@@ -151,7 +154,7 @@ void deleteNotifier(std::unique_ptr<QWinEventNotifier>& notifier)
         notifier->disconnect();
         if (CloseHandle(notifier->handle()) == FALSE)
         {
-            qWarning("Failed to close handle! Reason: %s", qUtf8Printable(getError(GetLastError())));
+            qCWarning(lc::os) << "Failed to close handle! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
         }
         notifier.reset();
     }
@@ -168,7 +171,7 @@ bool openKey(const PathComponents& path_components, const QString& path, HKEY& k
 
     if (result != ERROR_SUCCESS)
     {
-        qDebug("Could not open key '%s'! Reason: %s", qUtf8Printable(path), qUtf8Printable(getError(result)));
+        qCDebug(lc::os).nospace() << "Could not open key " << path << "! Reason: " << getError(result);
     }
 
     return result == ERROR_SUCCESS;
@@ -191,7 +194,7 @@ void RegKey::open(const QString& path, const QStringList& notification_names, bo
     const auto path_components = PathComponents::parse(path);
     if (!path_components)
     {
-        qDebug("Registry key '%s' is not valid!", qUtf8Printable(path));
+        qCDebug(lc::os).nospace() << "Registry key " << path << " is not valid!";
         return;
     }
 
@@ -233,7 +236,7 @@ void RegKey::close()
         const auto result = RegCloseKey(m_key_handle);
         if (result != ERROR_SUCCESS)
         {
-            qWarning("Could not close key '%s'! Reason: %s", qUtf8Printable(m_path), qUtf8Printable(getError(result)));
+            qCWarning(lc::os).nospace() << "Could not close key " << m_path << "! Reason: " << getError(result);
         }
         m_key_handle = nullptr;
     }
