@@ -29,7 +29,7 @@ namespace os
 void CursorHandler::hideCursor()
 {
     // Let windows take of the desktop clipping
-    if (SetCursorPos(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()) == FALSE)
+    if (SetCursorPos((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)()) == FALSE)
     {
         qCWarning(lc::os) << "Failed hide the cursor! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
     }
