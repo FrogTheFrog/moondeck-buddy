@@ -47,7 +47,7 @@ MaxEmptyLinesToKeep: '1'
 NamespaceIndentation: None
 PointerAlignment: Left
 ReflowComments: 'true'
-RequiresClausePosition: WithPreceding
+#RequiresClausePosition: WithPreceding
 SortIncludes: 'true'
 SortUsingDeclarations: 'true'
 SpaceAfterCStyleCast: 'false'
