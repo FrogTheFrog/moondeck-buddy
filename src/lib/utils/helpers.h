@@ -19,7 +19,7 @@ struct JsonValueConverter;
 //---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
-requires std::is_enum_v<T>
+    requires std::is_enum_v<T>
 struct JsonValueConverter<T>
 {
     static std::optional<T> convert(const QJsonValue& json)
@@ -89,9 +89,11 @@ struct JsonValueConverter<int>
 template<>
 struct JsonValueConverter<uint>
 {
-    static std::optional<uint> convert(const QJsonValue& json, uint min = 0, uint max = std::numeric_limits<int>::max())
+    static std::optional<uint> convert(const QJsonValue& json, uint min = 0,
+                                       uint max = static_cast<uint>(std::numeric_limits<int>::max()))
     {
-        if (min <= std::numeric_limits<int>::max() && max <= std::numeric_limits<int>::max())
+        if (min <= static_cast<uint>(std::numeric_limits<int>::max())
+            && max <= static_cast<uint>(std::numeric_limits<int>::max()))
         {
             const auto int_number{JsonValueConverter<int>::convert(json, static_cast<int>(min), static_cast<int>(max))};
             if (int_number)
