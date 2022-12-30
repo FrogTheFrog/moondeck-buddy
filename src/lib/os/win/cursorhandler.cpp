@@ -6,6 +6,7 @@
 
 // system/Qt includes
 #include <limits>
+#include <system_error>
 
 // local includes
 #include "shared/loggingcategories.h"
