@@ -2,40 +2,24 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME oslib)
+set(LIBNAME osspecificlib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
-
-#----------------------------------------------------------------------------------------------------------------------
-# Subdirectories
-#----------------------------------------------------------------------------------------------------------------------
-
-add_subdirectory(shared)
-
-IF(WIN32)
-    add_subdirectory(win)
-ELSEIF(UNIX)
-    add_subdirectory(linux)
-ELSE()
-    message(FATAL_ERROR "OS is not supported!")
-ENDIF()
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header files
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    autostarthandlerinterface.h
-    pccontrol.h
-    pcstatehandlerinterface.h
-    resolutionhandlerinterface.h
-    steamhandlerinterface.h
-    streamstatehandlerinterface.h
+    autostarthandler.h
+    pcstatehandler.h
+    resolutionhandler.h
+    steamhandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -43,7 +27,10 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
-    pccontrol.cpp
+    autostarthandler.cpp
+    pcstatehandler.cpp
+    resolutionhandler.cpp
+    steamhandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -51,5 +38,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib ossharedlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

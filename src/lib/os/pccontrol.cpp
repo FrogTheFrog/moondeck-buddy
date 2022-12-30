@@ -7,6 +7,11 @@
     #include "win/pcstatehandler.h"
     #include "win/resolutionhandler.h"
     #include "win/steamhandler.h"
+#elif defined(Q_OS_LINUX)
+    #include "linux/autostarthandler.h"
+    #include "linux/pcstatehandler.h"
+    #include "linux/resolutionhandler.h"
+    #include "linux/steamhandler.h"
 #else
     #error OS is not supported!
 #endif
