@@ -39,6 +39,10 @@ PcControl::PcControl()
     , m_steam_handler{std::make_unique<SteamHandler>()}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>()}
 {
+    connect(m_steam_handler.get(), &SteamHandler::signalSteamStateChanged, this,
+            &PcControl::slotHandleSteamStateChange);
+    connect(m_stream_state_handler.get(), &StreamStateHandler::signalStreamStateChanged, this,
+            &PcControl::slotHandleStreamStateChange);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
