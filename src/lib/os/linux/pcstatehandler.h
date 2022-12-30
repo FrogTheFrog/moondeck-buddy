@@ -18,7 +18,7 @@ class PcStateHandler
     Q_DISABLE_COPY(PcStateHandler)
 
 public:
-    explicit PcStateHandler() = default;
+    explicit PcStateHandler()  = default;
     ~PcStateHandler() override = default;
 
     shared::PcState getState() const override;

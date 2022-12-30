@@ -16,7 +16,7 @@ class SteamHandler : public SteamHandlerInterface
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler() = default;
+    explicit SteamHandler()  = default;
     ~SteamHandler() override = default;
 
     bool isRunning() const override;
