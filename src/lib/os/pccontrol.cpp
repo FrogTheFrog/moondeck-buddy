@@ -52,6 +52,13 @@ PcControl::PcControl()
 
 bool PcControl::launchSteamApp(uint app_id)
 {
+    const bool should_probably_hide_cursor{!m_steam_handler->isRunningNow() || getRunningApp() == 0};
+    if (should_probably_hide_cursor)
+    {
+        qCDebug(lc::os) << "Trying to hide cursor.";
+        m_cursor_handler->hideCursor();
+    }
+
     QStringList steam_args;
     if (m_stream_state_handler->getCurrentState() == shared::StreamState::Streaming || !m_steam_handler->isRunningNow())
     {
@@ -168,14 +175,7 @@ bool PcControl::isAutoStartEnabled() const
 
 bool PcControl::changeResolution(uint width, uint height)
 {
-    const bool result = m_resolution_handler->changeResolution(width, height);
-    if (result || !m_steam_handler->isRunningNow() || getRunningApp() == 0)
-    {
-        qCDebug(lc::os) << "Trying to hide cursor.";
-        m_cursor_handler->hideCursor();
-    }
-
-    return result;
+    return m_resolution_handler->changeResolution(width, height);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
