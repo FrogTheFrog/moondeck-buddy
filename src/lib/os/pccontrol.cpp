@@ -166,28 +166,16 @@ bool PcControl::isAutoStartEnabled() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool PcControl::changeResolution(uint width, uint height, bool immediate)
+bool PcControl::changeResolution(uint width, uint height)
 {
-    if (immediate)
+    const bool result = m_resolution_handler->changeResolution(width, height);
+    if (result || !m_steam_handler->isRunningNow() || getRunningApp() == 0)
     {
-        return m_resolution_handler->changeResolution(width, height);
+        qCDebug(lc::os) << "Trying to hide cursor.";
+        m_cursor_handler->hideCursor();
     }
 
-    if (!m_steam_handler->isRunningNow() || getRunningApp() == 0)
-    {
-        m_resolution_handler->setPendingResolution(width, height);
-        return true;
-    }
-
-    qCDebug(lc::os) << "Non-immediate change is discarded.";
-    return false;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void PcControl::abortPendingResolutionChange()
-{
-    m_resolution_handler->clearPendingResolution();
+    return result;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -204,7 +192,6 @@ void PcControl::slotHandleSteamStateChange()
     if (m_steam_handler->isRunning())
     {
         qCDebug(lc::os) << "Handling Steam start.";
-        m_resolution_handler->clearPendingResolution();
     }
     else
     {
@@ -228,8 +215,6 @@ void PcControl::slotHandleStreamStateChange()
         case shared::StreamState::Streaming:
         {
             qCDebug(lc::os) << "Stream started.";
-            m_resolution_handler->applyPendingChange();
-            m_cursor_handler->hideCursor();
             break;
         }
         case shared::StreamState::StreamEnding:

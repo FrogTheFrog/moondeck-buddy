@@ -27,10 +27,6 @@ public:
     bool changeResolution(uint width, uint height) override;
     void restoreResolution() override;
 
-    void setPendingResolution(uint width, uint height) override;
-    void applyPendingChange() override;
-    void clearPendingResolution() override;
-
 private:
     struct Resolution
     {
@@ -38,7 +34,6 @@ private:
         uint m_height;
     };
 
-    std::optional<Resolution>     m_pending_change;
     std::map<QString, Resolution> m_original_resolutions;
 };
 }  // namespace os

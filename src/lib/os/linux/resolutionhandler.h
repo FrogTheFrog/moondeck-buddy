@@ -23,9 +23,5 @@ public:
 
     bool changeResolution(uint width, uint height) override;
     void restoreResolution() override;
-
-    void setPendingResolution(uint width, uint height) override;
-    void applyPendingChange() override;
-    void clearPendingResolution() override;
 };
 }  // namespace os

@@ -42,8 +42,7 @@ public:
     void setAutoStart(bool enable);
     bool isAutoStartEnabled() const;
 
-    bool changeResolution(uint width, uint height, bool immediate);
-    void abortPendingResolutionChange();
+    bool changeResolution(uint width, uint height);
     void restoreChangedResolution();
 
 signals:

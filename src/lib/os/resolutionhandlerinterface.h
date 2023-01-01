@@ -14,9 +14,5 @@ public:
 
     virtual bool changeResolution(uint width, uint height) = 0;
     virtual void restoreResolution()                       = 0;
-
-    virtual void setPendingResolution(uint width, uint height) = 0;
-    virtual void applyPendingChange()                          = 0;
-    virtual void clearPendingResolution()                      = 0;
 };
 }  // namespace os

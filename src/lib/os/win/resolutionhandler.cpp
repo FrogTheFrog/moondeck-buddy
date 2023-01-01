@@ -18,8 +18,6 @@ ResolutionHandler::~ResolutionHandler()
 // NOLINTNEXTLINE(*-cognitive-complexity)
 bool ResolutionHandler::changeResolution(uint width, uint height)
 {
-    clearPendingResolution();
-
     qCDebug(lc::os) << "Trying to change resolution.";
     bool changed_at_least_one{false};
     for (int i = 0;; ++i)
@@ -77,7 +75,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         {
             changed_at_least_one = true;
 
-            qCInfo(lc::os) << "Changed resolution for" << device_name;
+            qCDebug(lc::os) << "Changed resolution for" << device_name;
             if (!m_original_resolutions.contains(device_name))
             {
                 m_original_resolutions[device_name] = previous_resolution;
@@ -157,7 +155,7 @@ void ResolutionHandler::restoreResolution()
             ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr, 0, nullptr);
         if (result == DISP_CHANGE_SUCCESSFUL)
         {
-            qCInfo(lc::os) << "Changed resolution for" << device_name;
+            qCDebug(lc::os) << "Changed resolution for" << device_name;
             m_original_resolutions.erase(resolution_it);
         }
         else
@@ -175,36 +173,6 @@ void ResolutionHandler::restoreResolution()
             qCWarning(lc::os) << "  *" << item.first;
         }
         m_original_resolutions.clear();
-    }
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void ResolutionHandler::setPendingResolution(uint width, uint height)
-{
-    qCDebug(lc::os) << "Setting a pending resolution.";
-    m_pending_change = {width, height};
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void ResolutionHandler::applyPendingChange()
-{
-    if (m_pending_change)
-    {
-        qCDebug(lc::os) << "Applying pending resolution.";
-        changeResolution(m_pending_change->m_width, m_pending_change->m_height);
-    }
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-void ResolutionHandler::clearPendingResolution()
-{
-    if (m_pending_change)
-    {
-        qCDebug(lc::os) << "Clearing pending resolution.";
-        m_pending_change = std::nullopt;
     }
 }
 }  // namespace os

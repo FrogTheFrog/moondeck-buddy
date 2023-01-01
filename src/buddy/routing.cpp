@@ -291,13 +291,12 @@ void setupResolution(server::HttpServer& server, os::PcControl& pc_control)
 
                      const auto width{utils::getJsonValue<uint>(json, "width")};
                      const auto height{utils::getJsonValue<uint>(json, "height")};
-                     const auto immediate{utils::getJsonValue<bool>(json, "immediate")};
-                     if (!width || !height || !immediate)
+                     if (!width || !height)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.changeResolution(*width, *height, *immediate)};
+                     const bool result{pc_control.changeResolution(*width, *height)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 }
