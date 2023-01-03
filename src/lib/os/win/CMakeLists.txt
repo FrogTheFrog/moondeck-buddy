@@ -28,6 +28,7 @@ set(HEADERS
     processenumerator.h
     resolutionhandler.h
     steamhandler.h
+    streamstatehandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -43,6 +44,7 @@ set(SOURCES
     processenumerator.cpp
     resolutionhandler.cpp
     steamhandler.cpp
+    streamstatehandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

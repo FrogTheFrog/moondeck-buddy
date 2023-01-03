@@ -8,12 +8,14 @@
     #include "win/pcstatehandler.h"
     #include "win/resolutionhandler.h"
     #include "win/steamhandler.h"
+    #include "win/streamstatehandler.h"
 #elif defined(Q_OS_LINUX)
     #include "linux/autostarthandler.h"
     #include "linux/cursorhandler.h"
     #include "linux/pcstatehandler.h"
     #include "linux/resolutionhandler.h"
     #include "linux/steamhandler.h"
+    #include "shared/streamstatehandler.h"
 #else
     #error OS is not supported!
 #endif
@@ -21,7 +23,6 @@
 // local includes
 #include "shared/constants.h"
 #include "shared/loggingcategories.h"
-#include "shared/streamstatehandler.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
