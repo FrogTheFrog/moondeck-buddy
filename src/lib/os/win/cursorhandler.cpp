@@ -38,7 +38,7 @@ void CursorHandler::hideCursor()
                            if (SetCursorPos((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)())
                                == FALSE)
                            {
-                               qCWarning(lc::os) << "Failed hide the cursor! Reason: "
+                               qCWarning(lc::os) << "Failed hide the cursor! Reason:"
                                                  << getError(static_cast<LSTATUS>(GetLastError()));
                            }
                        });

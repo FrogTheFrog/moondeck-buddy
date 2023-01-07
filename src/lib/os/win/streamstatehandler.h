@@ -11,6 +11,12 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// TODO: remove
+// This is a temp. hack for Nvidia until it kills GameStream
+bool& getMouseAccelResetHack();
+
+//---------------------------------------------------------------------------------------------------------------------
+
 namespace os
 {
 class StreamStateHandler : public StreamStateHandlerInterface

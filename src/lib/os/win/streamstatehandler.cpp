@@ -3,6 +3,48 @@
 
 // local includes
 #include "shared/constants.h"
+#include "shared/loggingcategories.h"
+
+//---------------------------------------------------------------------------------------------------------------------
+
+// TODO: remove hack
+bool& getMouseAccelResetHack()
+{
+    static bool value{false};
+    return value;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+namespace
+{
+QString getError(LSTATUS status)
+{
+    return QString::fromStdString(std::system_category().message(status));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SetMouseAcceleration(bool value)
+{
+    // NOLINTNEXTLINE(*)
+    int mouseParams[3];
+    // NOLINTNEXTLINE(*)
+    if (SystemParametersInfoW(SPI_GETMOUSE, 0, mouseParams, 0) == FALSE)
+    {
+        qCWarning(lc::os) << "Failed to get system params for mouse. Reason:"
+                          << getError(static_cast<LSTATUS>(GetLastError()));
+    }
+
+    mouseParams[2] = value ? 1 : 0;
+    // NOLINTNEXTLINE(*)
+    if (SystemParametersInfoW(SPI_SETMOUSE, 0, mouseParams, SPIF_SENDCHANGE) == FALSE)
+    {
+        qCWarning(lc::os) << "Failed to set system params for mouse. Reason:"
+                          << getError(static_cast<LSTATUS>(GetLastError()));
+    }
+}
+}  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -26,7 +68,14 @@ void StreamStateHandler::endStream()
     if (m_state == shared::StreamState::Streaming)
     {
         m_helper_heartbeat.terminate();
-        m_nvidia_stream_process.close();
+        if (m_nvidia_stream_process.isRunningNow())
+        {
+            m_nvidia_stream_process.close();
+            if (getMouseAccelResetHack())
+            {
+                SetMouseAcceleration(false);
+            }
+        }
         m_state = shared::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
@@ -59,7 +108,14 @@ void StreamStateHandler::slotHandleProcessStateChanges()
         {
             if (!m_helper_heartbeat.isAlive())
             {
-                m_nvidia_stream_process.close();
+                if (m_nvidia_stream_process.isRunningNow())
+                {
+                    m_nvidia_stream_process.close();
+                    if (getMouseAccelResetHack())
+                    {
+                        SetMouseAcceleration(false);
+                    }
+                }
                 m_state = shared::StreamState::NotStreaming;
                 emit signalStreamStateChanged();
             }

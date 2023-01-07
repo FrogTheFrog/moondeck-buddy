@@ -24,5 +24,9 @@ private:
 
     quint16 m_port;
     QString m_logging_rules;
+
+public:
+    // TODO: remove
+    bool m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 };
 }  // namespace utils

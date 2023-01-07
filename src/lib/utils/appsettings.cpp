@@ -23,6 +23,7 @@ namespace utils
 {
 AppSettings::AppSettings(const QString& filename)
     : m_port{DEFAULT_PORT}
+    , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filename))
     {
@@ -77,7 +78,12 @@ bool AppSettings::parseSettingsFile(const QString& filename)
             const auto port_v          = obj_v.value(QLatin1String("port"));
             const auto logging_rules_v = obj_v.value(QLatin1String("logging_rules"));
 
-            constexpr int current_entries{2};
+            // TODO: remove
+            const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
+                obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
+
+            // TODO: dec. once removed
+            constexpr int current_entries{3};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -101,6 +107,13 @@ bool AppSettings::parseSettingsFile(const QString& filename)
                 valid_entries++;
             }
 
+            if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
+            {
+                m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
+                    nvidia_reset_mouse_acceleration_after_stream_end_hack_v.toBool();
+                valid_entries++;
+            }
+
             return valid_entries == current_entries;
         }
     }
@@ -116,6 +129,8 @@ void AppSettings::saveDefaultFile(const QString& filename) const
 
     obj["port"]          = m_port;
     obj["logging_rules"] = m_logging_rules;
+    obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
+        m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 
     QFile file{filename};
     if (!file.open(QFile::WriteOnly))
