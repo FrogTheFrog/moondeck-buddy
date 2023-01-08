@@ -32,6 +32,8 @@ public:
     bool restartPC(uint grace_period_in_sec);
     bool suspendPC(uint grace_period_in_sec);
 
+    bool endStream();
+
     uint                getRunningApp() const;
     std::optional<uint> getTrackedUpdatingApp() const;
     bool                isSteamRunning() const;
@@ -50,7 +52,7 @@ signals:
                                int millisecondsTimeoutHint);
 
 private slots:
-    void slotHandleSteamStateChange();
+    void slotHandleSteamProcessStateChange();
     void slotHandleStreamStateChange();
 
 private:

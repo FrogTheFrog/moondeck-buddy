@@ -18,7 +18,7 @@ StreamStateHandler::StreamStateHandler()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void StreamStateHandler::endStream()
+bool StreamStateHandler::endStream()
 {
     if (m_state == shared::StreamState::Streaming)
     {
@@ -26,6 +26,8 @@ void StreamStateHandler::endStream()
         m_state = shared::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
+
+    return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

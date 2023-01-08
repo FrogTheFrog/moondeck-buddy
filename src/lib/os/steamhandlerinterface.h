@@ -18,11 +18,11 @@ public:
     virtual bool isRunningNow()                                 = 0;
     virtual bool close(std::optional<uint> grace_period_in_sec) = 0;
 
-    virtual bool                launchApp(uint app_id, const QStringList& steam_args) = 0;
-    virtual uint                getRunningApp() const                                 = 0;
-    virtual std::optional<uint> getTrackedUpdatingApp() const                         = 0;
+    virtual bool                launchApp(uint app_id)        = 0;
+    virtual uint                getRunningApp() const         = 0;
+    virtual std::optional<uint> getTrackedUpdatingApp() const = 0;
 
 signals:
-    void signalSteamStateChanged();
+    void signalProcessStateChanged();
 };
 }  // namespace os

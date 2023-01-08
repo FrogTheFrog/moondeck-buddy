@@ -3,6 +3,7 @@
 
 // system/Qt includes
 #include <QProcess>
+#include <QThread>
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -99,7 +100,7 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
+bool SteamHandler::launchApp(uint app_id)
 {
     if (m_steam_exec_path.isEmpty())
     {
@@ -119,10 +120,27 @@ bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
         return false;
     }
 
-    if (!m_steam_process.isRunningNow() || getRunningApp() != app_id)
+    if (getRunningApp() != app_id)
     {
-        const QStringList args{steam_args + QStringList{"-applaunch", QString::number(app_id)}};
-        const auto        result = QProcess::startDetached(m_steam_exec_path, args);
+        const bool        is_steam_running{m_steam_process.isRunningNow()};
+        const QStringList steam_args{(is_steam_running ? QStringList{} : QStringList{"-bigpicture"})
+                                     + QStringList{"-applaunch", QString::number(app_id)}};
+
+        if (is_steam_running)
+        {
+            const auto result = QProcess::startDetached(m_steam_exec_path, {"steam://open/bigpicture"});
+            if (!result)
+            {
+                qCWarning(lc::os) << "Failed to open Steam in big picture mode!";
+                return false;
+            }
+
+            // Need to wait a little until Steam actually goes into bigpicture mode...
+            const uint time_it_takes_steam_to_open_big_picture{1000};
+            QThread::msleep(time_it_takes_steam_to_open_big_picture);
+        }
+
+        const auto result = QProcess::startDetached(m_steam_exec_path, steam_args);
         if (!result)
         {
             qCWarning(lc::os) << "Failed to start Steam app launch sequence!";
@@ -173,7 +191,7 @@ void SteamHandler::slotSteamProcessStateChanged()
         m_steam_close_timer.stop();
     }
 
-    emit signalSteamStateChanged();
+    emit signalProcessStateChanged();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

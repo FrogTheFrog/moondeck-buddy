@@ -303,6 +303,23 @@ void setupResolution(server::HttpServer& server, os::PcControl& pc_control)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void setupStreamControl(server::HttpServer& server, os::PcControl& pc_control)
+{
+    server.route("/endStream", QHttpServerRequest::Method::Post,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const bool result{pc_control.endStream()};
+                     return QHttpServerResponse{QJsonObject{{"result", result}}};
+                 });
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void setupRouteLogging(server::HttpServer& server)
 {
     server.afterRequest(
@@ -326,6 +343,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupHostInfo(server, pc_control);
     routing_internal::setupSteamControl(server, pc_control);
     routing_internal::setupResolution(server, pc_control);
+    routing_internal::setupStreamControl(server, pc_control);
     routing_internal::setupRouteLogging(server);
 }
 

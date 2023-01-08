@@ -9,5 +9,5 @@ namespace shared
 {
 const QString APP_NAME_BUDDY{"MoonDeckBuddy"};
 const QString APP_NAME_STREAM{"MoonDeckStream"};
-constexpr int API_VERSION{1};
+constexpr int API_VERSION{2};
 }  // namespace shared

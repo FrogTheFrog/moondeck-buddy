@@ -28,7 +28,7 @@ public:
     explicit StreamStateHandler();
     ~StreamStateHandler() override = default;
 
-    void                endStream() override;
+    bool                endStream() override;
     shared::StreamState getCurrentState() const override;
 
 private slots:

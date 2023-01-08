@@ -17,7 +17,7 @@ class StreamStateHandlerInterface : public QObject
 public:
     ~StreamStateHandlerInterface() override = default;
 
-    virtual void                endStream()             = 0;
+    virtual bool                endStream()             = 0;
     virtual shared::StreamState getCurrentState() const = 0;
 
 signals:

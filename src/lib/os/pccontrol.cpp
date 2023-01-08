@@ -43,8 +43,8 @@ PcControl::PcControl()
     , m_steam_handler{std::make_unique<SteamHandler>()}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>()}
 {
-    connect(m_steam_handler.get(), &SteamHandler::signalSteamStateChanged, this,
-            &PcControl::slotHandleSteamStateChange);
+    connect(m_steam_handler.get(), &SteamHandler::signalProcessStateChanged, this,
+            &PcControl::slotHandleSteamProcessStateChange);
     connect(m_stream_state_handler.get(), &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
 }
@@ -60,12 +60,7 @@ bool PcControl::launchSteamApp(uint app_id)
         m_cursor_handler->hideCursor();
     }
 
-    QStringList steam_args;
-    if (m_stream_state_handler->getCurrentState() == shared::StreamState::Streaming || !m_steam_handler->isRunningNow())
-    {
-        steam_args += "-bigpicture";
-    }
-    return m_steam_handler->launchApp(app_id, steam_args);
+    return m_steam_handler->launchApp(app_id);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -121,6 +116,13 @@ bool PcControl::suspendPC(uint grace_period_in_sec)
     }
 
     return false;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool PcControl::endStream()
+{
+    return m_stream_state_handler->endStream();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -188,7 +190,7 @@ void PcControl::restoreChangedResolution()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PcControl::slotHandleSteamStateChange()
+void PcControl::slotHandleSteamProcessStateChange()
 {
     if (m_steam_handler->isRunning())
     {
@@ -197,8 +199,8 @@ void PcControl::slotHandleSteamStateChange()
     else
     {
         qCDebug(lc::os) << "Handling Steam exit.";
-        m_stream_state_handler->endStream();
-        m_resolution_handler->restoreResolution();
+        endStream();
+        restoreChangedResolution();
     }
 }
 
@@ -211,6 +213,7 @@ void PcControl::slotHandleStreamStateChange()
         case shared::StreamState::NotStreaming:
         {
             qCDebug(lc::os) << "Stream has ended.";
+            restoreChangedResolution();
             break;
         }
         case shared::StreamState::Streaming:
@@ -221,8 +224,6 @@ void PcControl::slotHandleStreamStateChange()
         case shared::StreamState::StreamEnding:
         {
             qCDebug(lc::os) << "Stream is ending.";
-            m_steam_handler->close(std::nullopt);
-            m_resolution_handler->restoreResolution();
             break;
         }
     }

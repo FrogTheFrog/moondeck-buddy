@@ -25,7 +25,7 @@ public:
     bool isRunningNow() override;
     bool close(std::optional<uint> grace_period_in_sec) override;
 
-    bool                launchApp(uint app_id, const QStringList& steam_args) override;
+    bool                launchApp(uint app_id) override;
     uint                getRunningApp() const override;
     std::optional<uint> getTrackedUpdatingApp() const override;
 

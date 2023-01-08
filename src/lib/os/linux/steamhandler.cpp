@@ -37,10 +37,9 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
-bool SteamHandler::launchApp(uint app_id, const QStringList& steam_args)
+bool SteamHandler::launchApp(uint app_id)
 {
     Q_UNUSED(app_id)
-    Q_UNUSED(steam_args)
     qCCritical(lc::os) << Q_FUNC_INFO << ": not implemented!";
     return false;
 }
