@@ -159,15 +159,19 @@ bool SteamHandler::launchApp(uint app_id)
 
 uint SteamHandler::getRunningApp() const
 {
-    return m_tracked_app && m_tracked_app->m_is_running ? m_tracked_app->m_app_id
-                                                        : m_global_app_id.value_or(FALLBACK_APP_ID);
+    return m_process_handler->isRunning() ? m_tracked_app && m_tracked_app->m_is_running
+                                                ? m_tracked_app->m_app_id
+                                                : m_global_app_id.value_or(FALLBACK_APP_ID)
+                                          : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
 {
-    return m_tracked_app && m_tracked_app->m_is_updating ? std::make_optional(m_tracked_app->m_app_id) : std::nullopt;
+    return m_process_handler->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
+               ? std::make_optional(m_tracked_app->m_app_id)
+               : std::nullopt;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

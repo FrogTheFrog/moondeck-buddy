@@ -18,8 +18,8 @@ public:
     {
         using List = std::vector<std::unique_ptr<Node>>;
 
-        QString                             m_key{};
-        std::variant<List, QString, qint64> m_value{QString{}};
+        QString                             m_key;
+        std::variant<List, QString, qint64> m_value;
     };
 
     explicit RegistryFileParser()  = default;

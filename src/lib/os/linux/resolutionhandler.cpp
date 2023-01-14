@@ -15,7 +15,7 @@ ResolutionHandler::~ResolutionHandler()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-// NOLINTNEXTLINE(*-static)
+// NOLINTNEXTLINE(*-static, *swappable-parameters)
 bool ResolutionHandler::changeResolution(uint width, uint height)
 {
     Q_UNUSED(width)

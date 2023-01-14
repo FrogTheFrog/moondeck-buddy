@@ -55,19 +55,20 @@ bool isEscapable(char byte)
 //---------------------------------------------------------------------------------------------------------------------
 
 using Node = os::RegistryFileParser::Node;
-QString toString(const uint indent_level, const Node& node);
-QString toString(const uint indent_level, const Node::List& node_list);
+QString toString(qsizetype indent_level, const Node& node);
+QString toString(qsizetype indent_level, const Node::List& node_list);
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QString indent(const uint level)
+QString indent(qsizetype level)
 {
-    return QString(level * 2, ' ');
+    return QString{level * 2, ' '};
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QString toString(const uint indent_level, const Node& node)
+// NOLINTNEXTLINE(*-no-recursion)
+QString toString(qsizetype indent_level, const Node& node)
 {
     QString result{indent(indent_level) % QStringLiteral("\"") % node.m_key % QStringLiteral("\"")};
     if (const auto* value = std::get_if<Node::List>(&node.m_value); value)
@@ -91,7 +92,8 @@ QString toString(const uint indent_level, const Node& node)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QString toString(const uint indent_level, const Node::List& node_list)
+// NOLINTNEXTLINE(*-no-recursion)
+QString toString(qsizetype indent_level, const Node::List& node_list)
 {
     QStringList entries;
     for (const auto& node : node_list)
@@ -276,7 +278,7 @@ bool RegistryFileParser::saveBuffer()
     auto& current_parent{m_data.m_parents.back()};
     if (m_data.m_expecting_key_value)
     {
-        current_parent->push_back(std::make_unique<Node>(m_data.m_buffer));
+        current_parent->push_back(std::make_unique<Node>(Node{m_data.m_buffer, QString{}}));
     }
     else
     {

@@ -34,7 +34,7 @@ QString NativeProcessHandler::getExecPath(uint pid)
 
 void NativeProcessHandler::close(uint pid)
 {
-    if (kill(pid, SIGTERM) < 0)
+    if (kill(static_cast<pid_t>(pid), SIGTERM) < 0)
     {
         const auto error{errno};
         if (error != ESRCH)
@@ -48,7 +48,7 @@ void NativeProcessHandler::close(uint pid)
 
 void NativeProcessHandler::terminate(uint pid)
 {
-    if (kill(pid, SIGKILL) < 0)
+    if (kill(static_cast<pid_t>(pid), SIGKILL) < 0)
     {
         const auto error{errno};
         if (error != ESRCH)
