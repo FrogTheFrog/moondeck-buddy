@@ -8,7 +8,7 @@
 
 namespace
 {
-bool validProcessExists(QString exec_path, const QRegularExpression& exec_regex)
+bool validProcessExists(const QString& exec_path, const QRegularExpression& exec_regex)
 {
     if (exec_path.isEmpty())
     {

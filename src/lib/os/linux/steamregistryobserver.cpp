@@ -122,18 +122,18 @@ void SteamRegistryObserver::slotRegistryChanged()
         const auto* app_data{getEntry<os::RegistryFileWatcher::NodeList>(
             APPS_PATH + QStringList{QString::number(m_tracked_app_data->m_app_id)}, data)};
 
-        bool is_running{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_RUNNING_PATH, *app_data))};
-        if (is_running != m_tracked_app_data->m_is_running)
-        {
-            m_tracked_app_data->m_is_running = is_running;
-            emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_running);
-        }
-
         bool is_updating{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_UPDATING_PATH, *app_data))};
         if (is_updating != m_tracked_app_data->m_is_updating)
         {
             m_tracked_app_data->m_is_updating = is_updating;
             emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_updating);
+        }
+
+        bool is_running{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_RUNNING_PATH, *app_data))};
+        if (is_running != m_tracked_app_data->m_is_running)
+        {
+            m_tracked_app_data->m_is_running = is_running;
+            emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_running);
         }
     }
 }

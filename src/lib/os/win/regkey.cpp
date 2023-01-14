@@ -189,8 +189,10 @@ RegKey::~RegKey()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void RegKey::open(const QString& path, const QStringList& notification_names, bool auto_retry)
+void RegKey::open(const QString& path, const QStringList& notification_names)
 {
+    close();
+
     const auto path_components = PathComponents::parse(path);
     if (!path_components)
     {
@@ -205,26 +207,23 @@ void RegKey::open(const QString& path, const QStringList& notification_names, bo
         return;
     }
 
-    if (auto_retry)
-    {
-        connect(&m_retry_timer, &QTimer::timeout, this,
-                [this, path, path_components, notification_names]()
+    connect(&m_retry_timer, &QTimer::timeout, this,
+            [this, path, path_components, notification_names]()
+            {
+                if (openKey(*path_components, path, m_key_handle))
                 {
-                    if (openKey(*path_components, path, m_key_handle))
-                    {
-                        m_path = path;
-                        addNotifyOnValueChange(notification_names);
-                        return;
-                    }
+                    m_path = path;
+                    addNotifyOnValueChange(notification_names);
+                    return;
+                }
 
-                    m_retry_timer.start();
-                });
+                m_retry_timer.start();
+            });
 
-        m_retry_timer.setSingleShot(true);
+    m_retry_timer.setSingleShot(true);
 
-        const int single_second{1000};
-        m_retry_timer.start(single_second);
-    }
+    const int single_second{1000};
+    m_retry_timer.start(single_second);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

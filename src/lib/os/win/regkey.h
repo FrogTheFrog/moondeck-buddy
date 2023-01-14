@@ -1,11 +1,13 @@
 #pragma once
 
+// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
+#include <windows.h>
+
 // system/Qt includes
 #include <QObject>
 #include <QTimer>
 #include <QVariant>
 #include <QWinEventNotifier>
-#include <windows.h>
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -20,7 +22,7 @@ public:
     explicit RegKey() = default;
     ~RegKey() override;
 
-    void open(const QString& path, const QStringList& notification_names = {}, bool auto_retry = true);
+    void open(const QString& path, const QStringList& notification_names = {});
     void close();
 
     bool     isOpen() const;

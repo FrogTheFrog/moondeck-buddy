@@ -100,6 +100,7 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 bool SteamHandler::launchApp(uint app_id)
 {
     if (m_steam_exec_path.isEmpty())

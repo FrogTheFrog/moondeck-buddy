@@ -5,9 +5,10 @@
 #if defined(Q_OS_WIN)
     #include "win/autostarthandler.h"
     #include "win/cursorhandler.h"
+    #include "win/nativeprocesshandler.h"
     #include "win/pcstatehandler.h"
     #include "win/resolutionhandler.h"
-    #include "win/steamhandler.h"
+    #include "win/steamregistryobserver.h"
     #include "win/streamstatehandler.h"
 #elif defined(Q_OS_LINUX)
     #include "linux/autostarthandler.h"
