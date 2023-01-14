@@ -12,15 +12,17 @@
 #elif defined(Q_OS_LINUX)
     #include "linux/autostarthandler.h"
     #include "linux/cursorhandler.h"
+    #include "linux/nativeprocesshandler.h"
     #include "linux/pcstatehandler.h"
     #include "linux/resolutionhandler.h"
-    #include "linux/steamhandler.h"
+    #include "linux/steamregistryobserver.h"
     #include "shared/streamstatehandler.h"
 #else
     #error OS is not supported!
 #endif
 
 // local includes
+#include "processhandler.h"
 #include "shared/constants.h"
 #include "shared/loggingcategories.h"
 
@@ -40,7 +42,9 @@ PcControl::PcControl()
     , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<PcStateHandler>()}
     , m_resolution_handler{std::make_unique<ResolutionHandler>()}
-    , m_steam_handler{std::make_unique<SteamHandler>()}
+    , m_steam_handler{std::make_unique<SteamHandler>(
+          std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
+          std::make_unique<SteamRegistryObserver>())}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>()}
 {
     connect(m_steam_handler.get(), &SteamHandler::signalProcessStateChanged, this,

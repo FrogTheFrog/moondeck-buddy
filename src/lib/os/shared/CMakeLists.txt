@@ -17,6 +17,7 @@ qt_standard_project_setup()
 
 set(HEADERS
     streamstatehandler.h
+    trackedappdata.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------

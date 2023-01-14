@@ -9,6 +9,7 @@
 #include "server/httpserver.h"
 #include "server/pairingmanager.h"
 #include "shared/constants.h"
+#include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
 #include "utils/helpers.h"
 #include "utils/logsettings.h"
@@ -20,6 +21,8 @@
 #if defined(Q_OS_WIN)
     #include "os/win/streamstatehandler.h"
 #endif
+
+#include "os/linux/steamregistryobserver.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -74,9 +77,12 @@ int main(int argc, char* argv[])
         qFatal("Failed to start server!");
     }
 
-    // TODO: remove once Nvidia kills GameStream
+// TODO: remove once Nvidia kills GameStream
+#if defined(Q_OS_WIN)
     getMouseAccelResetHack() = app_settings.m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
+#endif
 
+    qCInfo(lc::buddyMain) << "startup finished.";
     QGuiApplication::setQuitOnLastWindowClosed(false);
     return QCoreApplication::exec();
 }

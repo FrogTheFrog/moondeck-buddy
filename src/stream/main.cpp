@@ -3,6 +3,7 @@
 
 // local includes
 #include "shared/constants.h"
+#include "shared/loggingcategories.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
 #include "utils/singleinstanceguard.h"
@@ -25,5 +26,6 @@ int main(int argc, char* argv[])
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
+    qCInfo(lc::streamMain) << "startup finished.";
     return QCoreApplication::exec();
 }

@@ -32,10 +32,13 @@ ENDIF()
 set(HEADERS
     autostarthandlerinterface.h
     cursorhandlerinterface.h
+    nativeprocesshandlerinterface.h
     pccontrol.h
     pcstatehandlerinterface.h
+    processhandler.h
     resolutionhandlerinterface.h
-    steamhandlerinterface.h
+    steamhandler.h
+    steamregistryobserverinterface.h
     streamstatehandlerinterface.h
     )
 
@@ -45,6 +48,8 @@ set(HEADERS
 
 set(SOURCES
     pccontrol.cpp
+    processhandler.cpp
+    steamhandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

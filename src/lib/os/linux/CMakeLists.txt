@@ -18,9 +18,12 @@ qt_standard_project_setup()
 set(HEADERS
     autostarthandler.h
     cursorhandler.h
+    nativeprocesshandler.h
     pcstatehandler.h
+    registryfileparser.h
+    registryfilewatcher.h
     resolutionhandler.h
-    steamhandler.h
+    steamregistryobserver.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -30,9 +33,12 @@ set(HEADERS
 set(SOURCES
     autostarthandler.cpp
     cursorhandler.cpp
+    nativeprocesshandler.cpp
     pcstatehandler.cpp
+    registryfileparser.cpp
+    registryfilewatcher.cpp
     resolutionhandler.cpp
-    steamhandler.cpp
+    steamregistryobserver.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

@@ -9,8 +9,8 @@
 #include "cursorhandlerinterface.h"
 #include "pcstatehandlerinterface.h"
 #include "resolutionhandlerinterface.h"
-#include "steamhandlerinterface.h"
 #include "streamstatehandlerinterface.h"
+#include "steamhandler.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ private:
     std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
     std::unique_ptr<PcStateHandlerInterface>     m_pc_state_handler;
     std::unique_ptr<ResolutionHandlerInterface>  m_resolution_handler;
-    std::unique_ptr<SteamHandlerInterface>       m_steam_handler;
+    std::unique_ptr<SteamHandler>                m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
 };
 }  // namespace os
