@@ -1,8 +1,8 @@
 #pragma once
 
 // system/Qt includes
-#include <QTimer>
 #include <QRegularExpression>
+#include <QTimer>
 
 // local includes
 #include "nativeprocesshandlerinterface.h"

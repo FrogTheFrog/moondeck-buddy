@@ -144,7 +144,7 @@ bool RegistryFileParser::parse(const QString& path)
         }
     }
 
-    //qCDebug(lc::os).noquote().nospace() << "Registry file:\n\n" << toString(0, m_root);
+    // qCDebug(lc::os).noquote().nospace() << "Registry file:\n\n" << toString(0, m_root);
     return true;
 }
 
