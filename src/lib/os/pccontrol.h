@@ -7,10 +7,10 @@
 // local includes
 #include "autostarthandlerinterface.h"
 #include "cursorhandlerinterface.h"
-#include "pcstatehandlerinterface.h"
+#include "pcstatehandler.h"
 #include "resolutionhandlerinterface.h"
-#include "streamstatehandlerinterface.h"
 #include "steamhandler.h"
+#include "streamstatehandlerinterface.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -58,9 +58,9 @@ private slots:
 private:
     std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
     std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
-    std::unique_ptr<PcStateHandlerInterface>     m_pc_state_handler;
+    PcStateHandler                               m_pc_state_handler;
     std::unique_ptr<ResolutionHandlerInterface>  m_resolution_handler;
-    std::unique_ptr<SteamHandler>                m_steam_handler;
+    SteamHandler                                 m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
 };
 }  // namespace os

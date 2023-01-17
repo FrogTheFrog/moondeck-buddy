@@ -32,7 +32,6 @@ public slots:
     void slotResetState();
 
 private:
-    QString         m_app_name;
     QTimer          m_state_change_back_timer;
     bool            m_privilege_acquired;
     shared::PcState m_state{shared::PcState::Normal};

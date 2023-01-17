@@ -22,8 +22,6 @@
     #include "os/win/streamstatehandler.h"
 #endif
 
-#include "os/linux/steamregistryobserver.h"
-
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)

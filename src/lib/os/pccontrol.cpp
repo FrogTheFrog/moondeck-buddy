@@ -13,8 +13,8 @@
 #elif defined(Q_OS_LINUX)
     #include "linux/autostarthandler.h"
     #include "linux/cursorhandler.h"
+    #include "linux/nativepcstatehandler.h"
     #include "linux/nativeprocesshandler.h"
-    #include "linux/pcstatehandler.h"
     #include "linux/resolutionhandler.h"
     #include "linux/steamregistryobserver.h"
     #include "shared/streamstatehandler.h"
@@ -23,6 +23,7 @@
 #endif
 
 // local includes
+#include "pcstatehandler.h"
 #include "processhandler.h"
 #include "shared/constants.h"
 #include "shared/loggingcategories.h"
@@ -41,14 +42,18 @@ namespace os
 PcControl::PcControl()
     : m_auto_start_handler{std::make_unique<AutoStartHandler>()}
     , m_cursor_handler{std::make_unique<CursorHandler>()}
-    , m_pc_state_handler{std::make_unique<PcStateHandler>()}
+    , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<ResolutionHandler>()}
-    , m_steam_handler{std::make_unique<SteamHandler>(
-          std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
-          std::make_unique<SteamRegistryObserver>())}
+    , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
+                      std::make_unique<SteamRegistryObserver>()}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>()}
 {
-    connect(m_steam_handler.get(), &SteamHandler::signalProcessStateChanged, this,
+    assert(m_auto_start_handler != nullptr);
+    assert(m_cursor_handler != nullptr);
+    assert(m_resolution_handler != nullptr);
+    assert(m_stream_state_handler != nullptr);
+
+    connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
             &PcControl::slotHandleSteamProcessStateChange);
     connect(m_stream_state_handler.get(), &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
@@ -58,28 +63,28 @@ PcControl::PcControl()
 
 bool PcControl::launchSteamApp(uint app_id)
 {
-    const bool should_probably_hide_cursor{!m_steam_handler->isRunningNow() || getRunningApp() == 0};
+    const bool should_probably_hide_cursor{!m_steam_handler.isRunningNow() || getRunningApp() == 0};
     if (should_probably_hide_cursor)
     {
         qCDebug(lc::os) << "Trying to hide cursor.";
         m_cursor_handler->hideCursor();
     }
 
-    return m_steam_handler->launchApp(app_id);
+    return m_steam_handler.launchApp(app_id);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::closeSteam(std::optional<uint> grace_period_in_sec)
 {
-    return m_steam_handler->close(grace_period_in_sec);
+    return m_steam_handler.close(grace_period_in_sec);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::shutdownPC(uint grace_period_in_sec)
 {
-    if (m_pc_state_handler->shutdownPC(grace_period_in_sec))
+    if (m_pc_state_handler.shutdownPC(grace_period_in_sec))
     {
         closeSteam(std::nullopt);
         emit signalShowTrayMessage("Shutdown in progress", shared::APP_NAME_BUDDY + " is putting you to sleep :)",
@@ -95,7 +100,7 @@ bool PcControl::shutdownPC(uint grace_period_in_sec)
 
 bool PcControl::restartPC(uint grace_period_in_sec)
 {
-    if (m_pc_state_handler->restartPC(grace_period_in_sec))
+    if (m_pc_state_handler.restartPC(grace_period_in_sec))
     {
         closeSteam(std::nullopt);
         emit signalShowTrayMessage("Restart in progress", shared::APP_NAME_BUDDY + " is giving you new life :?",
@@ -111,7 +116,7 @@ bool PcControl::restartPC(uint grace_period_in_sec)
 
 bool PcControl::suspendPC(uint grace_period_in_sec)
 {
-    if (m_pc_state_handler->suspendPC(grace_period_in_sec))
+    if (m_pc_state_handler.suspendPC(grace_period_in_sec))
     {
         closeSteam(std::nullopt);
         emit signalShowTrayMessage(
@@ -134,21 +139,21 @@ bool PcControl::endStream()
 
 uint PcControl::getRunningApp() const
 {
-    return m_steam_handler->getRunningApp();
+    return m_steam_handler.getRunningApp();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 std::optional<uint> PcControl::getTrackedUpdatingApp() const
 {
-    return m_steam_handler->getTrackedUpdatingApp();
+    return m_steam_handler.getTrackedUpdatingApp();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::isSteamRunning() const
 {
-    return m_steam_handler->isRunning();
+    return m_steam_handler.isRunning();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -162,7 +167,7 @@ shared::StreamState PcControl::getStreamState() const
 
 shared::PcState PcControl::getPcState() const
 {
-    return m_pc_state_handler->getState();
+    return m_pc_state_handler.getState();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -197,7 +202,7 @@ void PcControl::restoreChangedResolution()
 
 void PcControl::slotHandleSteamProcessStateChange()
 {
-    if (m_steam_handler->isRunning())
+    if (m_steam_handler.isRunning())
     {
         qCDebug(lc::os) << "Handling Steam start.";
     }
