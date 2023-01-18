@@ -90,7 +90,7 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
     }
 
     QTimer::singleShot(getTimeoutTime(grace_period_in_sec), this,
-                       [this, failed_to_do_entry, &do_method]()
+                       [this, failed_to_do_entry, do_method]()
                        {
                            if (!(m_native_handler.get()->*do_method)())
                            {

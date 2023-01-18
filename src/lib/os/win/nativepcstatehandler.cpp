@@ -96,6 +96,11 @@ bool NativePcStateHandler::canSuspendPC()
 
 bool NativePcStateHandler::shutdownPC()
 {
+    if (!canShutdownPC())
+    {
+        return false;
+    }
+
     if (InitiateSystemShutdownW(nullptr, nullptr, 0, TRUE, FALSE) == FALSE)
     {
         qCWarning(lc::os) << "InitiateSystemShutdownW (shutdown) failed! Reason:"
@@ -110,6 +115,11 @@ bool NativePcStateHandler::shutdownPC()
 
 bool NativePcStateHandler::restartPC()
 {
+    if (!canRestartPC())
+    {
+        return false;
+    }
+
     if (InitiateSystemShutdownW(nullptr, nullptr, 0, TRUE, TRUE) == FALSE)
     {
         qCWarning(lc::os) << "InitiateSystemShutdownW (restart) failed! Reason:"
@@ -124,6 +134,11 @@ bool NativePcStateHandler::restartPC()
 
 bool NativePcStateHandler::suspendPC()
 {
+    if (!canSuspendPC())
+    {
+        return false;
+    }
+
     if (SetSuspendState(FALSE, TRUE, FALSE) == FALSE)
     {
         qCWarning(lc::os) << "SetSuspendState failed! Reason:" << getError(static_cast<LSTATUS>(GetLastError()));
