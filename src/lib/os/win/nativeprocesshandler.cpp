@@ -6,6 +6,7 @@
 
 // system/Qt includes
 #include <psapi.h>
+#include <system_error>
 
 // local includes
 #include "shared/loggingcategories.h"
