@@ -22,10 +22,10 @@ add_compile_definitions(PSAPI_VERSION=1)
 set(HEADERS
     autostarthandler.h
     cursorhandler.h
+    nativepcstatehandler.h
     nativeprocesshandler.h
     regkey.h
     processtracker.h
-    pcstatehandler.h
     processenumerator.h
     resolutionhandler.h
     steamregistryobserver.h
@@ -39,10 +39,10 @@ set(HEADERS
 set(SOURCES
     autostarthandler.cpp
     cursorhandler.cpp
+    nativepcstatehandler.cpp
     nativeprocesshandler.cpp
     regkey.cpp
     processtracker.cpp
-    pcstatehandler.cpp
     processenumerator.cpp
     resolutionhandler.cpp
     steamregistryobserver.cpp

@@ -5,8 +5,8 @@
 #if defined(Q_OS_WIN)
     #include "win/autostarthandler.h"
     #include "win/cursorhandler.h"
+    #include "win/nativepcstatehandler.h"
     #include "win/nativeprocesshandler.h"
-    #include "win/pcstatehandler.h"
     #include "win/resolutionhandler.h"
     #include "win/steamregistryobserver.h"
     #include "win/streamstatehandler.h"
