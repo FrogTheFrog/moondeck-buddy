@@ -21,11 +21,13 @@ int main(int argc, char* argv[])
 
     QCoreApplication app{argc, argv};
     utils::LogSettings::getInstance().init("stream.log");
+    qCInfo(lc::streamMain) << "startup.";
 
     utils::Heartbeat heartbeat{shared::APP_NAME_STREAM};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
     qCInfo(lc::streamMain) << "startup finished.";
     return QCoreApplication::exec();
 }

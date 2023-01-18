@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
 
     QApplication app{argc, argv};
     utils::LogSettings::getInstance().init("buddy.log");
+    qCInfo(lc::buddyMain) << "startup.";
 
     const utils::AppSettings app_settings{utils::getExecDir() + "settings.json"};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
@@ -80,7 +81,8 @@ int main(int argc, char* argv[])
     getMouseAccelResetHack() = app_settings.m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 #endif
 
-    qCInfo(lc::buddyMain) << "startup finished.";
     QGuiApplication::setQuitOnLastWindowClosed(false);
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
+    qCInfo(lc::buddyMain) << "startup finished.";
     return QCoreApplication::exec();
 }
