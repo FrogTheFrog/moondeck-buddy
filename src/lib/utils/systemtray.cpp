@@ -1,6 +1,9 @@
 // header file include
 #include "systemtray.h"
 
+// local includes
+#include "os/pccontrol.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace utils

@@ -14,12 +14,12 @@
 
 namespace
 {
-std::optional<QString> getLinkLocation()
+QString getLinkLocation()
 {
     const QString base = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
     if (base.isEmpty())
     {
-        return std::nullopt;
+        return {};
     }
 
     const QFileInfo fileInfo(QCoreApplication::applicationFilePath());
@@ -31,30 +31,29 @@ std::optional<QString> getLinkLocation()
 
 namespace os
 {
-// NOLINTNEXTLINE(*-static)
 void AutoStartHandler::setAutoStart(bool enable)
 {
     const auto location{getLinkLocation()};
-    if (!location)
+    if (location.isEmpty())
     {
         qCWarning(lc::os) << "Could not determine autostart location!";
         return;
     }
 
-    if (QFile::exists(*location))
+    if (QFile::exists(location))
     {
-        if (!QFile::remove(*location))
+        if (!QFile::remove(location))
         {
-            qCWarning(lc::os) << "Failed to remove" << *location;
+            qCWarning(lc::os) << "Failed to remove" << location;
             return;
         }
     }
 
     if (enable)
     {
-        if (!QFile::link(QCoreApplication::applicationFilePath(), *location))
+        if (!QFile::link(QCoreApplication::applicationFilePath(), location))
         {
-            qCWarning(lc::os) << "Failed to create link for" << *location;
+            qCWarning(lc::os) << "Failed to create link for" << location;
             return;
         }
     }
@@ -62,16 +61,15 @@ void AutoStartHandler::setAutoStart(bool enable)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-// NOLINTNEXTLINE(*-static)
 bool AutoStartHandler::isAutoStartEnabled() const
 {
     const auto location{getLinkLocation()};
-    if (!location || !QFile::exists(*location))
+    if (location.isEmpty() || !QFile::exists(location))
     {
         return false;
     }
 
-    const QFileInfo info(*location);
+    const QFileInfo info(location);
     if (!info.isShortcut())
     {
         return false;

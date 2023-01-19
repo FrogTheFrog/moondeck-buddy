@@ -15,7 +15,7 @@ class AutoStartHandler : public AutoStartHandlerInterface
     Q_DISABLE_COPY(AutoStartHandler)
 
 public:
-    explicit AutoStartHandler()          = default;
+    explicit AutoStartHandler(const shared::AppMetadata& app_meta);
     virtual ~AutoStartHandler() override = default;
 
     void setAutoStart(bool enable) override;

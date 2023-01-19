@@ -28,14 +28,14 @@ public:
     explicit StreamStateHandler();
     ~StreamStateHandler() override = default;
 
-    bool                endStream() override;
-    shared::StreamState getCurrentState() const override;
+    bool               endStream() override;
+    enums::StreamState getCurrentState() const override;
 
 private slots:
     void slotHandleProcessStateChanges();
 
 private:
-    shared::StreamState m_state{shared::StreamState::NotStreaming};
+    enums::StreamState m_state{enums::StreamState::NotStreaming};
     utils::Heartbeat    m_helper_heartbeat;
     ProcessTracker      m_nvidia_stream_process;
 };

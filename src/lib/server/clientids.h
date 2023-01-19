@@ -24,7 +24,7 @@ public:
     void removeId(const QString& client_id);
 
 private:
-    QString           m_filename;
+    QString           m_filepath;
     std::set<QString> m_ids;
 };
 }  // namespace server

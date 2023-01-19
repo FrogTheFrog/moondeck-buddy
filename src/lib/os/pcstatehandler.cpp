@@ -41,7 +41,7 @@ PcStateHandler::PcStateHandler(std::unique_ptr<NativePcStateHandlerInterface> na
 
 //---------------------------------------------------------------------------------------------------------------------
 
-shared::PcState PcStateHandler::getState() const
+enums::PcState PcStateHandler::getState() const
 {
     return m_state;
 }
@@ -51,7 +51,7 @@ shared::PcState PcStateHandler::getState() const
 bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
-                         &NativePcStateHandlerInterface::shutdownPC, shared::PcState::ShuttingDown);
+                         &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 bool PcStateHandler::restartPC(uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
-                         &NativePcStateHandlerInterface::restartPC, shared::PcState::Restarting);
+                         &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ bool PcStateHandler::restartPC(uint grace_period_in_sec)
 bool PcStateHandler::suspendPC(uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
-                         &NativePcStateHandlerInterface::suspendPC, shared::PcState::Suspending);
+                         &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ bool PcStateHandler::suspendPC(uint grace_period_in_sec)
 bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)
                                    const QString& failed_to_do_entry, NativeMethod can_do_method,
-                                   NativeMethod do_method, shared::PcState new_state)
+                                   NativeMethod do_method, enums::PcState new_state)
 {
     if (m_state_change_back_timer.isActive())
     {
@@ -111,6 +111,6 @@ void PcStateHandler::slotResetState()
 {
     m_state_change_back_timer.stop();
     qCInfo(lc::os) << "Failed to change the PC state - resetting back to normal.";
-    m_state = shared::PcState::Normal;
+    m_state = enums::PcState::Normal;
 }
 }  // namespace os

@@ -1,5 +1,6 @@
 // system/Qt includes
 #include <QApplication>
+#include <QDir>
 #include <QMainWindow>
 
 // local includes
@@ -8,14 +9,14 @@
 #include "server/clientids.h"
 #include "server/httpserver.h"
 #include "server/pairingmanager.h"
-#include "shared/constants.h"
+#include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
-#include "utils/helpers.h"
 #include "utils/logsettings.h"
 #include "utils/pairinginput.h"
 #include "utils/singleinstanceguard.h"
 #include "utils/systemtray.h"
+#include "utils/unixsignalhandler.h"
 
 // TODO: remove hack
 #if defined(Q_OS_WIN)
@@ -27,27 +28,33 @@
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    utils::SingleInstanceGuard guard{shared::APP_NAME_BUDDY};
+    constexpr int             api_version{2};
+    const shared::AppMetadata app_meta{shared::AppMetadata::App::Buddy};
+
+    utils::SingleInstanceGuard guard{app_meta.getAppName()};
     if (!guard.tryToRun())
     {
         return EXIT_SUCCESS;
     }
 
     QApplication app{argc, argv};
-    utils::LogSettings::getInstance().init("buddy.log");
+    QCoreApplication::setApplicationName(app_meta.getAppName());
+
+    utils::installSignalHandler();
+    utils::LogSettings::getInstance().init(app_meta.getLogPath());
     qCInfo(lc::buddyMain) << "startup.";
 
-    const utils::AppSettings app_settings{utils::getExecDir() + "settings.json"};
+    const utils::AppSettings app_settings{app_meta.getSettingsPath()};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
 
-    server::ClientIds      client_ids{utils::getExecDir() + "clients.json"};
-    server::HttpServer     new_server{shared::API_VERSION, client_ids};
+    server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
+    server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl pc_control;
+    os::PcControl pc_control{app_meta};
 
     const QIcon               icon{":/icons/app.ico"};
-    const utils::SystemTray   tray{icon, shared::APP_NAME_BUDDY, pc_control};
+    const utils::SystemTray   tray{icon, app_meta.getAppName(), pc_control};
     const utils::PairingInput pairing_input;
 
     // Tray + app

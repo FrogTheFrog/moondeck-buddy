@@ -123,14 +123,16 @@ bool SteamHandler::launchApp(uint app_id)
 
     if (getRunningApp() != app_id)
     {
-        const bool        is_steam_running{m_process_handler->isRunningNow()};
-        const QStringList steam_args{(is_steam_running ? QStringList{} : QStringList{"-bigpicture"})
-                                     + QStringList{"-applaunch", QString::number(app_id)}};
-
+        const bool is_steam_running{m_process_handler->isRunningNow()};
         if (is_steam_running)
         {
-            const auto result = QProcess::startDetached(m_steam_exec_path, {"steam://open/bigpicture"});
-            if (!result)
+            QProcess steam_process;
+            steam_process.setStandardOutputFile(QProcess::nullDevice());
+            steam_process.setStandardErrorFile(QProcess::nullDevice());
+            steam_process.setProgram(m_steam_exec_path);
+            steam_process.setArguments({"steam://open/bigpicture"});
+
+            if (!steam_process.startDetached())
             {
                 qCWarning(lc::os) << "Failed to open Steam in big picture mode!";
                 return false;
@@ -141,8 +143,14 @@ bool SteamHandler::launchApp(uint app_id)
             QThread::msleep(time_it_takes_steam_to_open_big_picture);
         }
 
-        const auto result = QProcess::startDetached(m_steam_exec_path, steam_args);
-        if (!result)
+        QProcess steam_process;
+        steam_process.setStandardOutputFile(QProcess::nullDevice());
+        steam_process.setStandardErrorFile(QProcess::nullDevice());
+        steam_process.setProgram(m_steam_exec_path);
+        steam_process.setArguments((is_steam_running ? QStringList{} : QStringList{"-bigpicture"})
+                                   + QStringList{"-applaunch", QString::number(app_id)});
+
+        if (!steam_process.startDetached())
         {
             qCWarning(lc::os) << "Failed to start Steam app launch sequence!";
             return false;

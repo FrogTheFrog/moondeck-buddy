@@ -16,7 +16,7 @@ qt_standard_project_setup()
 #----------------------------------------------------------------------------------------------------------------------
 
 set(HEADERS
-    constants.h
+    appmetadata.h
     enums.h
     loggingcategories.h
     )
@@ -26,6 +26,7 @@ set(HEADERS
 #----------------------------------------------------------------------------------------------------------------------
 
 set(SOURCES
+    appmetadata.cpp
     loggingcategories.cpp
     )
 

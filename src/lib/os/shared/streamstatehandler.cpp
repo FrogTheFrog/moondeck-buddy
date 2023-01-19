@@ -1,15 +1,12 @@
 // header file include
 #include "streamstatehandler.h"
 
-// local includes
-#include "shared/constants.h"
-
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-StreamStateHandler::StreamStateHandler()
-    : m_helper_heartbeat{shared::APP_NAME_STREAM}
+StreamStateHandler::StreamStateHandler(const QString& heartbeat_key)
+    : m_helper_heartbeat{heartbeat_key}
 {
     connect(&m_helper_heartbeat, &utils::Heartbeat::signalStateChanged, this,
             &StreamStateHandler::slotHandleProcessStateChanges);
@@ -20,10 +17,10 @@ StreamStateHandler::StreamStateHandler()
 
 bool StreamStateHandler::endStream()
 {
-    if (m_state == shared::StreamState::Streaming)
+    if (m_state == enums::StreamState::Streaming)
     {
         m_helper_heartbeat.terminate();
-        m_state = shared::StreamState::StreamEnding;
+        m_state = enums::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
 
@@ -32,7 +29,7 @@ bool StreamStateHandler::endStream()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-shared::StreamState StreamStateHandler::getCurrentState() const
+enums::StreamState StreamStateHandler::getCurrentState() const
 {
     return m_state;
 }
@@ -43,21 +40,21 @@ void StreamStateHandler::slotHandleProcessStateChanges()
 {
     switch (m_state)
     {
-        case shared::StreamState::NotStreaming:
+        case enums::StreamState::NotStreaming:
         {
             if (m_helper_heartbeat.isAlive())
             {
-                m_state = shared::StreamState::Streaming;
+                m_state = enums::StreamState::Streaming;
                 emit signalStreamStateChanged();
             }
             break;
         }
-        case shared::StreamState::Streaming:
-        case shared::StreamState::StreamEnding:
+        case enums::StreamState::Streaming:
+        case enums::StreamState::StreamEnding:
         {
             if (!m_helper_heartbeat.isAlive())
             {
-                m_state = shared::StreamState::NotStreaming;
+                m_state = enums::StreamState::NotStreaming;
                 emit signalStreamStateChanged();
             }
             break;

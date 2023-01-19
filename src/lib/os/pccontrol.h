@@ -5,12 +5,21 @@
 #include <memory>
 
 // local includes
-#include "autostarthandlerinterface.h"
-#include "cursorhandlerinterface.h"
 #include "pcstatehandler.h"
-#include "resolutionhandlerinterface.h"
 #include "steamhandler.h"
-#include "streamstatehandlerinterface.h"
+
+// forward declarations
+namespace shared
+{
+class AppMetadata;
+}  // namespace shared
+namespace os
+{
+class AutoStartHandlerInterface;
+class CursorHandlerInterface;
+class ResolutionHandlerInterface;
+class StreamStateHandlerInterface;
+}  // namespace os
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -22,8 +31,8 @@ class PcControl : public QObject
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl();
-    ~PcControl() override = default;
+    explicit PcControl(const shared::AppMetadata& app_meta);
+    ~PcControl() override;
 
     bool launchSteamApp(uint app_id);
     bool closeSteam(std::optional<uint> grace_period_in_sec);
@@ -38,8 +47,8 @@ public:
     std::optional<uint> getTrackedUpdatingApp() const;
     bool                isSteamRunning() const;
 
-    shared::StreamState getStreamState() const;
-    shared::PcState     getPcState() const;
+    enums::StreamState getStreamState() const;
+    enums::PcState     getPcState() const;
 
     void setAutoStart(bool enable);
     bool isAutoStartEnabled() const;
@@ -56,6 +65,7 @@ private slots:
     void slotHandleStreamStateChange();
 
 private:
+    const shared::AppMetadata&                   m_app_meta;
     std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
     std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
     PcStateHandler                               m_pc_state_handler;

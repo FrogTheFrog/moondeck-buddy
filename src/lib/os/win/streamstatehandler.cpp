@@ -2,7 +2,6 @@
 #include "streamstatehandler.h"
 
 // local includes
-#include "shared/constants.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -51,7 +50,7 @@ void SetMouseAcceleration(bool value)
 namespace os
 {
 StreamStateHandler::StreamStateHandler()
-    : m_helper_heartbeat{shared::APP_NAME_STREAM}  // Temporary support until nvidia completely removes the gamestream
+    : m_helper_heartbeat{QCoreApplication::applicationName()}  // Temporary support until nvidia completely removes the gamestream
     , m_nvidia_stream_process(
           QRegularExpression{R"([\\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption},
           std::make_shared<ProcessEnumerator>())
@@ -65,7 +64,7 @@ StreamStateHandler::StreamStateHandler()
 
 bool StreamStateHandler::endStream()
 {
-    if (m_state == shared::StreamState::Streaming)
+    if (m_state == enums::StreamState::Streaming)
     {
         m_helper_heartbeat.terminate();
         if (m_nvidia_stream_process.isRunningNow())
@@ -76,7 +75,7 @@ bool StreamStateHandler::endStream()
                 SetMouseAcceleration(false);
             }
         }
-        m_state = shared::StreamState::StreamEnding;
+        m_state = enums::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
 
@@ -96,17 +95,17 @@ void StreamStateHandler::slotHandleProcessStateChanges()
 {
     switch (m_state)
     {
-        case shared::StreamState::NotStreaming:
+        case enums::StreamState::NotStreaming:
         {
             if (m_helper_heartbeat.isAlive())
             {
-                m_state = shared::StreamState::Streaming;
+                m_state = enums::StreamState::Streaming;
                 emit signalStreamStateChanged();
             }
             break;
         }
-        case shared::StreamState::Streaming:
-        case shared::StreamState::StreamEnding:
+        case enums::StreamState::Streaming:
+        case enums::StreamState::StreamEnding:
         {
             if (!m_helper_heartbeat.isAlive())
             {
@@ -118,7 +117,7 @@ void StreamStateHandler::slotHandleProcessStateChanges()
                         SetMouseAcceleration(false);
                     }
                 }
-                m_state = shared::StreamState::NotStreaming;
+                m_state = enums::StreamState::NotStreaming;
                 emit signalStreamStateChanged();
             }
             break;

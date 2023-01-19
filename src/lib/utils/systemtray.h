@@ -4,8 +4,11 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QSystemTrayIcon>
 
-// local includes
-#include "os/pccontrol.h"
+// forward declarations
+namespace os
+{
+class PcControl;
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 

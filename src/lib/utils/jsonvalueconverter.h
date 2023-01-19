@@ -9,9 +9,6 @@
 
 namespace utils
 {
-const QString& getExecDir();
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 struct JsonValueConverter;

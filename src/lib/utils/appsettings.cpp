@@ -2,7 +2,9 @@
 #include "appsettings.h"
 
 // system/Qt includes
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <limits>
@@ -21,17 +23,17 @@ const quint16 DEFAULT_PORT{59999};
 
 namespace utils
 {
-AppSettings::AppSettings(const QString& filename)
+AppSettings::AppSettings(const QString& filepath)
     : m_port{DEFAULT_PORT}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
-    if (!parseSettingsFile(filename))
+    if (!parseSettingsFile(filepath))
     {
-        qCInfo(lc::utils) << "Saving default settings to" << filename;
-        saveDefaultFile(filename);
-        if (!parseSettingsFile(filename))
+        qCInfo(lc::utils) << "Saving default settings to" << filepath;
+        saveDefaultFile(filepath);
+        if (!parseSettingsFile(filepath))
         {
-            qFatal("Failed to parse \"%s\"!", qUtf8Printable(filename));
+            qFatal("Failed to parse \"%s\"!", qUtf8Printable(filepath));
         }
     }
 }
@@ -53,14 +55,14 @@ const QString& AppSettings::getLoggingRules() const
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
-bool AppSettings::parseSettingsFile(const QString& filename)
+bool AppSettings::parseSettingsFile(const QString& filepath)
 {
-    QFile file{filename};
+    QFile file{filepath};
     if (file.exists())
     {
         if (!file.open(QFile::ReadOnly))
         {
-            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(filename));
+            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(filepath));
         }
 
         const QByteArray data = file.readAll();
@@ -123,7 +125,7 @@ bool AppSettings::parseSettingsFile(const QString& filename)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void AppSettings::saveDefaultFile(const QString& filename) const
+void AppSettings::saveDefaultFile(const QString& filepath) const
 {
     QJsonObject obj;
 
@@ -132,10 +134,20 @@ void AppSettings::saveDefaultFile(const QString& filename) const
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 
-    QFile file{filename};
+    QFile file{filepath};
+    if (!file.exists())
+    {
+        QFileInfo info(filepath);
+        QDir      dir;
+        if (!dir.mkpath(info.absolutePath()))
+        {
+            qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(filepath));
+        }
+    }
+
     if (!file.open(QFile::WriteOnly))
     {
-        qFatal("File could not be opened for writting: \"%s\".", qUtf8Printable(filename));
+        qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(filepath));
     }
 
     const QJsonDocument file_data{obj};
