@@ -36,7 +36,7 @@ private slots:
 
 private:
     enums::StreamState m_state{enums::StreamState::NotStreaming};
-    utils::Heartbeat    m_helper_heartbeat;
-    ProcessTracker      m_nvidia_stream_process;
+    utils::Heartbeat   m_helper_heartbeat;
+    ProcessTracker     m_nvidia_stream_process;
 };
 }  // namespace os
