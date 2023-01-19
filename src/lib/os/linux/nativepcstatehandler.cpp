@@ -19,16 +19,19 @@ bool canDoQuery(QDBusInterface& bus, const QString& log_entry, const QString& qu
         return false;
     }
 
-    const QDBusReply<QString> reply{bus.call(QDBus::Block, QStringLiteral("Can") + query)};
-    if (reply.isValid())
+    const QString             actual_query{QStringLiteral("Can") + query};
+    const QDBusReply<QString> reply{bus.call(QDBus::Block, actual_query)};
+    if (!reply.isValid())
     {
-        qCWarning(lc::os).nospace() << "got invalid reply for " << log_entry << " (canDo?): " << reply.error();
+        qCWarning(lc::os).nospace() << "got invalid reply for " << log_entry << " (" << actual_query
+                                    << "): " << reply.error();
         return false;
     }
 
     if (reply.value() != QStringLiteral("yes"))
     {
-        qCWarning(lc::os).nospace() << "got unexpected reply for " << log_entry << " (canDo?): " << reply.value();
+        qCWarning(lc::os).nospace() << "got unexpected reply for " << log_entry << " (" << actual_query
+                                    << "): " << reply.value();
         return false;
     }
 
@@ -46,9 +49,9 @@ bool doQuery(QDBusInterface& bus, const QString& log_entry, const QString& query
 
     const bool             polkit_interactive{true};
     const QDBusReply<void> reply{bus.call(QDBus::Block, query, polkit_interactive)};
-    if (reply.isValid())
+    if (!reply.isValid())
     {
-        qCWarning(lc::os).nospace() << "got invalid reply for " << log_entry << ": " << reply.error();
+        qCWarning(lc::os).nospace() << "got invalid reply for " << log_entry << " (" << query << "): " << reply.error();
         return false;
     }
 
