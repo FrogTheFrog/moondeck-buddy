@@ -45,6 +45,7 @@ QString AppMetadata::getAppName() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAppName(App app) const
 {
     switch (app)
@@ -61,6 +62,7 @@ QString AppMetadata::getAppName(App app) const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getLogDir() const
 {
 #if defined(Q_OS_WIN)
@@ -103,6 +105,7 @@ QString AppMetadata::getSettingsDir() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getSettingsName() const
 {
     return QStringLiteral("settings.json");
@@ -117,6 +120,7 @@ QString AppMetadata::getSettingsPath() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAutoStartDir() const
 {
 #if defined(Q_OS_WIN)
@@ -151,6 +155,7 @@ QString AppMetadata::getAutoStartPath() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAutoStartExec() const
 {
     Q_ASSERT(QCoreApplication::instance() != nullptr);

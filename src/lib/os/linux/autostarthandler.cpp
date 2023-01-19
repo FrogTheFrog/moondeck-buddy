@@ -64,11 +64,7 @@ void AutoStartHandler::setAutoStart(bool enable)
             return;
         }
 
-        if (!file.write(getAutoStartContents(m_app_meta).toUtf8()))
-        {
-            qFatal("Failed to write to %s", qUtf8Printable(m_app_meta.getAutoStartPath()));
-            return;
-        }
+        file.write(getAutoStartContents(m_app_meta).toUtf8());
     }
 }
 

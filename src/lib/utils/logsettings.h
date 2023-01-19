@@ -14,7 +14,7 @@ class LogSettings final
 public:
     static LogSettings& getInstance();
 
-    void           init(const QString& filename);
+    void           init(const QString& filepath);
     const QString& getFilepath() const;
 
     void setLoggingRules(const QString& rules);

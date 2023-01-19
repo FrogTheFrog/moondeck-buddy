@@ -13,7 +13,7 @@ class ClientIds
     Q_DISABLE_COPY(ClientIds)
 
 public:
-    explicit ClientIds(QString filename);
+    explicit ClientIds(QString filepath);
     virtual ~ClientIds() = default;
 
     void load();

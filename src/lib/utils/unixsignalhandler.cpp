@@ -12,7 +12,7 @@ namespace
 void handler(int code)
 {
     std::signal(code, SIG_DFL);
-    QCoreApplication::instance()->quit();
+    QCoreApplication::quit();
 }
 }  // namespace
 
