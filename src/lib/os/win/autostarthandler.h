@@ -6,6 +6,12 @@
 // local includes
 #include "../autostarthandlerinterface.h"
 
+// forward declarations
+namespace shared
+{
+class AppMetadata;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
@@ -20,5 +26,8 @@ public:
 
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;
+
+private:
+    const shared::AppMetadata& m_app_meta;
 };
 }  // namespace os

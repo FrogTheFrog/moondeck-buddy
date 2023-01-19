@@ -6,7 +6,6 @@
 
 // local includes
 #include "shared/appmetadata.h"
-#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -45,7 +44,7 @@ void AutoStartHandler::setAutoStart(bool enable)
 
     if (file.exists() && !file.remove())
     {
-        qCWarning(lc::os) << "Failed to remove" << file.fileName();
+        qFatal("Failed to remove %s", qUtf8Printable(m_app_meta.getAutoStartPath()));
         return;
     }
 

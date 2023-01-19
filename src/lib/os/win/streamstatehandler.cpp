@@ -49,9 +49,8 @@ void SetMouseAcceleration(bool value)
 
 namespace os
 {
-StreamStateHandler::StreamStateHandler()
-    : m_helper_heartbeat{QCoreApplication::applicationName()}
-    // Temporary support until nvidia completely removes the gamestream
+StreamStateHandler::StreamStateHandler(const QString& heartbeat_key)
+    : m_helper_heartbeat{heartbeat_key}  // Temporary support until nvidia completely removes the gamestream
     , m_nvidia_stream_process(
           QRegularExpression{R"([\\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption},
           std::make_shared<ProcessEnumerator>())
@@ -85,7 +84,7 @@ bool StreamStateHandler::endStream()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-shared::StreamState StreamStateHandler::getCurrentState() const
+enums::StreamState StreamStateHandler::getCurrentState() const
 {
     return m_state;
 }

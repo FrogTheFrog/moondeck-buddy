@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QCoreApplication>
 #include <QDir>
+#include <QStandardPaths>
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -67,7 +68,7 @@ QString AppMetadata::getLogDir() const
 {
 #if defined(Q_OS_WIN)
     Q_ASSERT(QCoreApplication::instance() != nullptr);
-    return QCoreApplication::applicationFilePath();
+    return QCoreApplication::applicationDirPath();
 #elif defined(Q_OS_LINUX)
     return QStringLiteral("/tmp");
 #else
@@ -91,11 +92,12 @@ QString AppMetadata::getLogPath() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 QString AppMetadata::getSettingsDir() const
 {
 #if defined(Q_OS_WIN)
     Q_ASSERT(QCoreApplication::instance() != nullptr);
-    return QCoreApplication::applicationFilePath();
+    return QCoreApplication::applicationDirPath();
 #elif defined(Q_OS_LINUX)
     return QDir::cleanPath(getConfigDir() + "/" + getAppName(App::Buddy).toLower());
 #else

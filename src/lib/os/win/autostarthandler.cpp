@@ -2,58 +2,42 @@
 #include "autostarthandler.h"
 
 // system/Qt includes
-#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
 
 // local includes
+#include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
-
-//---------------------------------------------------------------------------------------------------------------------
-
-namespace
-{
-QString getLinkLocation()
-{
-    const QString base = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
-    if (base.isEmpty())
-    {
-        return {};
-    }
-
-    const QFileInfo fileInfo(QCoreApplication::applicationFilePath());
-    return base + QDir::separator() + "Startup" + QDir::separator() + fileInfo.completeBaseName() + ".lnk";
-}
-}  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
+AutoStartHandler::AutoStartHandler(const shared::AppMetadata& app_meta)
+    : m_app_meta{app_meta}
+{
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void AutoStartHandler::setAutoStart(bool enable)
 {
-    const auto location{getLinkLocation()};
-    if (location.isEmpty())
-    {
-        qCWarning(lc::os) << "Could not determine autostart location!";
-        return;
-    }
+    const auto dir{m_app_meta.getAutoStartDir()};
+    QFile      file{m_app_meta.getAutoStartPath()};
 
-    if (QFile::exists(location))
+    if (file.exists() && !file.remove())
     {
-        if (!QFile::remove(location))
-        {
-            qCWarning(lc::os) << "Failed to remove" << location;
-            return;
-        }
+        qFatal("Failed to remove %s", qUtf8Printable(m_app_meta.getAutoStartPath()));
+        return;
     }
 
     if (enable)
     {
-        if (!QFile::link(QCoreApplication::applicationFilePath(), location))
+        if (!QFile::link(m_app_meta.getAutoStartExec(), m_app_meta.getAutoStartPath()))
         {
-            qCWarning(lc::os) << "Failed to create link for" << location;
+            qFatal("Failed to create link for %s -> %s", qUtf8Printable(m_app_meta.getAutoStartExec()),
+                   qUtf8Printable(m_app_meta.getAutoStartPath()));
             return;
         }
     }
@@ -63,19 +47,18 @@ void AutoStartHandler::setAutoStart(bool enable)
 
 bool AutoStartHandler::isAutoStartEnabled() const
 {
-    const auto location{getLinkLocation()};
-    if (location.isEmpty() || !QFile::exists(location))
+    if (!QFile::exists(m_app_meta.getAutoStartPath()))
     {
         return false;
     }
 
-    const QFileInfo info(location);
+    const QFileInfo info(m_app_meta.getAutoStartPath());
     if (!info.isShortcut())
     {
         return false;
     }
 
     return QFileInfo(info.symLinkTarget()).canonicalFilePath()
-           == QFileInfo(QCoreApplication::applicationFilePath()).canonicalFilePath();
+           == QFileInfo(m_app_meta.getAutoStartExec()).canonicalFilePath();
 }
 }  // namespace os

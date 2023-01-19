@@ -25,7 +25,7 @@ class StreamStateHandler : public StreamStateHandlerInterface
     Q_DISABLE_COPY(StreamStateHandler)
 
 public:
-    explicit StreamStateHandler();
+    explicit StreamStateHandler(const QString& heartbeat_key);
     ~StreamStateHandler() override = default;
 
     bool               endStream() override;

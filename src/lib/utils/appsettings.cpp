@@ -137,8 +137,8 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     QFile file{filepath};
     if (!file.exists())
     {
-        QFileInfo info(filepath);
-        QDir      dir;
+        const QFileInfo info(filepath);
+        const QDir      dir;
         if (!dir.mkpath(info.absolutePath()))
         {
             qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(filepath));

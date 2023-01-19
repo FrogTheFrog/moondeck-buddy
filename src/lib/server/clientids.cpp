@@ -86,8 +86,8 @@ void ClientIds::save()
     QFile file{m_filepath};
     if (!file.exists())
     {
-        QFileInfo info(m_filepath);
-        QDir      dir;
+        const QFileInfo info(m_filepath);
+        const QDir      dir;
         if (!dir.mkpath(info.absolutePath()))
         {
             qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(m_filepath));
