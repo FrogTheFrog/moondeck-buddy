@@ -29,7 +29,7 @@ namespace os
 ProcessHandler::ProcessHandler(std::unique_ptr<NativeProcessHandlerInterface> native_handler)
     : m_native_handler{std::move(native_handler)}
 {
-    assert(m_native_handler != nullptr);
+    Q_ASSERT(m_native_handler != nullptr);
 
     connect(&m_check_timer, &QTimer::timeout, this, &ProcessHandler::slotCheckState);
     connect(&m_kill_timer, &QTimer::timeout, this, [this]() { terminate(); });

@@ -85,7 +85,7 @@ QString toString(qsizetype indent_level, const Node& node)
     }
     else
     {
-        assert(false);
+        Q_ASSERT(false);
     }
     return result;
 }

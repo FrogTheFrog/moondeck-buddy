@@ -57,7 +57,7 @@ QString AppMetadata::getAppName(App app) const
             return QStringLiteral("MoonDeckStream");
     }
 
-    assert(false);
+    Q_ASSERT(false);
     return {};
 }
 

@@ -26,8 +26,8 @@ SteamHandler::SteamHandler(std::unique_ptr<ProcessHandler>                 proce
     : m_process_handler{std::move(process_handler)}
     , m_registry_observer{std::move(registry_observer)}
 {
-    assert(m_process_handler != nullptr);
-    assert(m_registry_observer != nullptr);
+    Q_ASSERT(m_process_handler != nullptr);
+    Q_ASSERT(m_registry_observer != nullptr);
 
     connect(m_process_handler.get(), &ProcessHandler::signalProcessDied, this, &SteamHandler::slotSteamProcessDied);
     connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalSteamExecPath, this,
@@ -223,7 +223,7 @@ void SteamHandler::slotSteamPID(uint pid)
         qCDebug(lc::os) << "Failed to start monitoring Steam process" << pid << "(probably outdated)...";
         if (currently_running)
         {
-            assert(m_process_handler->isRunning() == false);
+            Q_ASSERT(m_process_handler->isRunning() == false);
             emit signalProcessStateChanged();
         }
         return;
@@ -232,7 +232,7 @@ void SteamHandler::slotSteamPID(uint pid)
     if (!currently_running)
     {
         qCDebug(lc::os) << "Steam is running!";
-        assert(m_process_handler->isRunning() == true);
+        Q_ASSERT(m_process_handler->isRunning() == true);
         emit signalProcessStateChanged();
     }
 }

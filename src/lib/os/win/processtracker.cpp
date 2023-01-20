@@ -84,7 +84,7 @@ ProcessTracker::ProcessTracker(QRegularExpression name_regex, std::shared_ptr<Pr
     : m_name_regex{std::move(name_regex)}
     , m_enumerator{std::move(enumerator)}
 {
-    assert(m_enumerator != nullptr);
+    Q_ASSERT(m_enumerator != nullptr);
     connect(m_enumerator.get(), &ProcessEnumerator::signalProcesses, this, &ProcessTracker::slotUpdateProcessState);
 }
 

@@ -31,7 +31,7 @@ const T* getEntry(const QStringList& path, const os::RegistryFileWatcher::NodeLi
     for (std::size_t i = 0; i < current_node_list->size();)
     {
         const auto& node{(*current_node_list)[i]};
-        assert(node != nullptr);
+        Q_ASSERT(node != nullptr);
 
         if (node->m_key != *current_segment)
         {

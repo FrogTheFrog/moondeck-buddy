@@ -50,9 +50,9 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
     , m_stream_state_handler{
           std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {
-    assert(m_auto_start_handler != nullptr);
-    assert(m_cursor_handler != nullptr);
-    assert(m_stream_state_handler != nullptr);
+    Q_ASSERT(m_auto_start_handler != nullptr);
+    Q_ASSERT(m_cursor_handler != nullptr);
+    Q_ASSERT(m_stream_state_handler != nullptr);
 
     connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
             &PcControl::slotHandleSteamProcessStateChange);
