@@ -2,7 +2,6 @@
 #include "processtracker.h"
 
 // system/Qt includes
-#include <system_error>
 #include <unordered_map>
 
 // local includes
@@ -12,13 +11,6 @@
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 bool closeProcess(DWORD pid)
 {
     std::vector<HWND> hwnds;
@@ -45,7 +37,7 @@ bool closeProcess(DWORD pid)
         if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
         {
             qCDebug(lc::os).nospace() << "Failed to post message to process (pid: " << pid
-                                      << ")! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+                                      << ")! Reason: " << lc::getErrorString(GetLastError());
             continue;
         }
 
@@ -71,7 +63,7 @@ void killProcess(DWORD pid)
     if (TerminateProcess(proc_handle, 1) == FALSE)
     {
         qCWarning(lc::os).nospace() << "Failed to terminate process (pid: " << pid
-                                    << ")! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+                                    << ")! Reason: " << lc::getErrorString(GetLastError());
     }
 }
 }  // namespace
@@ -84,7 +76,7 @@ ProcessTracker::ProcessTracker(QRegularExpression name_regex, std::shared_ptr<Pr
     : m_name_regex{std::move(name_regex)}
     , m_enumerator{std::move(enumerator)}
 {
-    assert(m_enumerator != nullptr);
+    Q_ASSERT(m_enumerator != nullptr);
     connect(m_enumerator.get(), &ProcessEnumerator::signalProcesses, this, &ProcessTracker::slotUpdateProcessState);
 }
 

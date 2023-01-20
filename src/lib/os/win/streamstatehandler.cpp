@@ -2,7 +2,6 @@
 #include "streamstatehandler.h"
 
 // local includes
-#include "shared/constants.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -18,13 +17,6 @@ bool& getMouseAccelResetHack()
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 void SetMouseAcceleration(bool value)
 {
     // NOLINTNEXTLINE(*)
@@ -32,16 +24,14 @@ void SetMouseAcceleration(bool value)
     // NOLINTNEXTLINE(*)
     if (SystemParametersInfoW(SPI_GETMOUSE, 0, mouseParams, 0) == FALSE)
     {
-        qCWarning(lc::os) << "Failed to get system params for mouse. Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "Failed to get system params for mouse. Reason:" << lc::getErrorString(GetLastError());
     }
 
     mouseParams[2] = value ? 1 : 0;
     // NOLINTNEXTLINE(*)
     if (SystemParametersInfoW(SPI_SETMOUSE, 0, mouseParams, SPIF_SENDCHANGE) == FALSE)
     {
-        qCWarning(lc::os) << "Failed to set system params for mouse. Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "Failed to set system params for mouse. Reason:" << lc::getErrorString(GetLastError());
     }
 }
 }  // namespace
@@ -50,8 +40,8 @@ void SetMouseAcceleration(bool value)
 
 namespace os
 {
-StreamStateHandler::StreamStateHandler()
-    : m_helper_heartbeat{shared::APP_NAME_STREAM}  // Temporary support until nvidia completely removes the gamestream
+StreamStateHandler::StreamStateHandler(const QString& heartbeat_key)
+    : m_helper_heartbeat{heartbeat_key}  // Temporary support until nvidia completely removes the gamestream
     , m_nvidia_stream_process(
           QRegularExpression{R"([\\\/]nvstreamer\.exe$)", QRegularExpression::CaseInsensitiveOption},
           std::make_shared<ProcessEnumerator>())
@@ -65,7 +55,7 @@ StreamStateHandler::StreamStateHandler()
 
 bool StreamStateHandler::endStream()
 {
-    if (m_state == shared::StreamState::Streaming)
+    if (m_state == enums::StreamState::Streaming)
     {
         m_helper_heartbeat.terminate();
         if (m_nvidia_stream_process.isRunningNow())
@@ -76,7 +66,7 @@ bool StreamStateHandler::endStream()
                 SetMouseAcceleration(false);
             }
         }
-        m_state = shared::StreamState::StreamEnding;
+        m_state = enums::StreamState::StreamEnding;
         emit signalStreamStateChanged();
     }
 
@@ -85,7 +75,7 @@ bool StreamStateHandler::endStream()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-shared::StreamState StreamStateHandler::getCurrentState() const
+enums::StreamState StreamStateHandler::getCurrentState() const
 {
     return m_state;
 }
@@ -96,17 +86,17 @@ void StreamStateHandler::slotHandleProcessStateChanges()
 {
     switch (m_state)
     {
-        case shared::StreamState::NotStreaming:
+        case enums::StreamState::NotStreaming:
         {
             if (m_helper_heartbeat.isAlive())
             {
-                m_state = shared::StreamState::Streaming;
+                m_state = enums::StreamState::Streaming;
                 emit signalStreamStateChanged();
             }
             break;
         }
-        case shared::StreamState::Streaming:
-        case shared::StreamState::StreamEnding:
+        case enums::StreamState::Streaming:
+        case enums::StreamState::StreamEnding:
         {
             if (!m_helper_heartbeat.isAlive())
             {
@@ -118,7 +108,7 @@ void StreamStateHandler::slotHandleProcessStateChanges()
                         SetMouseAcceleration(false);
                     }
                 }
-                m_state = shared::StreamState::NotStreaming;
+                m_state = enums::StreamState::NotStreaming;
                 emit signalStreamStateChanged();
             }
             break;

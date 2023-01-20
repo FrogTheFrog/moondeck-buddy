@@ -18,11 +18,12 @@ qt_standard_project_setup()
 set(HEADERS
     appsettings.h
     heartbeat.h
-    helpers.h
+    jsonvalueconverter.h
     logsettings.h
     pairinginput.h
     systemtray.h
     singleinstanceguard.h
+    unixsignalhandler.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -32,11 +33,11 @@ set(HEADERS
 set(SOURCES
     appsettings.cpp
     heartbeat.cpp
-    helpers.cpp
     logsettings.cpp
     pairinginput.cpp
     systemtray.cpp
     singleinstanceguard.cpp
+    unixsignalhandler.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -44,5 +45,5 @@ set(SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets oslib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets oslib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")

@@ -8,7 +8,7 @@
 
 // local includes
 #include "shared/loggingcategories.h"
-#include "utils/helpers.h"
+#include "utils/jsonvalueconverter.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

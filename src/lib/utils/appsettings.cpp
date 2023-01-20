@@ -2,7 +2,10 @@
 #include "appsettings.h"
 
 // system/Qt includes
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <limits>
@@ -21,17 +24,17 @@ const quint16 DEFAULT_PORT{59999};
 
 namespace utils
 {
-AppSettings::AppSettings(const QString& filename)
+AppSettings::AppSettings(const QString& filepath)
     : m_port{DEFAULT_PORT}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
-    if (!parseSettingsFile(filename))
+    if (!parseSettingsFile(filepath))
     {
-        qCInfo(lc::utils) << "Saving default settings to" << filename;
-        saveDefaultFile(filename);
-        if (!parseSettingsFile(filename))
+        qCInfo(lc::utils) << "Saving default settings to" << filepath;
+        saveDefaultFile(filepath);
+        if (!parseSettingsFile(filepath))
         {
-            qFatal("Failed to parse \"%s\"!", qUtf8Printable(filename));
+            qFatal("Failed to parse \"%s\"!", qUtf8Printable(filepath));
         }
     }
 }
@@ -52,15 +55,22 @@ const QString& AppSettings::getLoggingRules() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-// NOLINTNEXTLINE(*-function-cognitive-complexity)
-bool AppSettings::parseSettingsFile(const QString& filename)
+const std::set<QString>& AppSettings::getHandledDisplays() const
 {
-    QFile file{filename};
+    return m_handled_displays;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+// NOLINTNEXTLINE(*-function-cognitive-complexity)
+bool AppSettings::parseSettingsFile(const QString& filepath)
+{
+    QFile file{filepath};
     if (file.exists())
     {
         if (!file.open(QFile::ReadOnly))
         {
-            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(filename));
+            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(filepath));
         }
 
         const QByteArray data = file.readAll();
@@ -74,16 +84,17 @@ bool AppSettings::parseSettingsFile(const QString& filename)
         }
         else if (!json_data.isEmpty())
         {
-            const auto obj_v           = json_data.object();
-            const auto port_v          = obj_v.value(QLatin1String("port"));
-            const auto logging_rules_v = obj_v.value(QLatin1String("logging_rules"));
+            const auto obj_v              = json_data.object();
+            const auto port_v             = obj_v.value(QLatin1String("port"));
+            const auto logging_rules_v    = obj_v.value(QLatin1String("logging_rules"));
+            const auto handled_displays_v = obj_v.value(QLatin1String("handled_displays"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{3};
+            constexpr int current_entries{4};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -107,6 +118,30 @@ bool AppSettings::parseSettingsFile(const QString& filename)
                 valid_entries++;
             }
 
+            if (handled_displays_v.isArray())
+            {
+                m_handled_displays.clear();
+
+                bool             some_entries_were_skipped{false};
+                const QJsonArray entries = handled_displays_v.toArray();
+                for (const auto& entry : entries)
+                {
+                    const QString entry_string{entry.isString() ? entry.toString() : QString{}};
+                    if (entry_string.isEmpty() || m_logging_rules.contains(entry_string))
+                    {
+                        some_entries_were_skipped = true;
+                        continue;
+                    }
+
+                    m_handled_displays.insert(entry_string);
+                }
+
+                if (!some_entries_were_skipped)
+                {
+                    valid_entries++;
+                }
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -123,19 +158,31 @@ bool AppSettings::parseSettingsFile(const QString& filename)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void AppSettings::saveDefaultFile(const QString& filename) const
+void AppSettings::saveDefaultFile(const QString& filepath) const
 {
     QJsonObject obj;
 
     obj["port"]          = m_port;
     obj["logging_rules"] = m_logging_rules;
+    obj["handled_displays"] =
+        QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 
-    QFile file{filename};
+    QFile file{filepath};
+    if (!file.exists())
+    {
+        const QFileInfo info(filepath);
+        const QDir      dir;
+        if (!dir.mkpath(info.absolutePath()))
+        {
+            qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(filepath));
+        }
+    }
+
     if (!file.open(QFile::WriteOnly))
     {
-        qFatal("File could not be opened for writting: \"%s\".", qUtf8Printable(filename));
+        qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(filepath));
     }
 
     const QJsonDocument file_data{obj};

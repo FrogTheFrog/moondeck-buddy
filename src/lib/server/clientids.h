@@ -13,7 +13,7 @@ class ClientIds
     Q_DISABLE_COPY(ClientIds)
 
 public:
-    explicit ClientIds(QString filename);
+    explicit ClientIds(QString filepath);
     virtual ~ClientIds() = default;
 
     void load();
@@ -24,7 +24,7 @@ public:
     void removeId(const QString& client_id);
 
 private:
-    QString           m_filename;
+    QString           m_filepath;
     std::set<QString> m_ids;
 };
 }  // namespace server

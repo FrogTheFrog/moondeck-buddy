@@ -1,8 +1,12 @@
 name: Build
 on: [pull_request,workflow_call]
 jobs:
+  Checks:
+    uses: ./.github/workflows/checks.yaml
+
   Windows:
     runs-on: windows-latest
+    needs: [Checks]
     steps:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -18,9 +22,6 @@ jobs:
         with:
           submodules: recursive
       
-      - name: Clang-format check
-        run: clang-format -style=file --dry-run --Werror $(Get-ChildItem -Path $PWD/src -Recurse | Where Name -Match '\.(?:h|cpp)$' | Select-Object -ExpandProperty FullName)
-
       - name: CMake configure
         run: cmake -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
@@ -38,3 +39,26 @@ jobs:
           path: dist/*
           retention-days: 1
           if-no-files-found: error
+  Linux:
+    runs-on: ubuntu-latest
+    needs: [Checks]
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          modules: "qtwebsockets qthttpserver"
+          version: "6.4.*"
+
+      - name: Install Ninja
+        run: sudo apt-get install ninja-build
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: CMake configure
+        run: cmake -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+
+      - name: CMake build
+        run: cmake --build build

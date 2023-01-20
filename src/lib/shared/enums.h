@@ -1,4 +1,3 @@
-
 #pragma once
 
 // system/Qt includes
@@ -6,7 +5,7 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
-namespace shared
+namespace enums
 {
 Q_NAMESPACE
 
@@ -30,4 +29,4 @@ enum class StreamState
     StreamEnding
 };
 Q_ENUM_NS(StreamState)
-}  // namespace shared
+}  // namespace enums

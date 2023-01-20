@@ -11,6 +11,7 @@
 
 namespace os
 {
+// DEPRECATED, to be removed once Nvidia is gone
 class ProcessTracker : public QObject
 {
     Q_OBJECT

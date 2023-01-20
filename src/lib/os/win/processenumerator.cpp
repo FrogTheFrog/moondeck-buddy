@@ -3,20 +3,15 @@
 
 // system/Qt includes
 #include <psapi.h>
-#include <system_error>
 #include <unordered_map>
+
+// local includes
+#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 QString getProcessName(DWORD pid)
 {
     HANDLE proc_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
@@ -67,7 +62,8 @@ std::vector<DWORD> enumProcesses()
 
         if (EnumProcesses(handles.data(), buffer_in_bytes, &bytes_needed) == FALSE)
         {
-            qFatal("Failed get a list of running processes! Reason: %s", qUtf8Printable(getError(GetLastError())));
+            qFatal("Failed get a list of running processes! Reason: %s",
+                   qUtf8Printable(lc::getErrorString(GetLastError())));
         }
 
         if (buffer_in_bytes == bytes_needed)

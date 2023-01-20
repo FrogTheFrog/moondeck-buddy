@@ -14,14 +14,14 @@ class LogSettings final
 public:
     static LogSettings& getInstance();
 
-    void           init(const QString& filename);
-    const QString& getFilename() const;
+    void           init(const QString& filepath);
+    const QString& getFilepath() const;
 
     void setLoggingRules(const QString& rules);
 
 private:
     explicit LogSettings() = default;
 
-    QString m_filename;
+    QString m_filepath;
 };
 }  // namespace utils

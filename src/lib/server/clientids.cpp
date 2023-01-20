@@ -2,7 +2,9 @@
 #include "clientids.h"
 
 // system/Qt includes
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 
@@ -13,8 +15,8 @@
 
 namespace server
 {
-ClientIds::ClientIds(QString filename)
-    : m_filename{std::move(filename)}
+ClientIds::ClientIds(QString filepath)
+    : m_filepath{std::move(filepath)}
 {
 }
 
@@ -25,12 +27,12 @@ void ClientIds::load()
 {
     m_ids.clear();  // Clear the ids regardless of whether the file exists or not
 
-    QFile ids_file{m_filename};
+    QFile ids_file{m_filepath};
     if (ids_file.exists())
     {
         if (!ids_file.open(QFile::ReadOnly))
         {
-            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(m_filename));
+            qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(m_filepath));
         }
 
         const QByteArray data = ids_file.readAll();
@@ -81,15 +83,25 @@ void ClientIds::save()
         json_data.append(client_id);
     }
 
-    QFile ids_file{m_filename};
-    if (!ids_file.open(QFile::WriteOnly))
+    QFile file{m_filepath};
+    if (!file.exists())
     {
-        qFatal("File could not be opened for writting: \"%s\".", qUtf8Printable(m_filename));
+        const QFileInfo info(m_filepath);
+        const QDir      dir;
+        if (!dir.mkpath(info.absolutePath()))
+        {
+            qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(m_filepath));
+        }
+    }
+
+    if (!file.open(QFile::WriteOnly))
+    {
+        qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(m_filepath));
     }
 
     const QJsonDocument file_data{json_data};
-    ids_file.write(file_data.toJson(QJsonDocument::Indented));
-    qCDebug(lc::server) << "Finished saving:" << m_filename;
+    file.write(file_data.toJson(QJsonDocument::Indented));
+    qCInfo(lc::server) << "Finished saving:" << m_filepath;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
