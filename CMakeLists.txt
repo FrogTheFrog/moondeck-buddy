@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 project(MoonDeckBuddy 
-        VERSION 1.4.0
+        VERSION 1.4.1
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
         HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
         LANGUAGES CXX)
