@@ -7,20 +7,9 @@
 // system/Qt includes
 #include <QTimer>
 #include <limits>
-#include <system_error>
 
 // local includes
 #include "shared/loggingcategories.h"
-
-//---------------------------------------------------------------------------------------------------------------------
-
-namespace
-{
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-}  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -39,7 +28,7 @@ void CursorHandler::hideCursor()
                                == FALSE)
                            {
                                qCWarning(lc::os) << "Failed hide the cursor! Reason:"
-                                                 << getError(static_cast<LSTATUS>(GetLastError()));
+                                                 << lc::getErrorString(GetLastError());
                            }
                        });
 }

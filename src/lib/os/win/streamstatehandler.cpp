@@ -17,13 +17,6 @@ bool& getMouseAccelResetHack()
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 void SetMouseAcceleration(bool value)
 {
     // NOLINTNEXTLINE(*)
@@ -31,16 +24,14 @@ void SetMouseAcceleration(bool value)
     // NOLINTNEXTLINE(*)
     if (SystemParametersInfoW(SPI_GETMOUSE, 0, mouseParams, 0) == FALSE)
     {
-        qCWarning(lc::os) << "Failed to get system params for mouse. Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "Failed to get system params for mouse. Reason:" << lc::getErrorString(GetLastError());
     }
 
     mouseParams[2] = value ? 1 : 0;
     // NOLINTNEXTLINE(*)
     if (SystemParametersInfoW(SPI_SETMOUSE, 0, mouseParams, SPIF_SENDCHANGE) == FALSE)
     {
-        qCWarning(lc::os) << "Failed to set system params for mouse. Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "Failed to set system params for mouse. Reason:" << lc::getErrorString(GetLastError());
     }
 }
 }  // namespace

@@ -6,20 +6,9 @@
 
 // system/Qt includes
 #include <psapi.h>
-#include <system_error>
 
 // local includes
 #include "shared/loggingcategories.h"
-
-//---------------------------------------------------------------------------------------------------------------------
-
-namespace
-{
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-}  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -85,7 +74,7 @@ void NativeProcessHandler::close(uint pid)
         if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
         {
             qCDebug(lc::os).nospace() << "Failed to post message to process (pid: " << pid
-                                      << ")! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+                                      << ")! Reason: " << lc::getErrorString(GetLastError());
         }
     }
 }
@@ -107,7 +96,7 @@ void NativeProcessHandler::terminate(uint pid)
     if (proc_handle == nullptr || TerminateProcess(proc_handle, 1) == FALSE)
     {
         qCWarning(lc::os).nospace() << "Failed to terminate process (pid: " << pid
-                                    << ")! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+                                    << ")! Reason: " << lc::getErrorString(GetLastError());
     }
 }
 }  // namespace os

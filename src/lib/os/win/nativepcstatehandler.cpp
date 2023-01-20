@@ -14,13 +14,6 @@
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 bool acquirePrivilege()
 {
     HANDLE           token_handle{nullptr};
@@ -28,7 +21,7 @@ bool acquirePrivilege()
 
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token_handle) == FALSE)
     {
-        qCWarning(lc::os) << "Failed to open process token! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "Failed to open process token! Reason: " << lc::getErrorString(GetLastError());
         return false;
     }
     auto cleanup = qScopeGuard([&token_handle]() { CloseHandle(token_handle); });
@@ -38,8 +31,7 @@ bool acquirePrivilege()
         token_privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
         if (LookupPrivilegeValueW(nullptr, SE_SHUTDOWN_NAME, &token_privileges.Privileges[0].Luid) == FALSE)
         {
-            qCWarning(lc::os) << "Failed to lookup privilege value! Reason: "
-                              << getError(static_cast<LSTATUS>(GetLastError()));
+            qCWarning(lc::os) << "Failed to lookup privilege value! Reason: " << lc::getErrorString(GetLastError());
             return false;
         }
     }
@@ -50,7 +42,7 @@ bool acquirePrivilege()
     const auto result = GetLastError();
     if (result != ERROR_SUCCESS)
     {
-        qCWarning(lc::os) << "Failed to adjust token privileges! Reason: " << getError(static_cast<LSTATUS>(result));
+        qCWarning(lc::os) << "Failed to adjust token privileges! Reason: " << lc::getErrorString(result);
         return false;
     }
 
@@ -103,8 +95,7 @@ bool NativePcStateHandler::shutdownPC()
 
     if (InitiateSystemShutdownW(nullptr, nullptr, 0, TRUE, FALSE) == FALSE)
     {
-        qCWarning(lc::os) << "InitiateSystemShutdownW (shutdown) failed! Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "InitiateSystemShutdownW (shutdown) failed! Reason:" << lc::getErrorString(GetLastError());
         return false;
     }
 
@@ -122,8 +113,7 @@ bool NativePcStateHandler::restartPC()
 
     if (InitiateSystemShutdownW(nullptr, nullptr, 0, TRUE, TRUE) == FALSE)
     {
-        qCWarning(lc::os) << "InitiateSystemShutdownW (restart) failed! Reason:"
-                          << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "InitiateSystemShutdownW (restart) failed! Reason:" << lc::getErrorString(GetLastError());
         return false;
     }
 
@@ -141,7 +131,7 @@ bool NativePcStateHandler::suspendPC()
 
     if (SetSuspendState(FALSE, TRUE, FALSE) == FALSE)
     {
-        qCWarning(lc::os) << "SetSuspendState failed! Reason:" << getError(static_cast<LSTATUS>(GetLastError()));
+        qCWarning(lc::os) << "SetSuspendState failed! Reason:" << lc::getErrorString(GetLastError());
         return false;
     }
 

@@ -12,16 +12,6 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
-namespace
-{
-QString getError(int status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-}  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 QString NativeProcessHandler::getExecPath(uint pid)
@@ -39,7 +29,7 @@ void NativeProcessHandler::close(uint pid)
         const auto error{errno};
         if (error != ESRCH)
         {
-            qWarning(lc::os) << "Failed to close process" << pid << "-" << getError(error);
+            qWarning(lc::os) << "Failed to close process" << pid << "-" << lc::getErrorString(error);
         }
     }
 }
@@ -53,7 +43,7 @@ void NativeProcessHandler::terminate(uint pid)
         const auto error{errno};
         if (error != ESRCH)
         {
-            qWarning(lc::os) << "Failed to terminate process" << pid << "-" << getError(error);
+            qWarning(lc::os) << "Failed to terminate process" << pid << "-" << lc::getErrorString(error);
         }
     }
 }

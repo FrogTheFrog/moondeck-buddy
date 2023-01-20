@@ -11,6 +11,7 @@
 
 namespace os
 {
+// NOLINTNEXTLINE(*-cognitive-complexity)
 NativeResolutionHandler::ChangedResMap NativeResolutionHandler::changeResolution(const DisplayPredicate& predicate)
 {
     Q_ASSERT(predicate);

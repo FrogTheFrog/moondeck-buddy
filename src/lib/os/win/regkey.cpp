@@ -2,7 +2,6 @@
 #include "regkey.h"
 
 // system/Qt includes
-#include <system_error>
 #include <unordered_map>
 
 // local includes
@@ -12,13 +11,6 @@
 
 namespace
 {
-QString getError(LSTATUS status)
-{
-    return QString::fromStdString(std::system_category().message(status));
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 struct PathComponents
 {
     inline static const QChar            PATH_SEPARATOR{'\\'};
@@ -99,7 +91,7 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     if (result != ERROR_SUCCESS)
     {
         qCDebug(lc::os).nospace() << "Could not read the size of the key value " << name
-                                  << "! Reason: " << getError(result);
+                                  << "! Reason: " << lc::getErrorString(result);
     }
 
     if (data_size <= 0)
@@ -117,7 +109,7 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     if (result != ERROR_SUCCESS)
     {
         qCWarning(lc::os).nospace() << "Could not read the data of the key value " << name
-                                    << "! Reason: " << getError(result);
+                                    << "! Reason: " << lc::getErrorString(result);
     }
 
     return data;
@@ -130,7 +122,7 @@ void resetNotifier(std::unique_ptr<QWinEventNotifier>& notifier, const HKEY& key
     auto* const handle = notifier->handle();
     if (ResetEvent(handle) == FALSE)
     {
-        qFatal("Failed to reset handle! Reason: %s", qUtf8Printable(getError(GetLastError())));
+        qFatal("Failed to reset handle! Reason: %s", qUtf8Printable(lc::getErrorString(GetLastError())));
         return;
     }
 
@@ -141,7 +133,7 @@ void resetNotifier(std::unique_ptr<QWinEventNotifier>& notifier, const HKEY& key
     if (result != ERROR_SUCCESS)
     {
         qFatal("Could not start watching data of the key value '%s'! Reason: %s", qUtf8Printable(name),
-               qUtf8Printable(getError(result)));
+               qUtf8Printable(lc::getErrorString(result)));
     }
 }
 
@@ -154,7 +146,7 @@ void deleteNotifier(std::unique_ptr<QWinEventNotifier>& notifier)
         notifier->disconnect();
         if (CloseHandle(notifier->handle()) == FALSE)
         {
-            qCWarning(lc::os) << "Failed to close handle! Reason: " << getError(static_cast<LSTATUS>(GetLastError()));
+            qCWarning(lc::os) << "Failed to close handle! Reason: " << lc::getErrorString(GetLastError());
         }
         notifier.reset();
     }
@@ -171,7 +163,7 @@ bool openKey(const PathComponents& path_components, const QString& path, HKEY& k
 
     if (result != ERROR_SUCCESS)
     {
-        qCDebug(lc::os).nospace() << "Could not open key " << path << "! Reason: " << getError(result);
+        qCDebug(lc::os).nospace() << "Could not open key " << path << "! Reason: " << lc::getErrorString(result);
     }
 
     return result == ERROR_SUCCESS;
@@ -235,7 +227,7 @@ void RegKey::close()
         const auto result = RegCloseKey(m_key_handle);
         if (result != ERROR_SUCCESS)
         {
-            qCWarning(lc::os).nospace() << "Could not close key " << m_path << "! Reason: " << getError(result);
+            qCWarning(lc::os).nospace() << "Could not close key " << m_path << "! Reason: " << lc::getErrorString(result);
         }
         m_key_handle = nullptr;
     }
@@ -332,7 +324,7 @@ void RegKey::addNotifyOnValueChange(const QStringList& names)
     auto* const handle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
     if (handle == nullptr)
     {
-        qFatal("Failed to create handle! Reason: %s", qUtf8Printable(getError(GetLastError())));
+        qFatal("Failed to create handle! Reason: %s", qUtf8Printable(lc::getErrorString(GetLastError())));
         return;
     }
 
