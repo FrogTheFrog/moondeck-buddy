@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <limits>
@@ -54,6 +55,13 @@ const QString& AppSettings::getLoggingRules() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+const std::set<QString>& AppSettings::getHandledDisplays() const
+{
+    return m_handled_displays;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -76,16 +84,17 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
         }
         else if (!json_data.isEmpty())
         {
-            const auto obj_v           = json_data.object();
-            const auto port_v          = obj_v.value(QLatin1String("port"));
-            const auto logging_rules_v = obj_v.value(QLatin1String("logging_rules"));
+            const auto obj_v              = json_data.object();
+            const auto port_v             = obj_v.value(QLatin1String("port"));
+            const auto logging_rules_v    = obj_v.value(QLatin1String("logging_rules"));
+            const auto handled_displays_v = obj_v.value(QLatin1String("handled_displays"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{3};
+            constexpr int current_entries{4};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -107,6 +116,30 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             {
                 m_logging_rules = logging_rules_v.toString();
                 valid_entries++;
+            }
+
+            if (handled_displays_v.isArray())
+            {
+                m_handled_displays.clear();
+
+                bool             some_entries_were_skipped{false};
+                const QJsonArray entries = handled_displays_v.toArray();
+                for (const auto& entry : entries)
+                {
+                    const QString entry_string{entry.isString() ? entry.toString() : QString{}};
+                    if (entry_string.isEmpty() || m_logging_rules.contains(entry_string))
+                    {
+                        some_entries_were_skipped = true;
+                        continue;
+                    }
+
+                    m_handled_displays.insert(entry_string);
+                }
+
+                if (!some_entries_were_skipped)
+                {
+                    valid_entries++;
+                }
             }
 
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
@@ -131,6 +164,8 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
 
     obj["port"]          = m_port;
     obj["logging_rules"] = m_logging_rules;
+    obj["handled_displays"] =
+        QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

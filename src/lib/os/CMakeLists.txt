@@ -34,10 +34,11 @@ set(HEADERS
     cursorhandlerinterface.h
     nativepcstatehandlerinterface.h
     nativeprocesshandlerinterface.h
+    nativeresolutionhandlerinterface.h
     pccontrol.h
     pcstatehandler.h
     processhandler.h
-    resolutionhandlerinterface.h
+    resolutionhandler.h
     steamhandler.h
     steamregistryobserverinterface.h
     streamstatehandlerinterface.h
@@ -51,6 +52,7 @@ set(SOURCES
     pccontrol.cpp
     pcstatehandler.cpp
     processhandler.cpp
+    resolutionhandler.cpp
     steamhandler.cpp
     )
 

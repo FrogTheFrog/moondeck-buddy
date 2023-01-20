@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl pc_control{app_meta};
+    os::PcControl pc_control{app_meta, app_settings.getHandledDisplays()};
 
     const QIcon               icon{":/icons/app.ico"};
     const utils::SystemTray   tray{icon, app_meta.getAppName(), pc_control};

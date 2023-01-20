@@ -58,6 +58,14 @@ Can be used to enable/disable logging for various categories.
 
 By default, Buddy logs information that is of severity **INFO** or above. To enable Buddy's debug logs, set the parameter value to `"buddy.*.debug=true"`.
 
+#### Handled displays (default: [])
+
+By default, Buddy will change resolution for display(-s) that is marked as primary.
+
+Here you can override this choice, with a list of display names that you want to change resolution for instead.
+
+Note: you can enable the debug mode to check what displays are available as they are printed when trying to change resolution.
+
 ## Sunshine setup
 
 Since the NVidia has discontinued its Gamestream service, the Sunshine has now become the primary target for MoonDeckBuddy.

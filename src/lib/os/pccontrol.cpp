@@ -7,7 +7,7 @@
     #include "win/cursorhandler.h"
     #include "win/nativepcstatehandler.h"
     #include "win/nativeprocesshandler.h"
-    #include "win/resolutionhandler.h"
+    #include "win/nativeresolutionhandler.h"
     #include "win/steamregistryobserver.h"
     #include "win/streamstatehandler.h"
 #elif defined(Q_OS_LINUX)
@@ -15,7 +15,7 @@
     #include "linux/cursorhandler.h"
     #include "linux/nativepcstatehandler.h"
     #include "linux/nativeprocesshandler.h"
-    #include "linux/resolutionhandler.h"
+    #include "linux/nativeresolutionhandler.h"
     #include "linux/steamregistryobserver.h"
     #include "shared/streamstatehandler.h"
 #else
@@ -39,12 +39,12 @@ const int SEC_TO_MS{1000};
 
 namespace os
 {
-PcControl::PcControl(const shared::AppMetadata& app_meta)
+PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays)
     : m_app_meta{app_meta}
     , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
     , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
-    , m_resolution_handler{std::make_unique<ResolutionHandler>()}
+    , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
     , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
                       std::make_unique<SteamRegistryObserver>()}
     , m_stream_state_handler{
@@ -52,7 +52,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta)
 {
     assert(m_auto_start_handler != nullptr);
     assert(m_cursor_handler != nullptr);
-    assert(m_resolution_handler != nullptr);
     assert(m_stream_state_handler != nullptr);
 
     connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
@@ -195,14 +194,14 @@ bool PcControl::isAutoStartEnabled() const
 
 bool PcControl::changeResolution(uint width, uint height)
 {
-    return m_resolution_handler->changeResolution(width, height);
+    return m_resolution_handler.changeResolution(width, height);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 void PcControl::restoreChangedResolution()
 {
-    m_resolution_handler->restoreResolution();
+    m_resolution_handler.restoreResolution();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

@@ -24,10 +24,10 @@ set(HEADERS
     cursorhandler.h
     nativepcstatehandler.h
     nativeprocesshandler.h
+    nativeresolutionhandler.h
     regkey.h
     processtracker.h
     processenumerator.h
-    resolutionhandler.h
     steamregistryobserver.h
     streamstatehandler.h
     )
@@ -41,10 +41,10 @@ set(SOURCES
     cursorhandler.cpp
     nativepcstatehandler.cpp
     nativeprocesshandler.cpp
+    nativeresolutionhandler.cpp
     regkey.cpp
     processtracker.cpp
     processenumerator.cpp
-    resolutionhandler.cpp
     steamregistryobserver.cpp
     streamstatehandler.cpp
     )

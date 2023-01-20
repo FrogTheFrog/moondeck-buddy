@@ -4,8 +4,11 @@
 #include <QRegularExpression>
 #include <QTimer>
 
-// local includes
-#include "nativeprocesshandlerinterface.h"
+// forward declarations
+namespace os
+{
+class NativeProcessHandlerInterface;
+}  // namespace os
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -18,7 +21,7 @@ class ProcessHandler : public QObject
 
 public:
     explicit ProcessHandler(std::unique_ptr<NativeProcessHandlerInterface> native_handler);
-    ~ProcessHandler() override = default;
+    ~ProcessHandler() override;
 
     bool startMonitoring(uint pid, const QRegularExpression& exec_regex);
     void stopMonitoring();

@@ -6,6 +6,7 @@
 
 // local includes
 #include "pcstatehandler.h"
+#include "resolutionhandler.h"
 #include "steamhandler.h"
 
 // forward declarations
@@ -17,7 +18,6 @@ namespace os
 {
 class AutoStartHandlerInterface;
 class CursorHandlerInterface;
-class ResolutionHandlerInterface;
 class StreamStateHandlerInterface;
 }  // namespace os
 
@@ -31,7 +31,7 @@ class PcControl : public QObject
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(const shared::AppMetadata& app_meta);
+    explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays);
     ~PcControl() override;
 
     bool launchSteamApp(uint app_id);
@@ -69,7 +69,7 @@ private:
     std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
     std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
     PcStateHandler                               m_pc_state_handler;
-    std::unique_ptr<ResolutionHandlerInterface>  m_resolution_handler;
+    ResolutionHandler                            m_resolution_handler;
     SteamHandler                                 m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
 };

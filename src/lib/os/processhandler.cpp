@@ -4,6 +4,9 @@
 // local includes
 #include "shared/loggingcategories.h"
 
+// local includes
+#include "nativeprocesshandlerinterface.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -36,6 +39,11 @@ ProcessHandler::ProcessHandler(std::unique_ptr<NativeProcessHandlerInterface> na
     m_check_timer.setSingleShot(true);
     m_kill_timer.setSingleShot(true);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+// For forward declarations
+ProcessHandler::~ProcessHandler() = default;
 
 //---------------------------------------------------------------------------------------------------------------------
 
