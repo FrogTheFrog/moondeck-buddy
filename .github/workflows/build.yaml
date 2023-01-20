@@ -13,6 +13,7 @@ jobs:
         with:
           modules: "qtwebsockets qthttpserver"
           version: "6.4.*"
+          tools: "tools_openssl_x64"
 
       - name: Install MSCV
         uses: ilammy/msvc-dev-cmd@v1
