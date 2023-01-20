@@ -82,7 +82,7 @@ add_subdirectory(src)
 # Install
 #----------------------------------------------------------------------------------------------------------------------
 
-set(OPENSSL_ROOT_DIR "$ENV{Qt6_DIR}/Tools/OpenSSL")
+set(OPENSSL_ROOT_DIR "$ENV{GITHUB_WORKSPACE}/Qt/Tools/OpenSSL")
 message(WARNING "GOT ${OPENSSL_ROOT_DIR}")
 find_package(OpenSSL REQUIRED)
 
