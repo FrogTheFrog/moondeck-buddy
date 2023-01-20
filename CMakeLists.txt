@@ -82,6 +82,9 @@ add_subdirectory(src)
 # Install
 #----------------------------------------------------------------------------------------------------------------------
 
+find_package(OpenSSL REQUIRED)
+
+
 IF(WIN32)
     find_package(Qt6 REQUIRED COMPONENTS Core)
     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy_${PROJECT_NAME}.cmake")
