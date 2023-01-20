@@ -20,9 +20,9 @@ set(HEADERS
     cursorhandler.h
     nativepcstatehandler.h
     nativeprocesshandler.h
+    nativeresolutionhandler.h
     registryfileparser.h
     registryfilewatcher.h
-    resolutionhandler.h
     steamregistryobserver.h
     )
 
@@ -35,9 +35,9 @@ set(SOURCES
     cursorhandler.cpp
     nativepcstatehandler.cpp
     nativeprocesshandler.cpp
+    nativeresolutionhandler.cpp
     registryfileparser.cpp
     registryfilewatcher.cpp
-    resolutionhandler.cpp
     steamregistryobserver.cpp
     )
 

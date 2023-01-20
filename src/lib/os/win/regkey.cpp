@@ -227,7 +227,8 @@ void RegKey::close()
         const auto result = RegCloseKey(m_key_handle);
         if (result != ERROR_SUCCESS)
         {
-            qCWarning(lc::os).nospace() << "Could not close key " << m_path << "! Reason: " << lc::getErrorString(result);
+            qCWarning(lc::os).nospace() << "Could not close key " << m_path
+                                        << "! Reason: " << lc::getErrorString(result);
         }
         m_key_handle = nullptr;
     }

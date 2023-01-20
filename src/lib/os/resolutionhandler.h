@@ -1,8 +1,5 @@
 #pragma once
 
-// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
-#include <windows.h>
-
 // system/Qt includes
 #include <memory>
 #include <set>

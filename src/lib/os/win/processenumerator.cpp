@@ -62,7 +62,8 @@ std::vector<DWORD> enumProcesses()
 
         if (EnumProcesses(handles.data(), buffer_in_bytes, &bytes_needed) == FALSE)
         {
-            qFatal("Failed get a list of running processes! Reason: %s", qUtf8Printable(lc::getErrorString(GetLastError())));
+            qFatal("Failed get a list of running processes! Reason: %s",
+                   qUtf8Printable(lc::getErrorString(GetLastError())));
         }
 
         if (buffer_in_bytes == bytes_needed)
