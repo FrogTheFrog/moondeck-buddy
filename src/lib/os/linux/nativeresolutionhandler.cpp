@@ -13,13 +13,14 @@ bool isWaylandSession()
     const auto xdg_session_env = qgetenv("XDG_SESSION_TYPE");
     if (!xdg_session_env.isEmpty())
     {
-        QString xdg_session_str{QString(xdg_session_env).toLower()};
+        const QString xdg_session_str{QString(xdg_session_env).toLower()};
         if (xdg_session_str == QStringLiteral("wayland"))
         {
             qCDebug(lc::os) << "XDG_SESSION_TYPE says it's a Wayland session!";
             return true;
         }
-        else if (xdg_session_str == QStringLiteral("x11"))
+        
+        if (xdg_session_str == QStringLiteral("x11"))
         {
             qCDebug(lc::os) << "XDG_SESSION_TYPE says it's an X11 session!";
             return false;

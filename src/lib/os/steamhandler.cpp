@@ -190,13 +190,17 @@ void SteamHandler::slotSteamProcessDied()
 
     m_global_app_id = std::nullopt;
     m_tracked_app   = std::nullopt;
+
+    m_registry_observer->stopAppObservation();
     m_registry_observer->stopTrackingApp();
     m_steam_close_timer.stop();
 
 #if defined(Q_OS_LINUX)
-    // On linux there is a race condition where the crashed Steam process may leave game running...
+    // On linux there is a race condition where the crashed Steam process may leave the reaper process (game) running...
     // Let's kill it for fun!
-    // TODO: KILLBILL
+    const uint forced_termination_ms{10000};
+    m_process_handler->closeDetached(QRegularExpression(".*?Steam.+?reaper", QRegularExpression::CaseInsensitiveOption),
+                                     forced_termination_ms);
 #endif
 
     emit signalProcessStateChanged();
@@ -239,6 +243,7 @@ void SteamHandler::slotSteamPID(uint pid)
     {
         qCDebug(lc::os) << "Steam is running!";
         Q_ASSERT(m_process_handler->isRunning() == true);
+        m_registry_observer->startAppObservation();
         emit signalProcessStateChanged();
     }
 }

@@ -87,17 +87,21 @@ void ProcessHandler::closeDetached(const QRegularExpression& exec_regex, uint au
 
 void ProcessHandler::closeDetached(uint pid, const QRegularExpression& exec_regex, uint auto_termination_timer) const
 {
-    if (!matchingProcess(m_native_handler->getExecPath(m_pid), exec_regex))
+    const auto exec_path{m_native_handler->getExecPath(pid)};
+    if (!matchingProcess(exec_path, exec_regex))
     {
         return;
     }
 
+    qCDebug(lc::os) << "closing detached" << pid << "|" << exec_path;
     m_native_handler->close(pid);
     QTimer::singleShot(static_cast<int>(auto_termination_timer), this,
                        [this, pid, exec_regex]()
                        {
-                           if (matchingProcess(m_native_handler->getExecPath(pid), exec_regex))
+                           const auto exec_path{m_native_handler->getExecPath(pid)};
+                           if (matchingProcess(exec_path, exec_regex))
                            {
+                               qCDebug(lc::os) << "terminating detached" << pid << "|" << exec_path;
                                m_native_handler->terminate(pid);
                            }
                        });
