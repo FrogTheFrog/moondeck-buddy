@@ -40,9 +40,8 @@ std::vector<uint> NativeProcessHandler::getPids() const
         handles.resize(bytes_needed / sizeof(decltype(handles)::value_type));
 
         std::vector<uint> pids;
-        pids.reserve(handles.size());
-        std::copy(asd);
-
+        std::transform(std::cbegin(handles), std::cend(handles), std::back_inserter(pids),
+                       [](const DWORD handle) { return static_cast<uint>(handle); });
         return pids;
     }
 

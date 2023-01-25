@@ -16,8 +16,8 @@ public:
     ~NativeProcessHandler() override = default;
 
     std::vector<uint> getPids() const override;
-    QString           getExecPath(uint pid) override;
-    void              close(uint pid) override;
-    void              terminate(uint pid) override;
+    QString           getExecPath(uint pid) const override;
+    void              close(uint pid) const override;
+    void              terminate(uint pid) const override;
 };
 }  // namespace os
