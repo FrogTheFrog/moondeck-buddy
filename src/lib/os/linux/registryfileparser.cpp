@@ -134,7 +134,7 @@ bool RegistryFileParser::parse(const QString& path)
 
     while (!file.atEnd())
     {
-        QByteArray file_buffer{file.read(file_buffer_size)};
+        const QByteArray file_buffer{file.read(file_buffer_size)};
         for (const auto byte : file_buffer)
         {
             if (!processByte(byte))

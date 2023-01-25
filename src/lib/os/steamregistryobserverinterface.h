@@ -14,6 +14,9 @@ class SteamRegistryObserverInterface : public QObject
 public:
     ~SteamRegistryObserverInterface() override = default;
 
+    virtual void startAppObservation() = 0;
+    virtual void stopAppObservation()  = 0;
+
     virtual void startTrackingApp(uint app_id) = 0;
     virtual void stopTrackingApp()             = 0;
 

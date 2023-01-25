@@ -16,7 +16,7 @@ QString getConfigDir()
     const auto xdg_config_env = qgetenv("XDG_CONFIG_HOME");
     if (!xdg_config_env.isEmpty())
     {
-        QDir xdg_cnnfig_dir{xdg_config_env};
+        const QDir xdg_cnnfig_dir{xdg_config_env};
         if (xdg_cnnfig_dir.exists())
         {
             return xdg_cnnfig_dir.absolutePath();

@@ -18,6 +18,9 @@ public:
     explicit SteamRegistryObserver();
     ~SteamRegistryObserver() override = default;
 
+    void startAppObservation() override;
+    void stopAppObservation() override;
+
     void startTrackingApp(uint app_id) override;
     void stopTrackingApp() override;
 
@@ -25,6 +28,8 @@ private slots:
     void slotRegistryChanged();
 
 private:
+    bool                          m_is_observing_apps{false};
+    QTimer                        m_observation_delay;
     RegistryFileWatcher           m_watcher;
     QString                       m_steam_exec;
     uint                          m_pid{0};

@@ -50,7 +50,7 @@ void AutoStartHandler::setAutoStart(bool enable)
 
     if (enable)
     {
-        QDir autostart_dir;
+        const QDir autostart_dir;
         if (!autostart_dir.mkpath(dir))
         {
             qFatal("Failed at mkpath %s", qUtf8Printable(dir));
