@@ -22,16 +22,54 @@ namespace os
 SteamRegistryObserver::SteamRegistryObserver()
 {
     connect(&m_global_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
+    connect(&m_steam_exec_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_process_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_app_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
+    connect(&m_observation_delay, &QTimer::timeout, this,
+            [this]()
+            {
+                m_is_observing_apps = true;
+                m_global_reg_key.open(REG_STEAM_PATH, {REG_APP_ID});
+                if (m_tracked_app_data)
+                {
+                    m_app_reg_key.open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(m_tracked_app_data->m_app_id),
+                                       QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
+                }
+            });
+
+    const int initial_delay_ms{2000};
+    m_observation_delay.setInterval(initial_delay_ms);
+    m_observation_delay.setSingleShot(true);
 
     // Delay opening the keys until the next event loop
     QTimer::singleShot(0, this,
                        [this]()
                        {
-                           m_global_reg_key.open(REG_STEAM_PATH, {REG_APP_ID, REG_EXEC});
+                           //
+                           m_steam_exec_reg_key.open(REG_STEAM_PATH, {REG_EXEC});
                            m_process_reg_key.open(REG_STEAM_PROCESS_PATH, {REG_PID});
                        });
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SteamRegistryObserver::startAppObservation()
+{
+    m_observation_delay.start();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SteamRegistryObserver::stopAppObservation()
+{
+    m_observation_delay.stop();
+    m_is_observing_apps = false;
+    m_global_app_id     = 0;
+    if (m_tracked_app_data)
+    {
+        m_tracked_app_data->m_is_running  = false;
+        m_tracked_app_data->m_is_updating = false;
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -39,8 +77,11 @@ SteamRegistryObserver::SteamRegistryObserver()
 void SteamRegistryObserver::startTrackingApp(uint app_id)
 {
     m_tracked_app_data = TrackedAppData{app_id, false, false};
-    m_app_reg_key.open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(app_id),
-                       QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
+    if (m_is_observing_apps)
+    {
+        m_app_reg_key.open(REG_STEAM_APPS_PATH + R"(\)" + QString::number(app_id),
+                           QStringList{REG_APP_RUNNING, REG_APP_UPDATING});
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
