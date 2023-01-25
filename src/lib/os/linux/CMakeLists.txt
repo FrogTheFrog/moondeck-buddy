@@ -12,6 +12,7 @@ find_package(Qt6 COMPONENTS Core DBus REQUIRED)
 find_package(WaylandScanner REQUIRED)
 find_package(Wayland COMPONENTS Client REQUIRED)
 find_package(X11 REQUIRED)
+find_library(PROCPS_LIBRARY NAMES proc procps REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -60,15 +61,6 @@ ecm_add_wayland_client_protocol(WAYLAND_SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
-
-include (FindPackageHandleStandardArgs)
-
-    find_path (PROCPS_INCLUDE_DIR proc/readproc.h)
-    find_library (PROCPS_LIBRARY NAMES proc procps)
-    find_package_handle_standard_args (procps DEFAULT_MSG PROCPS_LIBRARY PROCPS_INCLUDE_DIR)
-
-message(STATUS ${PROCPS_LIBRARY})
-message(STATUS ${PROCPS_INCLUDE_DIR})
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES} ${WAYLAND_SOURCES})
 target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus sharedlib ${Wayland_LIBRARIES} X11::X11 X11::Xxf86vm ${PROCPS_LIBRARY})

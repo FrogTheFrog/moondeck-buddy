@@ -22,6 +22,7 @@ XF86VidModeModeInfo* findMatchingMode(const Resolution& resolution, XF86VidModeM
 
     for (int i = 0; i < size; ++i)
     {
+        // NOLINTNEXTLINE(*-pointer-arithmetic)
         XF86VidModeModeInfo* mode{modes[i]};
         Q_ASSERT(mode);
 
@@ -39,6 +40,7 @@ XF86VidModeModeInfo* findMatchingMode(const Resolution& resolution, XF86VidModeM
 
 namespace os
 {
+// NOLINTNEXTLINE(*-cognitive-complexity)
 X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const DisplayPredicate& predicate)
 {
     Q_ASSERT(predicate);
@@ -61,8 +63,8 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
     }
 
     ChangedResMap changed_res;
-    int           screen_count{XScreenCount(display)};
-    int           primary_screen{XDefaultScreen(display)};
+    const int     screen_count{XScreenCount(display)};
+    const int     primary_screen{XDefaultScreen(display)};
     for (int screen = 0; screen < screen_count; ++screen)
     {
         const QString screen_name{QString::number(screen)};
@@ -83,7 +85,7 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
             continue;
         }
 
-        Resolution previous_resolution{mode_line.hdisplay, mode_line.vdisplay};
+        const Resolution previous_resolution{mode_line.hdisplay, mode_line.vdisplay};
         if (previous_resolution.m_height == resolution->m_height && previous_resolution.m_width == resolution->m_width)
         {
             qCDebug(lc::os) << "Screen" << screen_name << "aslread has the requested resolution - skipping.";

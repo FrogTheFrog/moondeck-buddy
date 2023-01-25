@@ -27,12 +27,12 @@ uint getParentPid(uint pid)
     const auto cleanup{qScopeGuard(
         [&]()
         {
-            if (proc)
+            if (proc != nullptr)
             {
                 closeproc(proc);
             }
         })};
-    if (readproc(proc, &proc_info) == 0)
+    if (readproc(proc, &proc_info) == nullptr)
     {
         return 0;
     }
@@ -44,7 +44,7 @@ uint getParentPid(uint pid)
 
 std::vector<uint> getPids()
 {
-    QDir              proc_dir{"/proc"};
+    const QDir        proc_dir{"/proc"};
     const auto        dirs{proc_dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot)};
     std::vector<uint> pids;
 
@@ -52,8 +52,8 @@ std::vector<uint> getPids()
 
     for (const auto& dir : dirs)
     {
-        bool converted{false};
-        uint pid = dir.toUInt(&converted);
+        bool       converted{false};
+        const uint pid = dir.toUInt(&converted);
 
         if (!converted)
         {
@@ -90,16 +90,16 @@ std::vector<uint> getRelatedPids(uint pid)
 
     for (std::size_t i = 0; i < related_pids.size(); ++i)
     {
-        uint related_pid{related_pids[i]};
+        const uint related_pid{related_pids[i]};
         for (std::size_t k = 0; k < parent_pids.size(); ++k)
         {
-            uint parent_pid{parent_pids[k]};
+            const uint parent_pid{parent_pids[k]};
             if (related_pid != parent_pid)
             {
                 continue;
             }
 
-            uint process_pid{all_pids[k]};
+            const uint process_pid{all_pids[k]};
             if (process_pid == related_pid)
             {
                 // Is this even possible? To be your own parent?
@@ -127,7 +127,7 @@ std::vector<uint> NativeProcessHandler::getPids() const
 
 QString NativeProcessHandler::getExecPath(uint pid) const
 {
-    QFileInfo info{"/proc/" + QString::number(pid) + "/exe"};
+    const QFileInfo info{"/proc/" + QString::number(pid) + "/exe"};
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
 }
 

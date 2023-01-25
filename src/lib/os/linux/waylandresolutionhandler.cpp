@@ -15,6 +15,7 @@ struct ModeData;
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-member-functions)
 struct HandlerData final
 {
     ~HandlerData()
@@ -25,7 +26,7 @@ struct HandlerData final
     void destroyDisplay()
     {
         destroyRegistry();
-        if (m_display)
+        if (m_display != nullptr)
         {
             wl_display_disconnect(m_display);
             m_display = nullptr;
@@ -35,7 +36,7 @@ struct HandlerData final
     void destroyRegistry()
     {
         destroyOutputManager();
-        if (m_registry)
+        if (m_registry != nullptr)
         {
             wl_registry_destroy(m_registry);
             m_registry = nullptr;
@@ -45,7 +46,7 @@ struct HandlerData final
     void destroyOutputManager()
     {
         m_heads.clear();
-        if (m_output_manager)
+        if (m_output_manager != nullptr)
         {
             zwlr_output_manager_v1_destroy(m_output_manager);
             m_output_manager = nullptr;
@@ -78,6 +79,7 @@ struct HandlerData final
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-member-functions)
 struct HeadData final
 {
     explicit HeadData(HandlerData* const parent)
@@ -127,6 +129,7 @@ struct HeadData final
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-member-functions)
 struct ModeData final
 {
     explicit ModeData(HeadData* const parent)
@@ -161,6 +164,7 @@ struct ModeData final
 //---------------------------------------------------------------------------------------------------------------------
 
 template<typename... Args>
+// NOLINTNEXTLINE(*-named-parameter)
 void noopFunction(Args...)
 {
     // Does nothing
@@ -171,8 +175,10 @@ void noopFunction(Args...)
 zwlr_output_mode_v1_listener makeOutputModeListener()
 {
     return {.size =
-                [](void* data, zwlr_output_mode_v1*, int32_t width, int32_t height)
+                // NOLINTNEXTLINE(*-swappable-parameters)
+            [](void* data, zwlr_output_mode_v1*, int32_t width, int32_t height)
             {
+                // NOLINTNEXTLINE(*-reinterpret-cast)
                 auto* mode_data = reinterpret_cast<ModeData*>(data);
                 Q_ASSERT(mode_data != nullptr);
 
@@ -184,6 +190,7 @@ zwlr_output_mode_v1_listener makeOutputModeListener()
             .finished =
                 [](void* data, zwlr_output_mode_v1*)
             {
+                // NOLINTNEXTLINE(*-reinterpret-cast)
                 auto* mode_data = reinterpret_cast<ModeData*>(data);
                 Q_ASSERT(mode_data != nullptr);
                 Q_ASSERT(mode_data->m_parent != nullptr);
@@ -200,6 +207,7 @@ zwlr_output_head_v1_listener makeOutputHeadListener()
         .name =
             [](void* data, zwlr_output_head_v1*, const char* name)
         {
+            // NOLINTNEXTLINE(*-reinterpret-cast)
             auto* head_data = reinterpret_cast<HeadData*>(data);
             Q_ASSERT(head_data != nullptr);
 
@@ -210,6 +218,7 @@ zwlr_output_head_v1_listener makeOutputHeadListener()
         .mode =
             [](void* data, zwlr_output_head_v1*, zwlr_output_mode_v1* mode)
         {
+            // NOLINTNEXTLINE(*-reinterpret-cast)
             auto* head_data = reinterpret_cast<HeadData*>(data);
             Q_ASSERT(head_data != nullptr);
             Q_ASSERT(head_data->m_parent != nullptr);
@@ -230,6 +239,7 @@ zwlr_output_head_v1_listener makeOutputHeadListener()
         .current_mode =
             [](void* data, zwlr_output_head_v1*, zwlr_output_mode_v1* mode)
         {
+            // NOLINTNEXTLINE(*-reinterpret-cast)
             auto* head_data = reinterpret_cast<HeadData*>(data);
             Q_ASSERT(head_data != nullptr);
             Q_ASSERT(head_data->m_parent != nullptr);
@@ -252,6 +262,7 @@ zwlr_output_head_v1_listener makeOutputHeadListener()
         .finished =
             [](void* data, zwlr_output_head_v1*)
         {
+            // NOLINTNEXTLINE(*-reinterpret-cast)
             auto* head_data = reinterpret_cast<HeadData*>(data);
             Q_ASSERT(head_data != nullptr);
             Q_ASSERT(head_data->m_parent != nullptr);
@@ -271,6 +282,7 @@ zwlr_output_manager_v1_listener makeOutputManagerListener()
     return {.head =
                 [](void* data, zwlr_output_manager_v1*, zwlr_output_head_v1* head)
             {
+                // NOLINTNEXTLINE(*-reinterpret-cast)
                 auto* handler_data = reinterpret_cast<HandlerData*>(data);
                 Q_ASSERT(handler_data != nullptr);
 
@@ -289,6 +301,7 @@ zwlr_output_manager_v1_listener makeOutputManagerListener()
             .done =
                 [](void* data, zwlr_output_manager_v1*, uint32_t serial)
             {
+                // NOLINTNEXTLINE(*-reinterpret-cast)
                 auto* handler_data = reinterpret_cast<HandlerData*>(data);
                 Q_ASSERT(handler_data != nullptr);
 
@@ -297,6 +310,7 @@ zwlr_output_manager_v1_listener makeOutputManagerListener()
             .finished =
                 [](void* data, struct zwlr_output_manager_v1*)
             {
+                // NOLINTNEXTLINE(*-reinterpret-cast)
                 auto* handler_data = reinterpret_cast<HandlerData*>(data);
                 Q_ASSERT(handler_data != nullptr);
 
@@ -311,12 +325,14 @@ wl_registry_listener makeRegistryListener()
     return {
         .global{[](void* data, wl_registry* wl_registry, uint32_t name, const char* interface, uint32_t version)
                 {
+                    // NOLINTNEXTLINE(*-reinterpret-cast)
                     auto* handler_data = reinterpret_cast<HandlerData*>(data);
                     Q_ASSERT(handler_data != nullptr);
 
                     if (strcmp(interface, zwlr_output_manager_v1_interface.name) == 0)
                     {
-                        uint32_t supported_version     = version <= 4 ? version : 4;
+                        const uint32_t supported_version = version <= 4 ? version : 4;
+                        // NOLINTNEXTLINE(*-reinterpret-cast)
                         handler_data->m_output_manager = reinterpret_cast<zwlr_output_manager_v1*>(
                             wl_registry_bind(wl_registry, name, &zwlr_output_manager_v1_interface, supported_version));
 
@@ -337,6 +353,7 @@ wl_registry_listener makeRegistryListener()
                 }},
         .global_remove{[](void* data, struct wl_registry*, uint32_t)
                        {
+                           // NOLINTNEXTLINE(*-reinterpret-cast)
                            auto* handler_data = reinterpret_cast<HandlerData*>(data);
                            Q_ASSERT(handler_data != nullptr);
 

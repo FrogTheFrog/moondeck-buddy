@@ -19,7 +19,7 @@ bool isWaylandSession()
             qCDebug(lc::os) << "XDG_SESSION_TYPE says it's a Wayland session!";
             return true;
         }
-        
+
         if (xdg_session_str == QStringLiteral("x11"))
         {
             qCDebug(lc::os) << "XDG_SESSION_TYPE says it's an X11 session!";

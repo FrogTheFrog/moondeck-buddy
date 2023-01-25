@@ -63,8 +63,9 @@ void SystemTray::slotTryAttach()
 
 #if defined(Q_OS_LINUX)
     // workaround for https://bugreports.qt.io/browse/QTBUG-94871
-    QDBusInterface systrayHost(QLatin1String("org.kde.StatusNotifierWatcher"), QLatin1String("/StatusNotifierWatcher"),
-                               QLatin1String("org.kde.StatusNotifierWatcher"));
+    const QDBusInterface systrayHost(QLatin1String("org.kde.StatusNotifierWatcher"),
+                                     QLatin1String("/StatusNotifierWatcher"),
+                                     QLatin1String("org.kde.StatusNotifierWatcher"));
     if (!systrayHost.isValid() || !systrayHost.property("IsStatusNotifierHostRegistered").toBool())
     {
         constexpr int max_retries{25};
