@@ -23,6 +23,11 @@ public:
     explicit ProcessHandler(std::unique_ptr<NativeProcessHandlerInterface> native_handler);
     ~ProcessHandler() override;
 
+    std::vector<uint> getPids() const;
+    std::vector<uint> getPidsMatchingExecPath(const QRegularExpression& exec_regex) const;
+    void              closeDetached(const QRegularExpression& exec_regex, uint auto_termination_timer) const;
+    void              closeDetached(uint pid, const QRegularExpression& exec_regex, uint auto_termination_timer) const;
+
     bool startMonitoring(uint pid, const QRegularExpression& exec_regex);
     void stopMonitoring();
 

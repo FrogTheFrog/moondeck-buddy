@@ -11,7 +11,7 @@ namespace
 {
 const QStringList PID_PATH{{"Registry", "HKLM", "Software", "Valve", "Steam", "SteamPID"}};
 const QStringList GLOBAL_APP_ID_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "RunningAppID"}};
-const QStringList APPS_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "Apps"}};
+const QStringList APPS_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "apps"}};
 const QStringList APP_RUNNING_PATH{{"Running"}};
 const QStringList APP_UPDATING_PATH{{"Updating"}};
 
@@ -135,6 +135,10 @@ void SteamRegistryObserver::slotRegistryChanged()
             m_tracked_app_data->m_is_running = is_running;
             emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_running);
         }
+    }
+    else
+    {
+        startTrackingApp(646570);
     }
 }
 }  // namespace os

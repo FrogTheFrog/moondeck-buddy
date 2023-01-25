@@ -2,6 +2,7 @@
 #include "nativeprocesshandler.h"
 
 // system/Qt includes
+#include <QDir>
 #include <QFileInfo>
 #include <cerrno>
 #include <csignal>
@@ -14,7 +15,33 @@
 
 namespace os
 {
-QString NativeProcessHandler::getExecPath(uint pid)
+std::vector<uint> NativeProcessHandler::getPids() const
+{
+    QDir              proc_dir{"/proc"};
+    const auto        dirs{proc_dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot)};
+    std::vector<uint> matching_pids;
+
+    matching_pids.reserve(static_cast<std::size_t>(dirs.size()));
+
+    for (const auto& dir : dirs)
+    {
+        bool converted{false};
+        uint pid = dir.toUInt(&converted);
+
+        if (!converted)
+        {
+            continue;
+        }
+
+        matching_pids.push_back(pid);
+    }
+
+    return matching_pids;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+QString NativeProcessHandler::getExecPath(uint pid) const
 {
     QFileInfo info{"/proc/" + QString::number(pid) + "/exe"};
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
@@ -22,7 +49,7 @@ QString NativeProcessHandler::getExecPath(uint pid)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void NativeProcessHandler::close(uint pid)
+void NativeProcessHandler::close(uint pid) const
 {
     if (kill(static_cast<pid_t>(pid), SIGTERM) < 0)
     {
@@ -36,7 +63,7 @@ void NativeProcessHandler::close(uint pid)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void NativeProcessHandler::terminate(uint pid)
+void NativeProcessHandler::terminate(uint pid) const
 {
     if (kill(static_cast<pid_t>(pid), SIGKILL) < 0)
     {

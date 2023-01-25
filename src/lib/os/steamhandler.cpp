@@ -193,6 +193,12 @@ void SteamHandler::slotSteamProcessDied()
     m_registry_observer->stopTrackingApp();
     m_steam_close_timer.stop();
 
+#if defined(Q_OS_LINUX)
+    // On linux there is a race condition where the crashed Steam process may leave game running...
+    // Let's kill it for fun!
+    // TODO: KILLBILL
+#endif
+
     emit signalProcessStateChanged();
 }
 
