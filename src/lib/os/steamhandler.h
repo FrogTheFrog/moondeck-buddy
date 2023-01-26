@@ -32,6 +32,7 @@ public:
 
 signals:
     void signalProcessStateChanged();
+    void signalAppTrackingHasEnded();
 
 private slots:
     void slotSteamProcessDied();
@@ -43,11 +44,13 @@ private slots:
     void slotTerminateSteam();
 
 private:
+    void clearTrackedApp();
+
     std::unique_ptr<ProcessHandler>                 m_process_handler;
     std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
 
     QString                       m_steam_exec_path;
-    std::optional<uint>           m_global_app_id;
+    uint                          m_global_app_id{0};
     std::optional<TrackedAppData> m_tracked_app;
     QTimer                        m_steam_close_timer;
 };

@@ -63,6 +63,7 @@ signals:
 private slots:
     void slotHandleSteamProcessStateChange();
     void slotHandleStreamStateChange();
+    void slotAppTrackingHasEnded();
 
 private:
     const shared::AppMetadata&                   m_app_meta;

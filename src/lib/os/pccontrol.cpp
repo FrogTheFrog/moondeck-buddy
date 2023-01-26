@@ -201,7 +201,13 @@ bool PcControl::changeResolution(uint width, uint height)
 
 void PcControl::restoreChangedResolution()
 {
-    m_resolution_handler.restoreResolution();
+    const bool not_streaming{m_stream_state_handler->getCurrentState() == enums::StreamState::NotStreaming};
+    const bool no_app_is_being_tracked{getTrackedUpdatingApp() == std::nullopt};
+
+    if (not_streaming && no_app_is_being_tracked)
+    {
+        m_resolution_handler.restoreResolution();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -243,5 +249,12 @@ void PcControl::slotHandleStreamStateChange()
             break;
         }
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PcControl::slotAppTrackingHasEnded()
+{
+    restoreChangedResolution();
 }
 }  // namespace os
