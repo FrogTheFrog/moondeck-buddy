@@ -31,13 +31,13 @@ signals:
 private slots:
     void slotFileChanged();
     void slotRetry();
+    void slotParseFile();
 
 private:
-    void parseFile();
-
     QString            m_path;
     RegistryFileParser m_parser;
     QFileSystemWatcher m_file_watcher;
     QTimer             m_retry_timer;
+    QTimer             m_parsing_delay_timer;
 };
 }  // namespace os
