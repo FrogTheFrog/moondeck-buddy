@@ -6,7 +6,7 @@
 
 // X11 smelly includes
 #include <X11/Xlib.h>
-#include <X11/extensions/xf86vmode.h>
+#include <X11/extensions/Xrandr.h>
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -16,23 +16,27 @@ using Resolution = os::NativeResolutionHandlerInterface::Resolution;
 
 //---------------------------------------------------------------------------------------------------------------------
 
-XF86VidModeModeInfo* findMatchingMode(const Resolution& resolution, XF86VidModeModeInfo** modes, int size)
+int findMatchingSize(const Resolution& resolution, const XRRScreenSize* sizes, int number_of_sizes)
 {
-    Q_ASSERT(modes);
+    const int not_found{-1};
+    if (sizes == nullptr)
+    {
+        return not_found;
+    }
 
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < number_of_sizes; ++i)
     {
         // NOLINTNEXTLINE(*-pointer-arithmetic)
-        XF86VidModeModeInfo* mode{modes[i]};
-        Q_ASSERT(mode);
+        const auto& size{sizes[i]};
 
-        if (mode->hdisplay == resolution.m_width && mode->vdisplay == resolution.m_height)
+        if (static_cast<uint>(size.width) == resolution.m_width
+            && static_cast<uint>(size.height) == resolution.m_height)
         {
-            return mode;
+            return i;
         }
     }
 
-    return nullptr;
+    return not_found;
 }
 }  // namespace
 
@@ -77,62 +81,68 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
             continue;
         }
 
-        int                 dotclock{0};  // WTF is this?
-        XF86VidModeModeLine mode_line{};
-        if (XF86VidModeGetModeLine(display, screen, &dotclock, &mode_line) == False)
+        const auto root_window = XRootWindow(display, screen);
+        const auto screen_info = XRRGetScreenInfo(display, root_window);
+        const auto screen_info_cleanup{qScopeGuard(
+            [&]()
+            {
+                if (screen_info != nullptr)
+                {
+                    XRRFreeScreenConfigInfo(screen_info);
+                }
+            })};
+
+        if (screen_info == nullptr)
         {
-            qCDebug(lc::os) << "Failed to get XF86VidModeModeLine for" << screen_name;
+            qCDebug(lc::os) << "XRRGetScreenInfo failed for" << screen_name;
             continue;
         }
 
-        const Resolution previous_resolution{mode_line.hdisplay, mode_line.vdisplay};
+        Rotation current_rotation;
+        auto     current_size_index = XRRConfigCurrentConfiguration(screen_info, &current_rotation);
+
+        // all_screen_sizes ptr belongs to screen_info, no need for a cleanup
+        int         number_of_sizes{0};
+        const auto* all_screen_sizes = XRRConfigSizes(screen_info, &number_of_sizes);
+
+        if (all_screen_sizes == nullptr || number_of_sizes == 0)
+        {
+            qCDebug(lc::os) << "XRRConfigSizes failed for" << screen_name;
+            continue;
+        }
+
+        if (current_size_index >= number_of_sizes)
+        {
+            qCDebug(lc::os) << "current_size_index is out of range for" << screen_name;
+            continue;
+        }
+
+        const Resolution previous_resolution{static_cast<uint>(all_screen_sizes[current_size_index].width),
+                                             static_cast<uint>(all_screen_sizes[current_size_index].height)};
         if (previous_resolution.m_height == resolution->m_height && previous_resolution.m_width == resolution->m_width)
         {
-            qCDebug(lc::os) << "Screen" << screen_name << "aslread has the requested resolution - skipping.";
+            qCDebug(lc::os) << "Screen" << screen_name << "already has the requested resolution - skipping.";
             changed_res[screen_name] = std::nullopt;
             continue;
         }
 
-        int                   modes_size{0};
-        XF86VidModeModeInfo** modes{nullptr};
-        const auto            modes_cleanup{qScopeGuard(
-            [&]()
-            {
-                if (modes != nullptr)
-                {
-                    XFree(modes);
-                }
-            })};
-
-        if (XF86VidModeGetAllModeLines(display, screen, &modes_size, &modes) == False)
+        const auto matching_size_index{findMatchingSize(*resolution, all_screen_sizes, number_of_sizes)};
+        if (matching_size_index < 0)
         {
-            qCWarning(lc::os) << "Failed to get XF86VidModeModeInfo for" << screen_name;
+            qCDebug(lc::os) << "Matching size not found for" << screen_name;
             continue;
         }
 
-        auto* matching_mode{findMatchingMode(*resolution, modes, modes_size)};
-        if (matching_mode == nullptr)
+        const auto result =
+            XRRSetScreenConfig(display, screen_info, root_window, matching_size_index, current_rotation, CurrentTime);
+        if (result != RRSetConfigSuccess)
         {
-            qCDebug(lc::os) << "Failed to get mode with matching resolution for" << screen_name;
+            qCWarning(lc::os) << "Failed to change resolution for" << screen_name;
             continue;
         }
 
-        if (XF86VidModeSwitchToMode(display, screen, matching_mode) == False)
-        {
-            qCWarning(lc::os) << "Failed to switch to new mode for" << screen_name;
-            continue;
-        }
-
-        qCDebug(lc::os) << "Changed mode for" << screen_name;
+        qCDebug(lc::os) << "Changed resolution for" << screen_name;
         changed_res[screen_name] = previous_resolution;
-
-        if (XF86VidModeSetViewPort(display, screen, 0, 0) == False)
-        {
-            qCWarning(lc::os) << "Failed to set viewport for" << screen_name;
-            // No "continue" as we must at least proceed with the flush
-        }
-
-        XFlush(display);
     }
 
     return changed_res;

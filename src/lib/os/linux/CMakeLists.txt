@@ -63,5 +63,5 @@ ecm_add_wayland_client_protocol(WAYLAND_SOURCES
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES} ${WAYLAND_SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus sharedlib ${Wayland_LIBRARIES} X11::X11 X11::Xxf86vm ${PROCPS_LIBRARY})
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus Wayland::Client X11::X11 X11::Xrandr ${PROCPS_LIBRARY} sharedlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
