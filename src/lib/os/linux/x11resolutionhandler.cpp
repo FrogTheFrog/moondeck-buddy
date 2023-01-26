@@ -81,9 +81,9 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
             continue;
         }
 
-        const auto root_window = XRootWindow(display, screen);
-        const auto screen_info = XRRGetScreenInfo(display, root_window);
-        const auto screen_info_cleanup{qScopeGuard(
+        const auto  root_window = XRootWindow(display, screen);
+        auto* const screen_info = XRRGetScreenInfo(display, root_window);
+        const auto  screen_info_cleanup{qScopeGuard(
             [&]()
             {
                 if (screen_info != nullptr)
@@ -98,7 +98,7 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
             continue;
         }
 
-        Rotation current_rotation;
+        Rotation current_rotation{0};
         auto     current_size_index = XRRConfigCurrentConfiguration(screen_info, &current_rotation);
 
         // all_screen_sizes ptr belongs to screen_info, no need for a cleanup
@@ -117,7 +117,9 @@ X11ResolutionHandler::ChangedResMap X11ResolutionHandler::changeResolution(const
             continue;
         }
 
+        // NOLINTNEXTLINE(*-pointer-arithmetic)
         const Resolution previous_resolution{static_cast<uint>(all_screen_sizes[current_size_index].width),
+                                             // NOLINTNEXTLINE(*-pointer-arithmetic)
                                              static_cast<uint>(all_screen_sizes[current_size_index].height)};
         if (previous_resolution.m_height == resolution->m_height && previous_resolution.m_width == resolution->m_width)
         {
