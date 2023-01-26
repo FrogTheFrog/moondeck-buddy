@@ -28,6 +28,7 @@ public:
 
     bool                launchApp(uint app_id);
     uint                getRunningApp() const;
+    std::optional<uint> getTrackedActiveApp() const;
     std::optional<uint> getTrackedUpdatingApp() const;
 
 signals:

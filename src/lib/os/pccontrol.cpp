@@ -202,9 +202,9 @@ bool PcControl::changeResolution(uint width, uint height)
 void PcControl::restoreChangedResolution()
 {
     const bool not_streaming{m_stream_state_handler->getCurrentState() == enums::StreamState::NotStreaming};
-    const bool no_app_is_being_tracked{getTrackedUpdatingApp() == std::nullopt};
+    const bool tracked_app_is_dead{m_steam_handler.getTrackedActiveApp() == std::nullopt};
 
-    if (not_streaming && no_app_is_being_tracked)
+    if (not_streaming && tracked_app_is_dead)
     {
         m_resolution_handler.restoreResolution();
     }

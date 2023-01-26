@@ -173,6 +173,16 @@ uint SteamHandler::getRunningApp() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+std::optional<uint> SteamHandler::getTrackedActiveApp() const
+{
+    return m_process_handler->isRunning() && m_tracked_app
+                   && (m_tracked_app->m_is_running || m_tracked_app->m_is_updating)
+               ? std::make_optional(m_tracked_app->m_app_id)
+               : std::nullopt;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
 {
     return m_process_handler->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
