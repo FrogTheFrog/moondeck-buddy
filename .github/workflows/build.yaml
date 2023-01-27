@@ -23,7 +23,7 @@ jobs:
           submodules: recursive
       
       - name: CMake configure
-        run: cmake -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
       - name: CMake build
         run: cmake --build build
@@ -67,7 +67,7 @@ jobs:
           submodules: recursive
 
       - name: CMake configure
-        run: cmake -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
       - name: CMake build
         run: cmake --build build
