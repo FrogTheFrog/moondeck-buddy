@@ -52,6 +52,9 @@ jobs:
       - name: Install Ninja
         run: sudo apt-get install ninja-build
 
+      - name: Install Wayland dev packages
+        run: sudo apt-get install libwayland-dev
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
