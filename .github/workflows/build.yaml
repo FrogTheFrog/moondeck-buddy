@@ -55,6 +55,9 @@ jobs:
       - name: Install Wayland dev packages
         run: sudo apt-get install libwayland-dev
 
+      - name: Install Procps packages
+        run: sudo apt-get install procps
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
