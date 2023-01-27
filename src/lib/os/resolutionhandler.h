@@ -12,7 +12,7 @@
 
 namespace os
 {
-class ResolutionHandler: public QObject
+class ResolutionHandler : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(ResolutionHandler)
