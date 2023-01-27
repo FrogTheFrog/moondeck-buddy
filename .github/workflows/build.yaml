@@ -52,11 +52,11 @@ jobs:
       - name: Install Ninja
         run: sudo apt-get install ninja-build
 
-      - name: Install Wayland dev packages
+      - name: Install Wayland dev package
         run: sudo apt-get install libwayland-dev
 
-      - name: Install Procps packages
-        run: sudo apt-get install procps
+      - name: Install Procps dev package
+        run: sudo apt-get install libprocps-dev
 
       - name: Checkout
         uses: actions/checkout@v3
