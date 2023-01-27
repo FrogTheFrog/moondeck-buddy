@@ -11,7 +11,7 @@ namespace
 {
 const QStringList PID_PATH{{"Registry", "HKLM", "Software", "Valve", "Steam", "SteamPID"}};
 const QStringList GLOBAL_APP_ID_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "RunningAppID"}};
-const QStringList APPS_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "Apps"}};
+const QStringList APPS_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "apps"}};
 const QStringList APP_RUNNING_PATH{{"Running"}};
 const QStringList APP_UPDATING_PATH{{"Updating"}};
 
@@ -68,6 +68,37 @@ SteamRegistryObserver::SteamRegistryObserver()
     : m_watcher{QDir::homePath() + "/.steam/registry.vdf"}
 {
     connect(&m_watcher, &RegistryFileWatcher::signalRegistryChanged, this, &SteamRegistryObserver::slotRegistryChanged);
+    connect(&m_observation_delay, &QTimer::timeout, this,
+            [this]()
+            {
+                m_is_observing_apps = true;
+                slotRegistryChanged();
+            });
+
+    const int initial_delay_ms{2000};
+    m_observation_delay.setInterval(initial_delay_ms);
+    m_observation_delay.setSingleShot(true);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SteamRegistryObserver::startAppObservation()
+{
+    m_observation_delay.start();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void SteamRegistryObserver::stopAppObservation()
+{
+    m_observation_delay.stop();
+    m_is_observing_apps = false;
+    m_global_app_id     = 0;
+    if (m_tracked_app_data)
+    {
+        m_tracked_app_data->m_is_running  = false;
+        m_tracked_app_data->m_is_updating = false;
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -100,13 +131,6 @@ void SteamRegistryObserver::slotRegistryChanged()
         emit signalSteamPID(m_pid);
     }
 
-    const auto global_app_id{get_uint(getEntry<qint64>(GLOBAL_APP_ID_PATH, data))};
-    if (global_app_id != m_global_app_id)
-    {
-        m_global_app_id = global_app_id;
-        emit signalGlobalAppId(m_global_app_id);
-    }
-
     if (m_steam_exec.isEmpty())
     {
         const QString hardcoded_path{"/usr/bin/steam"};
@@ -117,19 +141,31 @@ void SteamRegistryObserver::slotRegistryChanged()
         }
     }
 
+    if (!m_is_observing_apps)
+    {
+        return;
+    }
+
+    const auto global_app_id{get_uint(getEntry<qint64>(GLOBAL_APP_ID_PATH, data))};
+    if (global_app_id != m_global_app_id)
+    {
+        m_global_app_id = global_app_id;
+        emit signalGlobalAppId(m_global_app_id);
+    }
+
     if (m_tracked_app_data)
     {
         const auto* app_data{getEntry<os::RegistryFileWatcher::NodeList>(
             APPS_PATH + QStringList{QString::number(m_tracked_app_data->m_app_id)}, data)};
 
-        bool is_updating{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_UPDATING_PATH, *app_data))};
+        const bool is_updating{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_UPDATING_PATH, *app_data))};
         if (is_updating != m_tracked_app_data->m_is_updating)
         {
             m_tracked_app_data->m_is_updating = is_updating;
             emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_updating);
         }
 
-        bool is_running{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_RUNNING_PATH, *app_data))};
+        const bool is_running{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_RUNNING_PATH, *app_data))};
         if (is_running != m_tracked_app_data->m_is_running)
         {
             m_tracked_app_data->m_is_running = is_running;

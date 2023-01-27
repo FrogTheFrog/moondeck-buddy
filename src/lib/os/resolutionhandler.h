@@ -1,6 +1,7 @@
 #pragma once
 
 // system/Qt includes
+#include <QTimer>
 #include <memory>
 #include <set>
 
@@ -11,8 +12,9 @@
 
 namespace os
 {
-class ResolutionHandler
+class ResolutionHandler : public QObject
 {
+    Q_OBJECT
     Q_DISABLE_COPY(ResolutionHandler)
 
 public:
@@ -29,5 +31,6 @@ private:
     std::unique_ptr<NativeResolutionHandlerInterface> m_native_handler;
     std::set<QString>                                 m_handled_displays;
     std::map<QString, Resolution>                     m_original_resolutions;
+    QTimer                                            m_restore_retry_timer;
 };
 }  // namespace os

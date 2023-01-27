@@ -9,6 +9,14 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
+namespace
+{
+const int RETRY_TIME{10};
+const int SEC_TO_MS{1000};
+}  // namespace
+
+//---------------------------------------------------------------------------------------------------------------------
+
 namespace os
 {
 ResolutionHandler::ResolutionHandler(std::unique_ptr<NativeResolutionHandlerInterface> native_handler,
@@ -17,6 +25,10 @@ ResolutionHandler::ResolutionHandler(std::unique_ptr<NativeResolutionHandlerInte
     , m_handled_displays{std::move(handled_displays)}
 {
     Q_ASSERT(m_native_handler != nullptr);
+
+    connect(&m_restore_retry_timer, &QTimer::timeout, this, [this]() { restoreResolution(); });
+    m_restore_retry_timer.setInterval(RETRY_TIME * SEC_TO_MS);
+    m_restore_retry_timer.setSingleShot(true);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -76,6 +88,8 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
 
 void ResolutionHandler::restoreResolution()
 {
+    m_restore_retry_timer.stop();
+
     if (m_original_resolutions.empty())
     {
         return;
@@ -94,28 +108,16 @@ void ResolutionHandler::restoreResolution()
             return std::nullopt;
         })};
 
-    std::set<QString> original_keys;
-    std::transform(std::cbegin(m_original_resolutions), std::cend(m_original_resolutions),
-                   std::inserter(original_keys, std::begin(original_keys)),
-                   [](const auto& item) { return item.first; });
-
-    std::set<QString> result_keys;
-    std::transform(std::cbegin(result), std::cend(result), std::inserter(result_keys, std::begin(result_keys)),
-                   [](const auto& item) { return item.first; });
-
-    std::set<QString> diff_keys;
-    std::set_difference(std::cbegin(original_keys), std::cend(original_keys), std::cbegin(result_keys),
-                        std::cend(result_keys), std::inserter(diff_keys, std::begin(diff_keys)));
-
-    if (!diff_keys.empty())
+    for (const auto& restored : result)
     {
-        qCWarning(lc::os) << "Failed to restore resolution for:";
-        for (const auto& name : diff_keys)
-        {
-            qCWarning(lc::os) << "  *" << name;
-        }
+        const auto& key{restored.first};
+        m_original_resolutions.erase(key);
     }
 
-    m_original_resolutions.clear();
+    if (!m_original_resolutions.empty())
+    {
+        qCDebug(lc::os) << "Failed to restore resolution. Trying again in" << RETRY_TIME << "seconds.";
+        m_restore_retry_timer.start();
+    }
 }
 }  // namespace os

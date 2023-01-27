@@ -14,7 +14,44 @@
 
 namespace os
 {
-QString NativeProcessHandler::getExecPath(uint pid)
+std::vector<uint> NativeProcessHandler::getPids() const
+{
+    std::vector<DWORD> handles;
+    for (auto i = 0; i < 3; ++i)
+    {
+        const int handle_size{1024};
+        // NOLINTNEXTLINE(*misplaced-widening-cast)
+        handles.resize(static_cast<std::size_t>(handle_size * (i + 1)));
+
+        DWORD       bytes_needed{0};
+        const DWORD buffer_in_bytes{static_cast<DWORD>(handles.size() * sizeof(decltype(handles)::value_type))};
+
+        if (EnumProcesses(handles.data(), buffer_in_bytes, &bytes_needed) == FALSE)
+        {
+            qFatal("Failed get a list of running processes! Reason: %s",
+                   qUtf8Printable(lc::getErrorString(GetLastError())));
+        }
+
+        if (buffer_in_bytes == bytes_needed)
+        {
+            continue;
+        }
+
+        handles.resize(bytes_needed / sizeof(decltype(handles)::value_type));
+
+        std::vector<uint> pids;
+        std::transform(std::cbegin(handles), std::cend(handles), std::back_inserter(pids),
+                       [](const DWORD handle) { return static_cast<uint>(handle); });
+        return pids;
+    }
+
+    qFatal("Failed get a list of running processes after 3 tries!");
+    return {};
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+QString NativeProcessHandler::getExecPath(uint pid) const
 {
     HANDLE proc_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
     auto   cleanup     = qScopeGuard(
@@ -50,7 +87,7 @@ QString NativeProcessHandler::getExecPath(uint pid)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void NativeProcessHandler::close(uint pid)
+void NativeProcessHandler::close(uint pid) const
 {
     std::vector<HWND> hwnds;
     {
@@ -81,7 +118,7 @@ void NativeProcessHandler::close(uint pid)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void NativeProcessHandler::terminate(uint pid)
+void NativeProcessHandler::terminate(uint pid) const
 {
     HANDLE proc_handle = OpenProcess(PROCESS_TERMINATE, FALSE, static_cast<DWORD>(pid));
     auto   cleanup     = qScopeGuard(

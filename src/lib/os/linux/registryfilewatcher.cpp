@@ -13,10 +13,15 @@ RegistryFileWatcher::RegistryFileWatcher(QString path)
 {
     connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this, &RegistryFileWatcher::slotFileChanged);
     connect(&m_retry_timer, &QTimer::timeout, this, &RegistryFileWatcher::slotRetry);
+    connect(&m_parsing_delay_timer, &QTimer::timeout, this, &RegistryFileWatcher::slotParseFile);
 
     const int retry_inverval{1000};
     m_retry_timer.setInterval(retry_inverval);
     m_retry_timer.setSingleShot(true);
+
+    const int delay_inverval{1000};
+    m_parsing_delay_timer.setInterval(delay_inverval);
+    m_parsing_delay_timer.setSingleShot(true);
 
     // Delay until next event loop
     QTimer::singleShot(0, this, &RegistryFileWatcher::slotRetry);
@@ -39,7 +44,10 @@ void RegistryFileWatcher::slotFileChanged()
         return;
     }
 
-    parseFile();
+    if (!m_parsing_delay_timer.isActive())
+    {
+        m_parsing_delay_timer.start();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -52,12 +60,15 @@ void RegistryFileWatcher::slotRetry()
         return;
     }
 
-    parseFile();
+    if (!m_parsing_delay_timer.isActive())
+    {
+        m_parsing_delay_timer.start();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void RegistryFileWatcher::parseFile()
+void RegistryFileWatcher::slotParseFile()
 {
     if (!m_parser.parse(m_path))
     {

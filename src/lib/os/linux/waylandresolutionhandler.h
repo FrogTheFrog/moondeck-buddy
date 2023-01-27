@@ -5,23 +5,19 @@
 
 // local includes
 #include "../nativeresolutionhandlerinterface.h"
-#include "x11resolutionhandler.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
-class NativeResolutionHandler : public NativeResolutionHandlerInterface
+class WaylandResolutionHandler : public NativeResolutionHandlerInterface
 {
-    Q_DISABLE_COPY(NativeResolutionHandler)
+    Q_DISABLE_COPY(WaylandResolutionHandler)
 
 public:
-    explicit NativeResolutionHandler()  = default;
-    ~NativeResolutionHandler() override = default;
+    explicit WaylandResolutionHandler()  = default;
+    ~WaylandResolutionHandler() override = default;
 
     ChangedResMap changeResolution(const DisplayPredicate& predicate) override;
-
-private:
-    X11ResolutionHandler x11_handler;
 };
 }  // namespace os

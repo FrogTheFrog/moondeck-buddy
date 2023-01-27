@@ -23,7 +23,7 @@ jobs:
           submodules: recursive
       
       - name: CMake configure
-        run: cmake -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
       - name: CMake build
         run: cmake --build build
@@ -52,13 +52,22 @@ jobs:
       - name: Install Ninja
         run: sudo apt-get install ninja-build
 
+      - name: Install Wayland dev package
+        run: sudo apt-get install libwayland-dev
+
+      - name: Install Procps dev package
+        run: sudo apt-get install libprocps-dev
+
+      - name: Install XRandR dev package
+        run: sudo apt-get install libxrandr-dev
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: CMake configure
-        run: cmake -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
       - name: CMake build
         run: cmake --build build

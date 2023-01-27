@@ -7,7 +7,7 @@ project(MoonDeckBuddy
         VERSION 1.4.1
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
         HOMEPAGE_URL "https://github.com/FrogTheFrog/moondeck-buddy"
-        LANGUAGES CXX)
+        LANGUAGES C CXX)
 
 set(EXEC_NAME_BUDDY MoonDeckBuddy)
 set(EXEC_NAME_STREAM MoonDeckStream)
@@ -17,6 +17,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(BUDDY_RESOURCES "${CMAKE_CURRENT_LIST_DIR}/resources")
+set(ENABLE_CLANG_TIDY OFF CACHE BOOL "Enable clang-tidy build (slow)")
 
 if(MSVC)
     # warning level 4 and all warnings as errors
@@ -40,8 +44,9 @@ endif()
 # CLang-Tidy
 #----------------------------------------------------------------------------------------------------------------------
 
-if(NOT DEBUG_MODE)
+if(ENABLE_CLANG_TIDY)
     if(NOT MSVC)
+        message(STATUS "Clang-tidy build is enabled!")
         set(CMAKE_CXX_CLANG_TIDY clang-tidy)
         file(WRITE "${CMAKE_BINARY_DIR}/.clang-tidy" "Checks: '-*,llvm-twine-local'")
     endif()

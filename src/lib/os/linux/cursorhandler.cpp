@@ -8,9 +8,8 @@
 
 namespace os
 {
-// NOLINTNEXTLINE(*-static)
 void CursorHandler::hideCursor()
 {
-    qCCritical(lc::os) << Q_FUNC_INFO << ": not implemented!";
+    // Doesn't seem to be an issue like in Windows, so no implementation for now :)
 }
 }  // namespace os

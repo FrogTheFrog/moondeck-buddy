@@ -11,7 +11,7 @@
 
 namespace
 {
-bool validProcessExists(const QString& exec_path, const QRegularExpression& exec_regex)
+bool matchingProcess(const QString& exec_path, const QRegularExpression& exec_regex)
 {
     if (exec_path.isEmpty())
     {
@@ -47,6 +47,68 @@ ProcessHandler::~ProcessHandler() = default;
 
 //---------------------------------------------------------------------------------------------------------------------
 
+std::vector<uint> ProcessHandler::getPids() const
+{
+    return m_native_handler->getPids();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<uint> ProcessHandler::getPidsMatchingExecPath(const QRegularExpression& exec_regex) const
+{
+    std::vector<uint> matching_pids;
+
+    const auto pids{getPids()};
+    for (const auto pid : pids)
+    {
+        if (!matchingProcess(m_native_handler->getExecPath(pid), exec_regex))
+        {
+            continue;
+        }
+
+        matching_pids.push_back(pid);
+    }
+
+    return matching_pids;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void ProcessHandler::closeDetached(const QRegularExpression& exec_regex, uint auto_termination_timer) const
+{
+    const auto pids{getPidsMatchingExecPath(exec_regex)};
+    for (const auto& pid : pids)
+    {
+        closeDetached(pid, exec_regex, auto_termination_timer);
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void ProcessHandler::closeDetached(uint pid, const QRegularExpression& exec_regex, uint auto_termination_timer) const
+{
+    const auto exec_path{m_native_handler->getExecPath(pid)};
+    if (!matchingProcess(exec_path, exec_regex))
+    {
+        return;
+    }
+
+    qCDebug(lc::os) << "closing detached" << pid << "|" << exec_path;
+    m_native_handler->close(pid);
+    QTimer::singleShot(static_cast<int>(auto_termination_timer), this,
+                       [this, pid, exec_regex]()
+                       {
+                           const auto exec_path{m_native_handler->getExecPath(pid)};
+                           if (matchingProcess(exec_path, exec_regex))
+                           {
+                               qCDebug(lc::os) << "terminating detached" << pid << "|" << exec_path;
+                               m_native_handler->terminate(pid);
+                           }
+                       });
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool ProcessHandler::startMonitoring(uint pid, const QRegularExpression& exec_regex)
 {
     stopMonitoring();
@@ -61,7 +123,7 @@ bool ProcessHandler::startMonitoring(uint pid, const QRegularExpression& exec_re
         return true;
     }
 
-    if (!validProcessExists(m_native_handler->getExecPath(pid), exec_regex))
+    if (!matchingProcess(m_native_handler->getExecPath(pid), exec_regex))
     {
         return false;
     }
@@ -131,7 +193,7 @@ void ProcessHandler::slotCheckState()
 {
     m_check_timer.stop();
 
-    if (!validProcessExists(m_native_handler->getExecPath(m_pid), m_exec_regex))
+    if (!matchingProcess(m_native_handler->getExecPath(m_pid), m_exec_regex))
     {
         stopMonitoring();
         emit signalProcessDied();
