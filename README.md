@@ -46,6 +46,12 @@ It creates the shortcut in the user's startup directory pointing to the executab
 
 Also if you remove the app without turning it off, you will need to remove it manually.
 
+# Log file location
+
+On Windows the logs are located next to the executable.
+
+On Linux the logs are located in `/tmp`.
+
 # Additional configuration
 
 Everytime the app is started, a configuration file called `settings.json` is read or created. After modifying the file, the app must be restarted for changes to apply.
