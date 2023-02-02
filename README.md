@@ -32,6 +32,10 @@ Verify that the app is running:
 
 #### Step 4 (optional)
 
+If MoonDeckBuddy is unreachable from outisde the PC, whitelist it in Windows' firewall.
+
+#### Step 5 (optional)
+
 Enable autostart by clicking on the icon (right-click) and selecting the following option:
 
 ![Autostart-option](.github/assets/autostart-option.png)
