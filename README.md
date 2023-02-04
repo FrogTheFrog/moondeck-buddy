@@ -40,6 +40,11 @@ Enable autostart by clicking on the icon (right-click) and selecting the followi
 
 ![Autostart-option](.github/assets/autostart-option.png)
 
+#### Step 6
+
+Add MoonDeckStream to the Sunshine Apps List (or GFE while it's still kicking).
+See below for more info.
+
 ## Linux
 
 You'll need to compile it for now :D, check Github's build workflow for linux.
