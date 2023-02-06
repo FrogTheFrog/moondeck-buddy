@@ -1,4 +1,4 @@
-# MoonDeck Buddy ![Status](https://github.com/FrogTheFrog/moondeck-buddy/actions/workflows/publish.yaml/badge.svg)
+# MoonDeck Buddy ![Status](https://github.com/FrogTheFrog/moondeck-buddy/actions/workflows/publish.yaml/badge.svg) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/ZU74G2NJzk)
 
 A server-side part of the [MoonDeck](https://github.com/FrogTheFrog/moondeck) plugin for the SteamDeck.
 
