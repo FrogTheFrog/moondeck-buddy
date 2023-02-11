@@ -49,10 +49,7 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
         {
             if ((m_handled_displays.empty() && is_primary) || m_handled_displays.contains(display_name))
             {
-                if (is_primary)
-                {
-                    return Resolution{width, height};
-                }
+                return Resolution{width, height};
             }
 
             return std::nullopt;
