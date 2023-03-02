@@ -26,7 +26,7 @@ public:
     void close();
 
     bool     isOpen() const;
-    QVariant getValue(const QString& names) const;
+    QVariant getValue(const QString& name = {}) const;
 
     bool isNotificationEnabled() const;
     void addNotifyOnValueChange(const QStringList& names);

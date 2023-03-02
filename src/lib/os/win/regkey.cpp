@@ -85,8 +85,8 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
 
     auto result =
         // NOLINTNEXTLINE(*-reinterpret-cast)
-        RegQueryValueExW(key_handle, reinterpret_cast<const wchar_t*>(name.utf16()), nullptr, &data.m_type, nullptr,
-                         &data_size);
+        RegQueryValueExW(key_handle, name.isEmpty() ? nullptr : reinterpret_cast<const wchar_t*>(name.utf16()), nullptr,
+                         &data.m_type, nullptr, &data_size);
 
     if (result != ERROR_SUCCESS)
     {
@@ -102,7 +102,8 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     data.m_buffer.resize(data_size);
     result =
         // NOLINTNEXTLINE(*-reinterpret-cast)
-        RegQueryValueExW(key_handle, reinterpret_cast<const wchar_t*>(name.utf16()), nullptr, nullptr,
+        RegQueryValueExW(key_handle, name.isEmpty() ? nullptr : reinterpret_cast<const wchar_t*>(name.utf16()), nullptr,
+                         nullptr,
                          // NOLINTNEXTLINE(*-reinterpret-cast)
                          reinterpret_cast<LPBYTE>(data.m_buffer.data()), &data_size);
 

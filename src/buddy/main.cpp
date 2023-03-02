@@ -5,6 +5,7 @@
 
 // local includes
 #include "os/pccontrol.h"
+#include "os/sunshineapps.h"
 #include "routing.h"
 #include "server/clientids.h"
 #include "server/httpserver.h"
@@ -28,7 +29,7 @@
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    constexpr int             api_version{2};
+    constexpr int             api_version{3};
     const shared::AppMetadata app_meta{shared::AppMetadata::App::Buddy};
 
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
@@ -51,7 +52,8 @@ int main(int argc, char* argv[])
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl pc_control{app_meta, app_settings.getHandledDisplays()};
+    os::PcControl    pc_control{app_meta, app_settings.getHandledDisplays()};
+    os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     const QIcon               icon{":/icons/app.ico"};
     const utils::SystemTray   tray{icon, app_meta.getAppName(), pc_control};
@@ -75,7 +77,7 @@ int main(int argc, char* argv[])
                      &server::PairingManager::slotPairingRejected);
 
     // HERE WE GO!!! (a.k.a. starting point)
-    setupRoutes(new_server, pairing_manager, pc_control);
+    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps);
 
     client_ids.load();
     if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))
