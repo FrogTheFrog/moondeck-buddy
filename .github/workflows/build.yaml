@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/checks.yaml
 
   Windows:
-    runs-on: windows-latestname: Checks
+    runs-on: windows-latest
 
     needs: [Checks]
     steps:
