@@ -6,6 +6,8 @@ on:
     push:
         branches:
           - main
+          - BigPictureFix
+          - workflows
 jobs:
   Checks:
     uses: ./.github/workflows/checks.yaml
