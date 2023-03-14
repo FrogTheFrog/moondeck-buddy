@@ -1,11 +1,18 @@
 name: Build
-on: [pull_request,workflow_call]
+on: 
+    pull_request:
+    workflow_call:
+    workflow_dispatch:
+    push:
+        branches:
+          - main
 jobs:
   Checks:
     uses: ./.github/workflows/checks.yaml
 
   Windows:
-    runs-on: windows-latest
+    runs-on: windows-latestname: Checks
+
     needs: [Checks]
     steps:
       - name: Install Qt

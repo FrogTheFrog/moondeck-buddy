@@ -1,8 +1,6 @@
 name: Build & Publish
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 jobs:
   Build:
     uses: ./.github/workflows/build.yaml
