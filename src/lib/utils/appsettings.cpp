@@ -62,6 +62,13 @@ const std::set<QString>& AppSettings::getHandledDisplays() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+const QString& AppSettings::getSunshineAppsFilepath() const
+{
+    return m_sunshine_apps_filepath;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -84,17 +91,18 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
         }
         else if (!json_data.isEmpty())
         {
-            const auto obj_v              = json_data.object();
-            const auto port_v             = obj_v.value(QLatin1String("port"));
-            const auto logging_rules_v    = obj_v.value(QLatin1String("logging_rules"));
-            const auto handled_displays_v = obj_v.value(QLatin1String("handled_displays"));
+            const auto obj_v                    = json_data.object();
+            const auto port_v                   = obj_v.value(QLatin1String("port"));
+            const auto logging_rules_v          = obj_v.value(QLatin1String("logging_rules"));
+            const auto handled_displays_v       = obj_v.value(QLatin1String("handled_displays"));
+            const auto sunshine_apps_filepath_v = obj_v.value(QLatin1String("sunshine_apps_filepath"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{4};
+            constexpr int current_entries{5};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -142,6 +150,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 }
             }
 
+            if (sunshine_apps_filepath_v.isString())
+            {
+                m_sunshine_apps_filepath = sunshine_apps_filepath_v.toString();
+                valid_entries++;
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -166,6 +180,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["logging_rules"] = m_logging_rules;
     obj["handled_displays"] =
         QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
+    obj["sunshine_apps_filepath"] = m_sunshine_apps_filepath;
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

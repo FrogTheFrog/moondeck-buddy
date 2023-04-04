@@ -19,6 +19,7 @@ public:
     quint16                  getPort() const;
     const QString&           getLoggingRules() const;
     const std::set<QString>& getHandledDisplays() const;
+    const QString&           getSunshineAppsFilepath() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -27,6 +28,7 @@ private:
     quint16           m_port;
     QString           m_logging_rules;
     std::set<QString> m_handled_displays;
+    QString           m_sunshine_apps_filepath;
 
 public:
     // TODO: remove

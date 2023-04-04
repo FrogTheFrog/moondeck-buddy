@@ -42,6 +42,7 @@ set(HEADERS
     steamhandler.h
     steamregistryobserverinterface.h
     streamstatehandlerinterface.h
+    sunshineapps.h
     )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -54,6 +55,7 @@ set(SOURCES
     processhandler.cpp
     resolutionhandler.cpp
     steamhandler.cpp
+    sunshineapps.cpp
     )
 
 #----------------------------------------------------------------------------------------------------------------------

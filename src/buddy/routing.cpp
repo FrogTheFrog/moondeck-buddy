@@ -2,6 +2,7 @@
 #include "routing.h"
 
 // system/Qt includes
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <limits>
@@ -320,6 +321,31 @@ void setupStreamControl(server::HttpServer& server, os::PcControl& pc_control)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
+{
+    server.route(
+        "/gamestreamAppNames", QHttpServerRequest::Method::Get,
+        [&server, &sunshine_apps](const QHttpServerRequest& request)
+        {
+            if (!server.isAuthorized(request))
+            {
+                return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+            }
+
+            sunshine_apps.load();
+            const auto app_names{sunshine_apps.getAppNames()};
+            if (!app_names)
+            {
+                return QHttpServerResponse{QJsonObject{{"appNames", QJsonValue()}}};
+            }
+
+            return QHttpServerResponse{QJsonObject{
+                {"appNames", QJsonArray::fromStringList(QStringList{std::begin(*app_names), std::end(*app_names)})}}};
+        });
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void setupRouteLogging(server::HttpServer& server)
 {
     server.afterRequest(
@@ -335,7 +361,8 @@ void setupRouteLogging(server::HttpServer& server)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control)
+void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
+                 os::SunshineApps& sunshine_apps)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
@@ -344,6 +371,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupSteamControl(server, pc_control);
     routing_internal::setupResolution(server, pc_control);
     routing_internal::setupStreamControl(server, pc_control);
+    routing_internal::setupGamestreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
 
