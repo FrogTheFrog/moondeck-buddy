@@ -277,13 +277,6 @@ void SteamHandler::slotTrackedAppIsRunning(bool state)
     }
 
     qCDebug(lc::os).nospace() << "App " << m_tracked_app->m_app_id << " \"running\" value change detected: " << state;
-    if (m_tracked_app->m_is_running && !state)
-    {
-        // The app was closed, we are no longer watching it
-        clearTrackedApp();
-        return;
-    }
-
     m_tracked_app->m_is_running = state;
 }
 
