@@ -1,14 +1,15 @@
 #pragma once
 
 // system/Qt includes
-#include <QString>
+#include <QObject>
 
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace shared
 {
-class AppMetadata final
+class AppMetadata final : public QObject
 {
+    Q_OBJECT
     Q_DISABLE_COPY(AppMetadata)
 
 public:

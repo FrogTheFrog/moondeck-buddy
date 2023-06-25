@@ -5,6 +5,10 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QStandardPaths>
+#include <QTimer>
+
+// local includes
+#include "loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -25,6 +29,19 @@ QString getConfigDir()
 
     return QDir::cleanPath(QDir::homePath() + "/.config");
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+QString getAppFilePath()
+{
+    const auto app_image_env = qgetenv("APPIMAGE");
+    if (!app_image_env.isEmpty())
+    {
+        return QString{app_image_env};
+    }
+
+    return QCoreApplication::applicationFilePath();
+}
 #endif
 }  // namespace
 
@@ -35,6 +52,21 @@ namespace shared
 AppMetadata::AppMetadata(App app)
     : m_current_app{app}
 {
+    // Delay logging until application start
+    QTimer::singleShot(0, this,
+                       [this]()
+                       {
+                           qCDebug(lc::shared) << "getAppName() >> " << getAppName();
+                           qCDebug(lc::shared) << "getLogDir() >> " << getLogDir();
+                           qCDebug(lc::shared) << "getLogName() >> " << getLogName();
+                           qCDebug(lc::shared) << "getLogPath() >> " << getLogPath();
+                           qCDebug(lc::shared) << "getSettingsDir() >> " << getSettingsDir();
+                           qCDebug(lc::shared) << "getSettingsName() >> " << getSettingsName();
+                           qCDebug(lc::shared) << "getSettingsPath() >> " << getSettingsPath();
+                           qCDebug(lc::shared) << "getAutoStartDir() >> " << getAutoStartDir();
+                           qCDebug(lc::shared) << "getAutoStartPath() >> " << getAutoStartPath();
+                           qCDebug(lc::shared) << "getAutoStartExec() >> " << getAutoStartExec();
+                       });
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -164,8 +196,7 @@ QString AppMetadata::getAutoStartExec() const
 #if defined(Q_OS_WIN)
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
-    // TODO: flatpak && others
-    return QCoreApplication::applicationFilePath();
+    return getAppFilePath();
 #else
     #error OS is not supported!
 #endif
