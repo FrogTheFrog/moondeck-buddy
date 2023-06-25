@@ -94,7 +94,7 @@ jobs:
 
       - name: Package AppImage
         working-directory: ./build
-        run: linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
+        run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
