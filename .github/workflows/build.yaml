@@ -70,6 +70,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: TestA
+        run: ls ${QT_ROOT_DIR}
+
+      - name: TestB
+        run: ls ${QT_ROOT_DIR}/lib
+
+      - name: TestC
+        run: ls ${QT_ROOT_DIR}/bin
+
       - name: Configure
         run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
