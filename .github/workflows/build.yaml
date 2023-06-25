@@ -57,7 +57,7 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
+        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2 libssl-dev
 
       - name: Checkout
         uses: actions/checkout@v3
