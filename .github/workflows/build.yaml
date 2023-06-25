@@ -72,7 +72,6 @@ jobs:
 
       - name: TestA
         run: qmake -v
-        run: ls ${QT_ROOT_DIR}/bin
 
       - name: Configure
         run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
