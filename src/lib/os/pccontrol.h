@@ -73,5 +73,6 @@ private:
     ResolutionHandler                            m_resolution_handler;
     SteamHandler                                 m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
+    mutable QTimer                               m_app_tracking_timeout;
 };
 }  // namespace os

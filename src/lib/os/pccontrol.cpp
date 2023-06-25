@@ -58,6 +58,11 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
             &PcControl::slotHandleSteamProcessStateChange);
     connect(m_stream_state_handler.get(), &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
+    connect(&m_app_tracking_timeout, &QTimer::timeout, this, [this]() { m_steam_handler.clearTrackedApp(); });
+
+    const int tracking_timeout_s{5};
+    m_app_tracking_timeout.setInterval(static_cast<int>(tracking_timeout_s) * SEC_TO_MS);
+    m_app_tracking_timeout.setSingleShot(true);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -76,7 +81,13 @@ bool PcControl::launchSteamApp(uint app_id)
         m_cursor_handler->hideCursor();
     }
 
-    return m_steam_handler.launchApp(app_id);
+    if (m_steam_handler.launchApp(app_id))
+    {
+        m_app_tracking_timeout.start();
+        return true;
+    }
+
+    return false;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -152,6 +163,12 @@ uint PcControl::getRunningApp() const
 
 std::optional<uint> PcControl::getTrackedUpdatingApp() const
 {
+    if (m_app_tracking_timeout.isActive())
+    {
+        // Reseting the timeout here by starting the timer again
+        m_app_tracking_timeout.start();
+    }
+
     return m_steam_handler.getTrackedUpdatingApp();
 }
 
