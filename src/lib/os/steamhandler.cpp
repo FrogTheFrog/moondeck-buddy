@@ -216,7 +216,7 @@ void SteamHandler::slotSteamProcessDied()
 #if defined(Q_OS_LINUX)
     // On linux there is a race condition where the crashed Steam process may leave the reaper process (game) running...
     // Let's kill it for fun!
-    const uint forced_termination_ms{10000};
+    const uint forced_termination_ms{5000};
     m_process_handler->closeDetached(QRegularExpression(".*?Steam.+?reaper", QRegularExpression::CaseInsensitiveOption),
                                      forced_termination_ms);
 #endif

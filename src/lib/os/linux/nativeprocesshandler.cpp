@@ -166,4 +166,11 @@ void NativeProcessHandler::terminate(uint pid) const
         }
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<uint> getChildrenPids(uint pid) const
+{
+    
+}
 }  // namespace os
