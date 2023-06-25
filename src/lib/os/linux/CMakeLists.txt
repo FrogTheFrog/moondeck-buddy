@@ -27,6 +27,7 @@ set(HEADERS
     nativeresolutionhandler.h
     registryfileparser.h
     registryfilewatcher.h
+    steamprocesslistobserver.h
     steamregistryobserver.h
     waylandresolutionhandler.h
     x11resolutionhandler.h
@@ -44,6 +45,7 @@ set(SOURCES
     nativeresolutionhandler.cpp
     registryfileparser.cpp
     registryfilewatcher.cpp
+    steamprocesslistobserver.cpp
     steamregistryobserver.cpp
     waylandresolutionhandler.cpp
     x11resolutionhandler.cpp

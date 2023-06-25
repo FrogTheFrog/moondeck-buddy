@@ -21,5 +21,6 @@ public:
     void              terminate(uint pid) const override;
 
     std::vector<uint> getChildrenPids(uint pid) const;
+    QString           getCmdline(uint pid) const;
 };
 }  // namespace os
