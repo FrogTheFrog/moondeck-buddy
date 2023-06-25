@@ -1,0 +1,38 @@
+name: Generate binary filename
+on:
+  workflow_call:
+    inputs:
+      original_event_name:
+        required: true
+        type: string
+    outputs:
+      filename:
+        value: ${{ jobs.Filename.outputs.filename }}
+
+jobs:
+  Filename:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.name }}
+      hash: ${{ steps.hash.outputs.name }}
+      filename: ${{ steps.filename.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Using the CMakeLists version
+        if: inputs.original_event_name != 'pull_request'
+        id: version
+        run: echo "name=$(grep -E "\s+VERSION" CMakeLists.txt | xargs | cut -d' ' -f 2)" >> $GITHUB_OUTPUT
+
+      - name: Using the commit SHA as a version
+        if: inputs.original_event_name == 'pull_request'
+        id: hash
+        run: echo "name=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_OUTPUT
+
+      - name: Generate name
+        id: filename
+        run: echo "name=MoonDeckBuddy-${{ steps.version.outputs.name }}${{ steps.hash.outputs.name }}-x86_64" >> $GITHUB_OUTPUT
+
+      - name: Print the filename base
+        run: echo "${{ steps.filename.outputs.name }}"
