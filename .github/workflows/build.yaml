@@ -60,7 +60,6 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
-          tools: "tools_cmake"
           version: "6.4.*"
 
       - name: Install packages
@@ -72,12 +71,7 @@ jobs:
           submodules: recursive
 
       - name: TestA
-        run: aqt list-tool linux desktop
-
-      - name: TestB
-        run: ls ${QT_ROOT_DIR}/lib
-
-      - name: TestC
+        run: qmake -v
         run: ls ${QT_ROOT_DIR}/bin
 
       - name: Configure
