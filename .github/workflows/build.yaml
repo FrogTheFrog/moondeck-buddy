@@ -60,6 +60,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
+          tools: "tools_generic"
           version: "6.4.*"
 
       - name: Install packages
