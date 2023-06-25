@@ -17,6 +17,7 @@ SteamProcessListObserver::SteamProcessListObserver()
 
     const int interval_ms{2000};
     m_check_timer.setInterval(interval_ms);
+    m_check_timer.setSingleShot(true);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -28,9 +29,7 @@ void SteamProcessListObserver::observePid(uint pid)
     if (pid != 0)
     {
         m_steam_pid = pid;
-
         slotCheckProcessList();
-        m_check_timer.start();
     }
 }
 
@@ -53,36 +52,46 @@ const std::set<uint>& SteamProcessListObserver::getAppIds() const
 
 void SteamProcessListObserver::slotCheckProcessList()
 {
-    NativeProcessHandler proc_handler;
-    std::set<uint>       running_apps;
+    std::set<uint> running_apps;
 
-    const auto pids{proc_handler.getChildrenPids(m_steam_pid)};
-    for (auto pid : pids)
+    if (m_steam_pid != 0)
     {
-        static const QRegularExpression app_id_matcher{R"(AppId=([0-9]+))", QRegularExpression::CaseInsensitiveOption};
-        const auto                      match{app_id_matcher.match(proc_handler.getCmdline(pid))};
-        if (!match.hasCaptured(1))
+        NativeProcessHandler proc_handler;
+
+        const auto pids{proc_handler.getChildrenPids(m_steam_pid)};
+        for (auto pid : pids)
         {
-            continue;
+            static const QRegularExpression app_id_matcher{R"(AppId=([0-9]+))",
+                                                           QRegularExpression::CaseInsensitiveOption};
+            const auto                      match{app_id_matcher.match(proc_handler.getCmdline(pid))};
+            if (!match.hasCaptured(1))
+            {
+                continue;
+            }
+
+            const QString captured{match.captured(1)};
+
+            bool       success{false};
+            const auto result{captured.toUInt(&success)};
+
+            if (!success)
+            {
+                continue;
+            }
+
+            running_apps.insert(result);
         }
-
-        const QString captured{match.captured(1)};
-
-        bool       success{false};
-        const auto result{captured.toUInt(&success)};
-
-        if (!success)
-        {
-            continue;
-        }
-
-        running_apps.insert(result);
     }
 
     if (running_apps != m_app_ids)
     {
         std::swap(running_apps, m_app_ids);
         emit signalListChanged();
+    }
+
+    if (m_steam_pid != 0)
+    {
+        m_check_timer.start();
     }
 }
 }  // namespace os
