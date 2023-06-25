@@ -19,9 +19,7 @@ namespace
 {
 uint getParentPid(uint pid)
 {
-    std::array<uint, 2> pids;
-    pids[0] = pid;
-    pids[1] = 0;  // Must be 0 for this API...
+    const std::array<uint, 2> pids{pid, 0};
 
     proc_t proc_info;
     memset(&proc_info, 0, sizeof(proc_info));
@@ -48,9 +46,7 @@ uint getParentPid(uint pid)
 
 QString getCmdline(uint pid)
 {
-    std::array<uint, 2> pids;
-    pids[0] = pid;
-    pids[1] = 0;  // Must be 0 for this API...
+    const std::array<uint, 2> pids{pid, 0};
 
     proc_t proc_info;
     memset(&proc_info, 0, sizeof(proc_info));
@@ -70,7 +66,7 @@ QString getCmdline(uint pid)
         return {};
     }
 
-    auto ptr_list{proc_info.cmdline};
+    auto* ptr_list{proc_info.cmdline};
     if (ptr_list == nullptr)
     {
         return {};
@@ -251,6 +247,7 @@ std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-to-static)
 QString NativeProcessHandler::getCmdline(uint pid) const
 {
     return ::getCmdline(pid);
