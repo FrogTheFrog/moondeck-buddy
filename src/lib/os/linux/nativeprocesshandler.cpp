@@ -76,6 +76,7 @@ QString getCmdline(uint pid)
     while (*ptr_list != nullptr)
     {
         cmdline.append(*ptr_list);
+        // NOLINTNEXTLINE(*-pointer-arithmetic)
         ptr_list++;
     }
 
