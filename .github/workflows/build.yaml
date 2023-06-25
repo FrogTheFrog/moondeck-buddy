@@ -73,6 +73,10 @@ jobs:
       - name: Configure
         run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
+      - name: Build
+        working-directory: ./build
+        run: ninja
+
       - name: Install
         working-directory: ./build
         run: DESTDIR=AppDir ninja install
