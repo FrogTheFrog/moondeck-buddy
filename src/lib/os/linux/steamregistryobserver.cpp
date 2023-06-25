@@ -10,10 +10,6 @@
 namespace
 {
 const QStringList PID_PATH{{"Registry", "HKLM", "Software", "Valve", "Steam", "SteamPID"}};
-const QStringList GLOBAL_APP_ID_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "RunningAppID"}};
-const QStringList APPS_PATH{{"Registry", "HKCU", "Software", "Valve", "Steam", "apps"}};
-const QStringList APP_RUNNING_PATH{{"Running"}};
-const QStringList APP_UPDATING_PATH{{"Updating"}};
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -68,6 +64,8 @@ SteamRegistryObserver::SteamRegistryObserver()
     : m_watcher{QDir::homePath() + "/.steam/registry.vdf"}
 {
     connect(&m_watcher, &RegistryFileWatcher::signalRegistryChanged, this, &SteamRegistryObserver::slotRegistryChanged);
+    connect(&m_process_list_observer, &SteamProcessListObserver::signalListChanged, this,
+            &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_observation_delay, &QTimer::timeout, this,
             [this]()
             {
@@ -85,6 +83,7 @@ SteamRegistryObserver::SteamRegistryObserver()
 void SteamRegistryObserver::startAppObservation()
 {
     m_observation_delay.start();
+    m_process_list_observer.observePid(m_pid);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -92,6 +91,8 @@ void SteamRegistryObserver::startAppObservation()
 void SteamRegistryObserver::stopAppObservation()
 {
     m_observation_delay.stop();
+    m_process_list_observer.stopObserving();
+
     m_is_observing_apps = false;
     m_global_app_id     = 0;
     if (m_tracked_app_data)
@@ -122,12 +123,13 @@ void SteamRegistryObserver::slotRegistryChanged()
 {
     const auto& data{m_watcher.getData()};
     const auto  get_uint = [](const qint64* ptr) { return ptr == nullptr ? 0 : static_cast<uint>(*ptr); };
-    const auto  get_bool = [](const qint64* ptr) { return ptr == nullptr ? false : *ptr != 0; };
 
     const auto pid{get_uint(getEntry<qint64>(PID_PATH, data))};
     if (pid != m_pid)
     {
         m_pid = pid;
+
+        m_process_list_observer.observePid(m_pid);
         emit signalSteamPID(m_pid);
     }
 
@@ -146,30 +148,36 @@ void SteamRegistryObserver::slotRegistryChanged()
         return;
     }
 
-    const auto global_app_id{get_uint(getEntry<qint64>(GLOBAL_APP_ID_PATH, data))};
-    if (global_app_id != m_global_app_id)
-    {
-        m_global_app_id = global_app_id;
-        emit signalGlobalAppId(m_global_app_id);
-    }
+    // Note: everything after here is a workaround, because Steam is no longer saving stuff to the registry
+    //       https://github.com/ValveSoftware/steam-for-linux/issues/9672
 
+    const auto running_apps{m_process_list_observer.getAppIds()};
     if (m_tracked_app_data)
     {
-        const auto* app_data{getEntry<os::RegistryFileWatcher::NodeList>(
-            APPS_PATH + QStringList{QString::number(m_tracked_app_data->m_app_id)}, data)};
+        const bool tracked_app_is_running{running_apps.contains(m_tracked_app_data->m_app_id)};
+        const uint global_app_id{tracked_app_is_running ? m_tracked_app_data->m_app_id
+                                 : running_apps.empty() ? 0
+                                                        : *running_apps.begin()};
 
-        const bool is_updating{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_UPDATING_PATH, *app_data))};
-        if (is_updating != m_tracked_app_data->m_is_updating)
+        if (global_app_id != m_global_app_id)
         {
-            m_tracked_app_data->m_is_updating = is_updating;
-            emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_updating);
+            m_global_app_id = global_app_id;
+            emit signalGlobalAppId(m_global_app_id);
         }
 
-        const bool is_running{app_data == nullptr ? false : get_bool(getEntry<qint64>(APP_RUNNING_PATH, *app_data))};
-        if (is_running != m_tracked_app_data->m_is_running)
+        if (tracked_app_is_running != m_tracked_app_data->m_is_running)
         {
-            m_tracked_app_data->m_is_running = is_running;
+            m_tracked_app_data->m_is_running = tracked_app_is_running;
             emit signalTrackedAppIsRunning(m_tracked_app_data->m_is_running);
+        }
+    }
+    else
+    {
+        const uint global_app_id{running_apps.empty() ? 0 : *running_apps.begin()};
+        if (global_app_id != m_global_app_id)
+        {
+            m_global_app_id = global_app_id;
+            emit signalGlobalAppId(m_global_app_id);
         }
     }
 }

@@ -19,11 +19,13 @@ namespace
 {
 uint getParentPid(uint pid)
 {
+    const std::array<uint, 2> pids{pid, 0};
+
     proc_t proc_info;
     memset(&proc_info, 0, sizeof(proc_info));
 
     // NOLINTNEXTLINE(*-vararg)
-    PROCTAB*   proc = openproc(PROC_FILLSTATUS | PROC_PID, &pid);
+    PROCTAB*   proc = openproc(PROC_FILLSTATUS | PROC_PID, pids.data());
     const auto cleanup{qScopeGuard(
         [&]()
         {
@@ -38,6 +40,47 @@ uint getParentPid(uint pid)
     }
 
     return proc_info.ppid;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+QString getCmdline(uint pid)
+{
+    const std::array<uint, 2> pids{pid, 0};
+
+    proc_t proc_info;
+    memset(&proc_info, 0, sizeof(proc_info));
+
+    // NOLINTNEXTLINE(*-vararg)
+    PROCTAB*   proc = openproc(PROC_FILLCOM | PROC_PID, pids.data());
+    const auto cleanup{qScopeGuard(
+        [&]()
+        {
+            if (proc != nullptr)
+            {
+                closeproc(proc);
+            }
+        })};
+    if (readproc(proc, &proc_info) == nullptr)
+    {
+        return {};
+    }
+
+    auto* ptr_list{proc_info.cmdline};
+    if (ptr_list == nullptr)
+    {
+        return {};
+    }
+
+    QStringList cmdline;
+    while (*ptr_list != nullptr)
+    {
+        cmdline.append(*ptr_list);
+        // NOLINTNEXTLINE(*-pointer-arithmetic)
+        ptr_list++;
+    }
+
+    return cmdline.join(' ');
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -79,8 +122,8 @@ std::vector<uint> getParentPids(const std::vector<uint>& pids)
 
 std::vector<uint> getRelatedPids(uint pid)
 {
-    std::vector<uint> all_pids{getPids()};
-    std::vector<uint> parent_pids{getParentPids(all_pids)};
+    const std::vector<uint> all_pids{getPids()};
+    const std::vector<uint> parent_pids{getParentPids(all_pids)};
 
     Q_ASSERT(all_pids.size() == parent_pids.size());
     std::vector<uint> related_pids;
@@ -165,5 +208,49 @@ void NativeProcessHandler::terminate(uint pid) const
             }
         }
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
+{
+    const std::vector<uint> all_pids{getPids()};
+    if (std::find(std::begin(all_pids), std::end(all_pids), pid) == std::end(all_pids))
+    {
+        // Process does not exist, early exit.
+        return {};
+    }
+
+    const std::vector<uint> parent_pids{getParentPids(all_pids)};
+    Q_ASSERT(all_pids.size() == parent_pids.size());
+
+    std::vector<uint> children_pids;
+    for (std::size_t i = 0; i < all_pids.size(); ++i)
+    {
+        const uint parent_pid{parent_pids[i]};
+        if (parent_pid != pid)
+        {
+            continue;
+        }
+
+        const uint process_pid{all_pids[i]};
+        if (process_pid == pid)
+        {
+            // Is this even possible? To be your own parent?
+            continue;
+        }
+
+        children_pids.push_back(process_pid);
+    }
+
+    return children_pids;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+// NOLINTNEXTLINE(*-to-static)
+QString NativeProcessHandler::getCmdline(uint pid) const
+{
+    return ::getCmdline(pid);
 }
 }  // namespace os

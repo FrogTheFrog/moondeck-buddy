@@ -30,10 +30,10 @@ public:
     uint                getRunningApp() const;
     std::optional<uint> getTrackedActiveApp() const;
     std::optional<uint> getTrackedUpdatingApp() const;
+    void                clearTrackedApp();
 
 signals:
     void signalProcessStateChanged();
-    void signalAppTrackingHasEnded();
 
 private slots:
     void slotSteamProcessDied();
@@ -45,8 +45,6 @@ private slots:
     void slotTerminateSteam();
 
 private:
-    void clearTrackedApp();
-
     std::unique_ptr<ProcessHandler>                 m_process_handler;
     std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
 

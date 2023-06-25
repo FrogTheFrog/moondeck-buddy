@@ -4,6 +4,7 @@
 #include "../shared/trackedappdata.h"
 #include "../steamregistryobserverinterface.h"
 #include "registryfilewatcher.h"
+#include "steamprocesslistobserver.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -35,5 +36,6 @@ private:
     uint                          m_pid{0};
     uint                          m_global_app_id{0};
     std::optional<TrackedAppData> m_tracked_app_data;
+    SteamProcessListObserver      m_process_list_observer;
 };
 }  // namespace os
