@@ -63,7 +63,7 @@ jobs:
           version: "6.4.*"
 
       - name: Install packages
-        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev
+        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
 
       - name: Checkout
         uses: actions/checkout@v3
