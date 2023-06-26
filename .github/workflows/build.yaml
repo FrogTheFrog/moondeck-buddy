@@ -73,7 +73,10 @@ jobs:
           cache: true
 
       - name: Test
-        run: cd $QT_ROOT_DIR && pwd && ls
+        run: cd $Qt6_DIR && ls
+
+      - name: Test1
+        run: cd $Qt6_DIR/lib && ls
 
       # - name: Install LibSSL-Dev 1.1.1
       #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
