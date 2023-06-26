@@ -68,17 +68,16 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
-          tools: "tools_openssl_x64"
           version: "6.4.*"
 
       - name: Install OpenSSL 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.16_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb
+        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i openssl_1.1.1f-1ubuntu2.19_amd64.deb
 
       - name: Install LibSSL-Dev 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.16_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.16_amd64.deb
+        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
 
       - name: Install LibSSL 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb
+        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
 
       - name: TestA
         run: ls /usr/lib
