@@ -38,11 +38,11 @@ jobs:
 
       - name: Rename 7z
         working-directory: ./dist
-        run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}.7z
+        run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}-win64.7z
 
       - name: Rename Exe
         working-directory: ./dist
-        run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}.exe
+        run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}-win64.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -91,7 +91,7 @@ jobs:
         run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
 
       - name: Rename
-        run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}.AppImage" >> $GITHUB_ENV
+        run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}-x86_64.AppImage" >> $GITHUB_ENV
 
       - name: Package AppImage
         working-directory: ./build

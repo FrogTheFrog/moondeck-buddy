@@ -32,7 +32,7 @@ jobs:
 
       - name: Generate name
         id: filename
-        run: echo "name=MoonDeckBuddy-${{ steps.version.outputs.name }}${{ steps.hash.outputs.name }}-x86_64" >> $GITHUB_OUTPUT
+        run: echo "name=MoonDeckBuddy-${{ steps.version.outputs.name }}${{ steps.hash.outputs.name }}" >> $GITHUB_OUTPUT
 
       - name: Print the filename base
         run: echo "${{ steps.filename.outputs.name }}"
