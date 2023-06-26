@@ -71,6 +71,9 @@ jobs:
           tools: "tools_openssl_x64"
           version: "6.4.*"
 
+      - name: TestA
+        run: ls /usr/lib
+
       - name: Configure
         run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
