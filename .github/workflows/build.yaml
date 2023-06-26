@@ -82,7 +82,8 @@ jobs:
         run: cd $IQTA_TOOLS/OpenSSL && ls
 
       - name: Test3
-        run: cd $IQTA_TOOLS/OpenSSL/lib && ls
+        run: ls $IQTA_TOOLS/OpenSSL/binary/lib/
+        # run: cd $IQTA_TOOLS/OpenSSL/binary/lib/libssl.so.1.1 && $IQTA_TOOLS/OpenSSL/binary/lib/libcrypto.so.1.1
         
 
       # - name: Install LibSSL-Dev 1.1.1
