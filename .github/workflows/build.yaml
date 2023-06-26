@@ -78,6 +78,13 @@ jobs:
       - name: Test1
         run: cd $Qt6_DIR/lib && ls
 
+      - name: Test2
+        run: cd $IQTA_TOOLS && ls
+
+      - name: Test3
+        run: cd $IQTA_TOOLS/lib && ls
+        
+
       # - name: Install LibSSL-Dev 1.1.1
       #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
 
