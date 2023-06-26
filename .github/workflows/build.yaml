@@ -57,7 +57,7 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2 libssl-dev
+        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -68,6 +68,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
+          tools: "tools_opensslv3_src"
           version: "6.4.*"
 
       - name: Configure
