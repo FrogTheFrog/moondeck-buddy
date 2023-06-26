@@ -3,6 +3,9 @@ set -e
 
 HERE="$(readlink -f "$(dirname "$0")")"
 
+# Wayland plugin is not packaged, so defining this to get rid of the warning
+export QT_QPA_PLATFORM=xcb
+
 if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
     ARGS="${@:3}"
@@ -12,7 +15,7 @@ if [ "$1" = "--exec" ]; then
         echo "$BINARY_NAME does not exist!"
         exit 1
     fi
-else
+elif [ ! -z $APPIMAGE ] ; then
     BINARY_NAME=$(basename "$ARGV0")
     ARGS="$@"
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
@@ -23,4 +26,7 @@ else
     else
         exec "$HERE/usr/bin/MoonDeckBuddy" "$ARGS"
     fi
+else
+    ARGS="$@"
+    exec "$HERE/usr/bin/MoonDeckBuddy" "$ARGS"
 fi
