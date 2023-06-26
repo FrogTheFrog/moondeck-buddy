@@ -68,7 +68,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
-          tools: "tools_opensslv3_src"
+          tools: "tools_openssl_x64"
           version: "6.4.*"
 
       - name: Configure
