@@ -9,48 +9,48 @@ jobs:
     with:
       original_event_name: "${{ github.event_name }}"
 
-  Windows:
-    runs-on: windows-latest
-    needs: [Formatting, Filename]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
+  # Windows:
+  #   runs-on: windows-latest
+  #   needs: [Formatting, Filename]
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
 
-      - name: Install MSCV
-        uses: ilammy/msvc-dev-cmd@v1
+  #     - name: Install MSCV
+  #       uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          modules: "qtwebsockets qthttpserver"
-          version: "6.4.*"
+  #     - name: Install Qt
+  #       uses: jurplel/install-qt-action@v3
+  #       with:
+  #         modules: "qtwebsockets qthttpserver"
+  #         version: "6.4.*"
       
-      - name: Configure
-        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+  #     - name: Configure
+  #       run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
-      - name: Build
-        run: cmake --build build
+  #     - name: Build
+  #       run: cmake --build build
 
-      - name: Bundle
-        run: cd build && cpack -C CPackConfig.cmake
+  #     - name: Bundle
+  #       run: cd build && cpack -C CPackConfig.cmake
 
-      - name: Rename 7z
-        working-directory: ./dist
-        run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}.7z
+  #     - name: Rename 7z
+  #       working-directory: ./dist
+  #       run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}.7z
 
-      - name: Rename Exe
-        working-directory: ./dist
-        run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}.exe
+  #     - name: Rename Exe
+  #       working-directory: ./dist
+  #       run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}.exe
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist/*
-          retention-days: 1
-          if-no-files-found: error
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: dist
+  #         path: dist/*
+  #         retention-days: 1
+  #         if-no-files-found: error
 
   Linux:
     runs-on: ubuntu-latest
@@ -72,38 +72,38 @@ jobs:
           version: "6.4.*"
 
       - name: TestA
-        run: ls /usr/lib
+        run: ls ${QT_ROOT_DIR}
 
-      - name: Configure
-        run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
+      # - name: Configure
+      #   run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
-      - name: Build
-        working-directory: ./build
-        run: ninja
+      # - name: Build
+      #   working-directory: ./build
+      #   run: ninja
 
-      - name: Install
-        working-directory: ./build
-        run: DESTDIR=AppDir ninja install
+      # - name: Install
+      #   working-directory: ./build
+      #   run: DESTDIR=AppDir ninja install
 
-      - name: Get linuxdeploy's AppImage
-        working-directory: ./build
-        run: wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x ./linuxdeploy-x86_64.AppImage
+      # - name: Get linuxdeploy's AppImage
+      #   working-directory: ./build
+      #   run: wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x ./linuxdeploy-x86_64.AppImage
 
-      - name: Get linuxdeploy's QT AppImage
-        working-directory: ./build
-        run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
+      # - name: Get linuxdeploy's QT AppImage
+      #   working-directory: ./build
+      #   run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
 
-      - name: Rename
-        run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}.AppImage" >> $GITHUB_ENV
+      # - name: Rename
+      #   run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}.AppImage" >> $GITHUB_ENV
 
-      - name: Package AppImage
-        working-directory: ./build
-        run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
+      # - name: Package AppImage
+      #   working-directory: ./build
+      #   run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: ./build/MoonDeckBuddy*AppImage
-          retention-days: 1
-          if-no-files-found: error
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: dist
+      #     path: ./build/MoonDeckBuddy*AppImage
+      #     retention-days: 1
+      #     if-no-files-found: error
