@@ -79,10 +79,10 @@ jobs:
         run: cd $Qt6_DIR/lib && ls
 
       - name: Test2
-        run: cd $IQTA_TOOLS && ls
+        run: cd $IQTA_TOOLS/OpenSSL && ls
 
       - name: Test3
-        run: cd $IQTA_TOOLS/lib && ls
+        run: cd $IQTA_TOOLS/OpenSSL/lib && ls
         
 
       # - name: Install LibSSL-Dev 1.1.1
