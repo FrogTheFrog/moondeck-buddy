@@ -71,7 +71,7 @@ jobs:
           version: "6.4.*"
 
       - name: Install OpenSSL 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i openssl_1.1.1f-1ubuntu2.19_amd64.deb
+        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.19_amd64.deb && yes | sudo dpkg -i openssl_1.1.1f-1ubuntu2.19_amd64.deb
 
       - name: Install LibSSL-Dev 1.1.1
         run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
