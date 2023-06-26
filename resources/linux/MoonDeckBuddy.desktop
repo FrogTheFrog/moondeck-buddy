@@ -1,6 +1,6 @@
 [Desktop Entry]
-Type=Application
 Name=MoonDeckBuddy
-Exec=AppRun
+Type=Application
+Exec=MoonDeckBuddy
 Icon=app
 Categories=Utility
