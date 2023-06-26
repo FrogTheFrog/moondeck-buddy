@@ -9,48 +9,48 @@ jobs:
     with:
       original_event_name: "${{ github.event_name }}"
 
-  # Windows:
-  #   runs-on: windows-latest
-  #   needs: [Formatting, Filename]
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
+  Windows:
+    runs-on: windows-latest
+    needs: [Formatting, Filename]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-  #     - name: Install MSCV
-  #       uses: ilammy/msvc-dev-cmd@v1
+      - name: Install MSCV
+        uses: ilammy/msvc-dev-cmd@v1
 
-  #     - name: Install Qt
-  #       uses: jurplel/install-qt-action@v3
-  #       with:
-  #         modules: "qtwebsockets qthttpserver"
-  #         version: "6.4.*"
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          modules: "qtwebsockets qthttpserver"
+          version: "6.4.*"
       
-  #     - name: Configure
-  #       run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+      - name: Configure
+        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
-  #     - name: Build
-  #       run: cmake --build build
+      - name: Build
+        run: cmake --build build
 
-  #     - name: Bundle
-  #       run: cd build && cpack -C CPackConfig.cmake
+      - name: Bundle
+        run: cd build && cpack -C CPackConfig.cmake
 
-  #     - name: Rename 7z
-  #       working-directory: ./dist
-  #       run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}.7z
+      - name: Rename 7z
+        working-directory: ./dist
+        run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}.7z
 
-  #     - name: Rename Exe
-  #       working-directory: ./dist
-  #       run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}.exe
+      - name: Rename Exe
+        working-directory: ./dist
+        run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}.exe
 
-  #     - name: Upload artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: dist
-  #         path: dist/*
-  #         retention-days: 1
-  #         if-no-files-found: error
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/*
+          retention-days: 1
+          if-no-files-found: error
 
   Linux:
     runs-on: ubuntu-latest
@@ -70,27 +70,6 @@ jobs:
           modules: "qtwebsockets qthttpserver"
           tools: "tools_openssl_x64"
           version: "6.4.*"
-          cache: true
-
-      - name: Test
-        run: cd $Qt6_DIR && ls
-
-      - name: Test1
-        run: cd $Qt6_DIR/lib && ls
-
-      - name: Test2
-        run: cd $IQTA_TOOLS/OpenSSL && ls
-
-      - name: Test3
-        run: ls $IQTA_TOOLS/OpenSSL/binary/lib/
-        # run: cd $IQTA_TOOLS/OpenSSL/binary/lib/libssl.so.1.1 && $IQTA_TOOLS/OpenSSL/binary/lib/libcrypto.so.1.1
-        
-
-      # - name: Install LibSSL-Dev 1.1.1
-      #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
-
-      # - name: Install LibSSL 1.1.1
-      #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
 
       - name: Configure
         run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
