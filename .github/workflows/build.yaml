@@ -56,56 +56,60 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Formatting, Filename]
     steps:
-      - name: Install packages
-        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
+      # - name: Install packages
+      #   run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
 
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
+      # - name: Checkout
+      #   uses: actions/checkout@v3
+      #   with:
+      #     submodules: recursive
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
+          tools: "tools_openssl_x64"
           version: "6.4.*"
 
-      - name: Install LibSSL-Dev 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
+      - name: Test
+        run: cd $QT_ROOT_DIR && pwd
 
-      - name: Install LibSSL 1.1.1
-        run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
+      # - name: Install LibSSL-Dev 1.1.1
+      #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.19_amd64.deb
 
-      - name: Configure
-        run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
+      # - name: Install LibSSL 1.1.1
+      #   run: wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb && sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
 
-      - name: Build
-        working-directory: ./build
-        run: ninja
+      # - name: Configure
+      #   run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
-      - name: Install
-        working-directory: ./build
-        run: DESTDIR=AppDir ninja install
+      # - name: Build
+      #   working-directory: ./build
+      #   run: ninja
 
-      - name: Get linuxdeploy's AppImage
-        working-directory: ./build
-        run: wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x ./linuxdeploy-x86_64.AppImage
+      # - name: Install
+      #   working-directory: ./build
+      #   run: DESTDIR=AppDir ninja install
 
-      - name: Get linuxdeploy's QT AppImage
-        working-directory: ./build
-        run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
+      # - name: Get linuxdeploy's AppImage
+      #   working-directory: ./build
+      #   run: wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x ./linuxdeploy-x86_64.AppImage
 
-      - name: Rename
-        run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}.AppImage" >> $GITHUB_ENV
+      # - name: Get linuxdeploy's QT AppImage
+      #   working-directory: ./build
+      #   run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
 
-      - name: Package AppImage
-        working-directory: ./build
-        run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
+      # - name: Rename
+      #   run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}.AppImage" >> $GITHUB_ENV
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: ./build/MoonDeckBuddy*AppImage
-          retention-days: 1
-          if-no-files-found: error
+      # - name: Package AppImage
+      #   working-directory: ./build
+      #   run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun"
+
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: dist
+      #     path: ./build/MoonDeckBuddy*AppImage
+      #     retention-days: 1
+      #     if-no-files-found: error
