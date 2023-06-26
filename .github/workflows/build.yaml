@@ -49,7 +49,7 @@ jobs:
         with:
           name: dist
           path: dist/*
-          retention-days: 1
+          retention-days: 7
           if-no-files-found: error
 
   Linux:
@@ -102,5 +102,5 @@ jobs:
         with:
           name: dist
           path: ./build/MoonDeckBuddy*AppImage
-          retention-days: 1
+          retention-days: 7
           if-no-files-found: error
