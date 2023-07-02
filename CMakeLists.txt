@@ -71,9 +71,7 @@ IF (WIN32)
     set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${EXEC_NAME_BUDDY}.exe")
     set(CPACK_NSIS_INSTALL_ROOT "\$LocalAppData\\\\Programs")
     set(CPACK_NSIS_DEFINES "RequestExecutionLevel user")
-ELSEIF(UNIX)
-    message(WARNING "OS packaging is not supported, yet...")
-ELSE()
+ELSEIF(NOT UNIX)
     message(FATAL_ERROR "OS is not supported!")
 ENDIF()
 
@@ -125,7 +123,23 @@ IF(WIN32)
     
     include(CPack)
 ELSEIF(UNIX)
-    message(WARNING "OS install is not supported, yet...")
+    install(
+        TARGETS ${EXEC_NAME_BUDDY} ${EXEC_NAME_STREAM}
+        RUNTIME DESTINATION bin
+    )
+
+    install(
+        FILES resources/linux/MoonDeckBuddy.desktop
+        DESTINATION share/applications/
+    )
+
+    foreach(size 16;32;64;128;256)
+        install(
+            FILES resources/icons/app-${size}.png
+            DESTINATION share/icons/hicolor/${size}x${size}/apps/
+            RENAME app.png
+        )
+    endforeach()
 ELSE()
     message(FATAL_ERROR "OS is not supported!")
 ENDIF()

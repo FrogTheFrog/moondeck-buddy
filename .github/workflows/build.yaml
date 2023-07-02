@@ -1,73 +1,106 @@
 name: Build
 on: [pull_request,workflow_call]
 jobs:
-  Checks:
-    uses: ./.github/workflows/checks.yaml
+  Formatting:
+    uses: ./.github/workflows/formatting.yaml
+
+  Filename:
+    uses: ./.github/workflows/filename.yaml
+    with:
+      original_event_name: "${{ github.event_name }}"
 
   Windows:
     runs-on: windows-latest
-    needs: [Checks]
+    needs: [Formatting, Filename]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install MSCV
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
           version: "6.4.*"
-
-      - name: Install MSCV
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
       
-      - name: CMake configure
+      - name: Configure
         run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
-      - name: CMake build
+      - name: Build
         run: cmake --build build
 
-      - name: CPack bundle
-        run: cd build && cpack -C CPackConfig.cmake && cd ..
+      - name: Bundle
+        run: cd build && cpack -C CPackConfig.cmake
+
+      - name: Rename 7z
+        working-directory: ./dist
+        run: mv MoonDeckBuddy*.7z ${{ needs.Filename.outputs.filename }}-win64.7z
+
+      - name: Rename Exe
+        working-directory: ./dist
+        run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}-win64.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
-        if: steps.tagstatus.outputs.TAG_EXISTS == 0
         with:
           name: dist
           path: dist/*
           retention-days: 1
           if-no-files-found: error
+
   Linux:
     runs-on: ubuntu-latest
-    needs: [Checks]
+    needs: [Formatting, Filename]
     steps:
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          modules: "qtwebsockets qthttpserver"
-          version: "6.4.*"
-
-      - name: Install Ninja
-        run: sudo apt-get install ninja-build
-
-      - name: Install Wayland dev package
-        run: sudo apt-get install libwayland-dev
-
-      - name: Install Procps dev package
-        run: sudo apt-get install libprocps-dev
-
-      - name: Install XRandR dev package
-        run: sudo apt-get install libxrandr-dev
+      - name: Install packages
+        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2
 
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
-      - name: CMake configure
-        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          modules: "qtwebsockets qthttpserver"
+          tools: "tools_openssl_x64"
+          version: "6.4.*"
 
-      - name: CMake build
-        run: cmake --build build
+      - name: Configure
+        run: mkdir build && cd build && cmake .. -DENABLE_CLANG_TIDY=True -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
+
+      - name: Build
+        working-directory: ./build
+        run: ninja
+
+      - name: Install
+        working-directory: ./build
+        run: DESTDIR=AppDir ninja install
+
+      - name: Get linuxdeploy's AppImage
+        working-directory: ./build
+        run: wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x ./linuxdeploy-x86_64.AppImage
+
+      - name: Get linuxdeploy's QT AppImage
+        working-directory: ./build
+        run: wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage && chmod +x ./linuxdeploy-plugin-qt-x86_64.AppImage
+
+      - name: Rename
+        run: echo "OUTPUT=${{ needs.Filename.outputs.filename }}-x86_64.AppImage" >> $GITHUB_ENV
+
+      - name: Package AppImage
+        working-directory: ./build
+        run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun" --library="$IQTA_TOOLS/OpenSSL/binary/lib/libssl.so.1.1" --library="$IQTA_TOOLS/OpenSSL/binary/lib/libcrypto.so.1.1"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: ./build/MoonDeckBuddy*AppImage
+          retention-days: 1
+          if-no-files-found: error
