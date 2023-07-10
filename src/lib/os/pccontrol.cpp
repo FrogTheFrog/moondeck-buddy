@@ -136,6 +136,22 @@ bool PcControl::suspendPC(uint grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool PcControl::hibernatePC(uint grace_period_in_sec)
+{
+    if (m_pc_state_handler.hibernatePC(grace_period_in_sec))
+    {
+        closeSteam(std::nullopt);
+        emit signalShowTrayMessage(
+            "Hibernation in progress", m_app_meta.getAppName() + " is about to put you into a hard sleep :O",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        return true;
+    }
+
+    return false;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool PcControl::endStream()
 {
     return m_stream_state_handler->endStream();

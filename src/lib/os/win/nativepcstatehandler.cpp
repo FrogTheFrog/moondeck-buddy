@@ -86,6 +86,13 @@ bool NativePcStateHandler::canSuspendPC()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool NativePcStateHandler::canHibernatePC()
+{
+    return m_privilege_acquired;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool NativePcStateHandler::shutdownPC()
 {
     if (!canShutdownPC())
@@ -130,6 +137,24 @@ bool NativePcStateHandler::suspendPC()
     }
 
     if (SetSuspendState(FALSE, TRUE, FALSE) == FALSE)
+    {
+        qCWarning(lc::os) << "SetSuspendState failed! Reason:" << lc::getErrorString(GetLastError());
+        return false;
+    }
+
+    return true;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool NativePcStateHandler::hibernatePC()
+{
+    if (!canHibernatePC())
+    {
+        return false;
+    }
+
+    if (SetSuspendState(TRUE, TRUE, FALSE) == FALSE)
     {
         qCWarning(lc::os) << "SetSuspendState failed! Reason:" << lc::getErrorString(GetLastError());
         return false;

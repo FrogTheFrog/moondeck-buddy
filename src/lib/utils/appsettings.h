@@ -20,6 +20,7 @@ public:
     const QString&           getLoggingRules() const;
     const std::set<QString>& getHandledDisplays() const;
     const QString&           getSunshineAppsFilepath() const;
+    bool                     getPreferHibernation() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -29,6 +30,7 @@ private:
     QString           m_logging_rules;
     std::set<QString> m_handled_displays;
     QString           m_sunshine_apps_filepath;
+    bool              m_prefer_hibernation;
 
 public:
     // TODO: remove

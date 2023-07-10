@@ -143,7 +143,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
+void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool prefer_hibernation)
 {
     server.route(
         "/pcState", QHttpServerRequest::Method::Get,
@@ -158,7 +158,7 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
         });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,
-                 [&server, &pc_control](const QHttpServerRequest& request)
+                 [&server, &pc_control, prefer_hibernation](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
                      {
@@ -188,7 +188,8 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
                              result = pc_control.shutdownPC(*grace_period);
                              break;
                          case ChangePcState::Suspend:
-                             result = pc_control.suspendPC(*grace_period);
+                             result = (prefer_hibernation && pc_control.hibernatePC(*grace_period))
+                                      || pc_control.suspendPC(*grace_period);
                              break;
                      }
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
@@ -362,11 +363,11 @@ void setupRouteLogging(server::HttpServer& server)
 //---------------------------------------------------------------------------------------------------------------------
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps)
+                 os::SunshineApps& sunshine_apps, bool prefer_hibernation)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
-    routing_internal::setupPcState(server, pc_control);
+    routing_internal::setupPcState(server, pc_control, prefer_hibernation);
     routing_internal::setupHostInfo(server, pc_control);
     routing_internal::setupSteamControl(server, pc_control);
     routing_internal::setupResolution(server, pc_control);

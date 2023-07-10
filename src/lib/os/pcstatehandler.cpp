@@ -64,6 +64,14 @@ bool PcStateHandler::suspendPC(uint grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
+{
+    return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
+                         &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)
                                    const QString& failed_to_do_entry, NativeMethod can_do_method,
