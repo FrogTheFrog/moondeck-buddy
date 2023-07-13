@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
-    qCInfo(lc::buddyMain) << "startup.";
+    qCInfo(lc::buddyMain) << "startup. Version:" << EXEC_VERSION;
 
     const utils::AppSettings app_settings{app_meta.getSettingsPath()};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
