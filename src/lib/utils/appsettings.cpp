@@ -33,16 +33,16 @@ std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
         {QStringLiteral("TlsV1_3OrLater"), QSsl::TlsV1_3OrLater}     //
     };
 
-    auto it{allowed_values.find(value)};
-    if (it == std::end(allowed_values))
+    auto value_it{allowed_values.find(value)};
+    if (value_it == std::end(allowed_values))
     {
         return std::nullopt;
     }
 
     // Delayed logging
-    QTimer::singleShot(0, [value, enum_value = it->second]()
+    QTimer::singleShot(0, [value, enum_value = value_it->second]()
                        { qCDebug(lc::utils) << "Mapped" << value << "to" << enum_value; });
-    return it->second;
+    return value_it->second;
 }
 }  // namespace
 
