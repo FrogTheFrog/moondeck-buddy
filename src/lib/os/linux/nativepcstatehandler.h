@@ -25,10 +25,12 @@ public:
     bool canShutdownPC() override;
     bool canRestartPC() override;
     bool canSuspendPC() override;
+    bool canHibernatePC() override;
 
     bool shutdownPC() override;
     bool restartPC() override;
     bool suspendPC() override;
+    bool hibernatePC() override;
 
 private:
     QDBusInterface m_logind_bus;

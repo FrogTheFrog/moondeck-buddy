@@ -26,6 +26,7 @@ namespace utils
 {
 AppSettings::AppSettings(const QString& filepath)
     : m_port{DEFAULT_PORT}
+    , m_prefer_hibernation{false}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filepath))
@@ -69,6 +70,13 @@ const QString& AppSettings::getSunshineAppsFilepath() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool AppSettings::getPreferHibernation() const
+{
+    return m_prefer_hibernation;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -96,13 +104,14 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto logging_rules_v          = obj_v.value(QLatin1String("logging_rules"));
             const auto handled_displays_v       = obj_v.value(QLatin1String("handled_displays"));
             const auto sunshine_apps_filepath_v = obj_v.value(QLatin1String("sunshine_apps_filepath"));
+            const auto prefer_hibernation_v     = obj_v.value(QLatin1String("prefer_hibernation"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{5};
+            constexpr int current_entries{6};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -156,6 +165,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+            if (prefer_hibernation_v.isBool())
+            {
+                m_prefer_hibernation = prefer_hibernation_v.toBool();
+                valid_entries++;
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -181,6 +196,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["handled_displays"] =
         QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
     obj["sunshine_apps_filepath"] = m_sunshine_apps_filepath;
+    obj["prefer_hibernation"]     = m_prefer_hibernation;
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
-    qCInfo(lc::streamMain) << "startup.";
+    qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
 
     utils::Heartbeat heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);

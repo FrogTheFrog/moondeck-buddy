@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
-    qCInfo(lc::buddyMain) << "startup.";
+    qCInfo(lc::buddyMain) << "startup. Version:" << EXEC_VERSION;
 
     const utils::AppSettings app_settings{app_meta.getSettingsPath()};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
                      &server::PairingManager::slotPairingRejected);
 
     // HERE WE GO!!! (a.k.a. starting point)
-    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps);
+    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getPreferHibernation());
 
     client_ids.load();
     if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))

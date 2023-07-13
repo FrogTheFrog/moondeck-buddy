@@ -96,6 +96,13 @@ bool NativePcStateHandler::canSuspendPC()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool NativePcStateHandler::canHibernatePC()
+{
+    return canDoQuery(m_logind_bus, "hibernate", "Hibernate");
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool NativePcStateHandler::shutdownPC()
 {
     return doQuery(m_logind_bus, "shutdown", "PowerOff");
@@ -113,5 +120,12 @@ bool NativePcStateHandler::restartPC()
 bool NativePcStateHandler::suspendPC()
 {
     return doQuery(m_logind_bus, "suspend", "Suspend");
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool NativePcStateHandler::hibernatePC()
+{
+    return doQuery(m_logind_bus, "hibernate", "Hibernate");
 }
 }  // namespace os
