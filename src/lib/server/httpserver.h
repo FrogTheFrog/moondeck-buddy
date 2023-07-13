@@ -23,7 +23,8 @@ public:
     explicit HttpServer(int api_version, ClientIds& client_ids);
     virtual ~HttpServer() = default;
 
-    bool startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file);
+    bool startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
+                     QSsl::SslProtocol protocol);
 
     int  getApiVersion() const;
     bool isAuthorized(const QHttpServerRequest& request) const;

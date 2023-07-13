@@ -8,7 +8,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTimer>
 #include <limits>
+#include <optional>
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -18,6 +20,30 @@
 namespace
 {
 const quint16 DEFAULT_PORT{59999};
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
+{
+    static const std::unordered_map<QString, QSsl::SslProtocol> allowed_values{
+        {QStringLiteral("SecureProtocols"), QSsl::SecureProtocols},  //
+        {QStringLiteral("TlsV1_2"), QSsl::TlsV1_2},                  //
+        {QStringLiteral("TlsV1_2OrLater"), QSsl::TlsV1_2OrLater},    //
+        {QStringLiteral("TlsV1_3"), QSsl::TlsV1_3},                  //
+        {QStringLiteral("TlsV1_3OrLater"), QSsl::TlsV1_3OrLater}     //
+    };
+
+    auto it{allowed_values.find(value)};
+    if (it == std::end(allowed_values))
+    {
+        return std::nullopt;
+    }
+
+    // Delayed logging
+    QTimer::singleShot(0, [value, enum_value = it->second]()
+                       { qCDebug(lc::utils) << "Mapped" << value << "to" << enum_value; });
+    return it->second;
+}
 }  // namespace
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -27,6 +53,7 @@ namespace utils
 AppSettings::AppSettings(const QString& filepath)
     : m_port{DEFAULT_PORT}
     , m_prefer_hibernation{false}
+    , m_ssl_protocol{QSsl::SecureProtocols}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filepath))
@@ -77,6 +104,13 @@ bool AppSettings::getPreferHibernation() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+QSsl::SslProtocol AppSettings::getSslProtocol() const
+{
+    return m_ssl_protocol;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -105,13 +139,14 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto handled_displays_v       = obj_v.value(QLatin1String("handled_displays"));
             const auto sunshine_apps_filepath_v = obj_v.value(QLatin1String("sunshine_apps_filepath"));
             const auto prefer_hibernation_v     = obj_v.value(QLatin1String("prefer_hibernation"));
+            const auto ssl_protocol_v           = obj_v.value(QLatin1String("ssl_protocol"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{6};
+            constexpr int current_entries{7};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -171,6 +206,15 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+            if (ssl_protocol_v.isString())
+            {
+                if (auto protocol = protocolFromString(ssl_protocol_v.toString()); protocol)
+                {
+                    m_ssl_protocol = *protocol;
+                    valid_entries++;
+                }
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -197,6 +241,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
         QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
     obj["sunshine_apps_filepath"] = m_sunshine_apps_filepath;
     obj["prefer_hibernation"]     = m_prefer_hibernation;
+    obj["ssl_protocol"]           = QStringLiteral("SecureProtocols");
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 
