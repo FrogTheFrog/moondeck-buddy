@@ -60,7 +60,7 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
             return false;
         }
 
-        m_server.sslSetup(QSslCertificate{cert_file.readAll()}, QSslKey{key_file.readAll(), QSsl::Rsa});
+        m_server.sslSetup(QSslCertificate{cert_file.readAll()}, QSslKey{key_file.readAll(), QSsl::Rsa}, QSsl::TlsV1_2);
     }
 
     if (m_server.listen(QHostAddress::Any, port) == 0)
