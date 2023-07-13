@@ -142,7 +142,7 @@ bool PcControl::hibernatePC(uint grace_period_in_sec)
     {
         closeSteam(std::nullopt);
         emit signalShowTrayMessage(
-            "Hibernation in progress", m_app_meta.getAppName() + " is about to put you into a hard sleep :O",
+            "Hibernation in progress", m_app_meta.getAppName() + " is about to put you into hard sleep :O",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
