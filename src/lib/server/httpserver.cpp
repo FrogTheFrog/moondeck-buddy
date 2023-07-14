@@ -43,7 +43,8 @@ HttpServer::HttpServer(int api_version, ClientIds& client_ids)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file)
+bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
+                             QSsl::SslProtocol protocol)
 {
     {
         QFile cert_file{ssl_cert_file};
@@ -60,7 +61,7 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
             return false;
         }
 
-        m_server.sslSetup(QSslCertificate{cert_file.readAll()}, QSslKey{key_file.readAll(), QSsl::Rsa});
+        m_server.sslSetup(QSslCertificate{cert_file.readAll()}, QSslKey{key_file.readAll(), QSsl::Rsa}, protocol);
     }
 
     if (m_server.listen(QHostAddress::Any, port) == 0)

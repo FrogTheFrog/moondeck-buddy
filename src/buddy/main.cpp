@@ -80,7 +80,8 @@ int main(int argc, char* argv[])
     setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getPreferHibernation());
 
     client_ids.load();
-    if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem"))
+    if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",
+                                app_settings.getSslProtocol()))
     {
         qFatal("Failed to start server!");
     }
