@@ -55,7 +55,7 @@ public:
     bool isAutoStartEnabled() const;
 
     bool changeResolution(uint width, uint height);
-    void restoreChangedResolution();
+    void restoreChangedResolution(bool force);
 
 signals:
     void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
