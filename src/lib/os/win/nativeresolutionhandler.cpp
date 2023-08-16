@@ -66,8 +66,8 @@ NativeResolutionHandler::ChangedResMap NativeResolutionHandler::changeResolution
         devmode.dmPelsHeight = resolution->m_height;
         devmode.dmFields     = DM_PELSWIDTH | DM_PELSHEIGHT;
 
-        const LONG result =
-            ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr, 0, nullptr);
+        const LONG result = ChangeDisplaySettingsExW(static_cast<WCHAR*>(display_device.DeviceName), &devmode, nullptr,
+                                                     CDS_UPDATEREGISTRY, nullptr);
         if (result == DISP_CHANGE_SUCCESSFUL)
         {
             qCDebug(lc::os) << "Changed resolution for" << device_name;
