@@ -56,6 +56,7 @@ HeartbeatAccessor::HeartbeatAccessor(QSharedMemory& shared_mem)
     {
         qFatal("Failed to lock shared memory %s", qUtf8Printable(m_shared_mem.key()));
     }
+    qInfo() << "locked";
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -66,6 +67,7 @@ HeartbeatAccessor::~HeartbeatAccessor()
     {
         qFatal("Failed to unlock shared memory %s", qUtf8Printable(m_shared_mem.key()));
     }
+    qInfo() << "unlocked";
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -203,8 +205,11 @@ void Heartbeat::slotBeating(bool fresh_start)
         return;
     }
 
+    const auto now{QDateTime::currentDateTimeUtc()};
     memory.setShouldTerminate(false);
-    memory.setTime(QDateTime::currentDateTimeUtc());
+    memory.setTime(now);
+
+    qInfo() << "new beat at" << now.toMSecsSinceEpoch();
 
     m_timer.start();
 }
@@ -218,6 +223,8 @@ void Heartbeat::slotListening()
     const HeartbeatAccessor memory{m_shared_mem};
     const QDateTime         last_beat{memory.getTime()};
     const bool              is_alive{last_beat.msecsTo(QDateTime::currentDateTimeUtc()) <= HEARTBEAT_TIMEOUT};
+
+    qInfo() << "got beat at" << last_beat.toMSecsSinceEpoch() << "alive:" << is_alive;
 
     if (is_alive != m_is_alive)
     {
