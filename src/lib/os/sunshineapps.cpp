@@ -109,15 +109,25 @@ std::optional<std::set<QString>> SunshineApps::load()
             {
                 if (!app.isObject())
                 {
+                    qCDebug(lc::os).noquote() << "skipping entry as it's not an object:" << app;
                     continue;
                 }
 
                 const auto app_object{app.toObject()};
                 const auto name_it{app_object.find("name")};
-                if (name_it != app_object.end() && name_it->isString())
+                if (name_it == app_object.end())
                 {
-                    parsed_apps.insert(name_it->toString());
+                    qCDebug(lc::os) << "skipping entry as it does not contain \"name\" field:" << app_object;
+                    continue;
                 }
+
+                if (!name_it->isString())
+                {
+                    qCDebug(lc::os) << "skipping entry as the \"name\" field does not contain a string:" << *name_it;
+                    continue;
+                }
+
+                parsed_apps.insert(name_it->toString());
             }
 
             // This is the only "valid" return point.
