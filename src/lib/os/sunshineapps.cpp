@@ -105,6 +105,12 @@ std::optional<std::set<QString>> SunshineApps::load()
             std::set<QString> parsed_apps{};
 
             const auto apps{apps_it->toArray()};
+            if (apps.isEmpty())
+            {
+                qCDebug(lc::os) << "there are no Sunshine apps to parse.";
+                return parsed_apps;
+            }
+
             for (const auto& app : apps)
             {
                 if (!app.isObject())
@@ -130,7 +136,6 @@ std::optional<std::set<QString>> SunshineApps::load()
                 parsed_apps.insert(name_it->toString());
             }
 
-            // This is the only "valid" return point.
             qCDebug(lc::os) << "parsed the following Sunshine apps:"
                             << QSet<QString>{std::begin(parsed_apps), std::end(parsed_apps)};
             return parsed_apps;
