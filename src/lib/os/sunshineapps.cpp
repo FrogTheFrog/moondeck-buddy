@@ -115,7 +115,7 @@ std::optional<std::set<QString>> SunshineApps::load()
             {
                 if (!app.isObject())
                 {
-                    qCDebug(lc::os).noquote() << "skipping entry as it's not an object:" << app;
+                    qCDebug(lc::os) << "skipping entry as it's not an object:" << app;
                     continue;
                 }
 
