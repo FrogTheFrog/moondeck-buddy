@@ -98,13 +98,13 @@ std::optional<std::set<QString>> SunshineApps::load()
     qCDebug(lc::os).noquote() << "Sunshine apps file content:" << Qt::endl << json_data.toJson(QJsonDocument::Indented);
     if (json_data.isObject())
     {
-        const auto json_object{json_data.object()};
+        const auto json_object = json_data.object();
         const auto apps_it{json_object.find("apps")};
         if (apps_it != json_object.end() && apps_it->isArray())
         {
             std::set<QString> parsed_apps{};
 
-            const auto apps{apps_it->toArray()};
+            const auto apps = apps_it->toArray();
             if (apps.isEmpty())
             {
                 qCDebug(lc::os) << "there are no Sunshine apps to parse.";
@@ -119,7 +119,7 @@ std::optional<std::set<QString>> SunshineApps::load()
                     continue;
                 }
 
-                const auto app_object{app.toObject()};
+                const auto app_object = app.toObject();
                 const auto name_it{app_object.find("name")};
                 if (name_it == app_object.end())
                 {
