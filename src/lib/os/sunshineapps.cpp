@@ -51,10 +51,8 @@ SunshineApps::SunshineApps(QString filepath)
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
-void SunshineApps::load()
+std::optional<std::set<QString>> SunshineApps::load()
 {
-    m_apps = std::nullopt;  // Clear the apps regardless of whether the file exists or not
-
     QString filepath{m_filepath};
     if (filepath.isEmpty())  // Fallback to places where we could expect the file to exist
     {
@@ -73,17 +71,18 @@ void SunshineApps::load()
 #endif
     }
 
+    qCDebug(lc::os) << "selected filepath for Sunshine apps:" << filepath;
     if (filepath.isEmpty())
     {
         qCWarning(lc::os) << "filepath for Sunshine apps is empty!";
-        return;
+        return std::nullopt;
     }
 
     QFile file{filepath};
     if (!file.open(QFile::ReadOnly))
     {
         qCWarning(lc::os) << "file" << filepath << "could not be opened! Reason:" << file.errorString();
-        return;
+        return std::nullopt;
     }
 
     const auto data{file.readAll()};
@@ -93,16 +92,17 @@ void SunshineApps::load()
     if (json_data.isNull())
     {
         qCWarning(lc::os) << "failed to decode JSON data! Reason:" << parser_error.errorString() << "| data:" << data;
-        return;
+        return std::nullopt;
     }
 
+    qCDebug(lc::os).noquote() << "Sunshine apps file content:" << Qt::endl << json_data.toJson(QJsonDocument::Indented);
     if (json_data.isObject())
     {
         const auto json_object{json_data.object()};
         const auto apps_it{json_object.find("apps")};
         if (apps_it != json_object.end() && apps_it->isArray())
         {
-            m_apps = std::set<QString>{};
+            std::set<QString> parsed_apps{};
 
             const auto apps{apps_it->toArray()};
             for (const auto& app : apps)
@@ -116,22 +116,18 @@ void SunshineApps::load()
                 const auto name_it{app_object.find("name")};
                 if (name_it != app_object.end() && name_it->isString())
                 {
-                    m_apps->insert(name_it->toString());
+                    parsed_apps.insert(name_it->toString());
                 }
             }
 
             // This is the only "valid" return point.
-            return;
+            qCDebug(lc::os) << "parsed the following Sunshine apps:"
+                            << QSet<QString>{std::begin(parsed_apps), std::end(parsed_apps)};
+            return parsed_apps;
         }
     }
 
     qCWarning(lc::os) << "file" << m_filepath << "could not be parsed!";
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-std::optional<std::set<QString>> SunshineApps::getAppNames() const
-{
-    return m_apps;
+    return std::nullopt;
 }
 }  // namespace os

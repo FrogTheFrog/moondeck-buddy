@@ -16,12 +16,9 @@ public:
     explicit SunshineApps(QString filepath);
     virtual ~SunshineApps() = default;
 
-    void load();
-
-    std::optional<std::set<QString>> getAppNames() const;
+    std::optional<std::set<QString>> load();
 
 private:
-    QString                          m_filepath;
-    std::optional<std::set<QString>> m_apps;
+    QString m_filepath;
 };
 }  // namespace os

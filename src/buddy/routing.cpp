@@ -333,8 +333,7 @@ void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_
                 return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
             }
 
-            sunshine_apps.load();
-            const auto app_names{sunshine_apps.getAppNames()};
+            const auto app_names{sunshine_apps.load()};
             if (!app_names)
             {
                 return QHttpServerResponse{QJsonObject{{"appNames", QJsonValue()}}};
