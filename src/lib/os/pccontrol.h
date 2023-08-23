@@ -34,7 +34,7 @@ public:
     explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays);
     ~PcControl() override;
 
-    bool launchSteamApp(uint app_id);
+    bool launchSteamApp(uint app_id, bool force_big_picture);
     bool closeSteam(std::optional<uint> grace_period_in_sec);
 
     bool shutdownPC(uint grace_period_in_sec);

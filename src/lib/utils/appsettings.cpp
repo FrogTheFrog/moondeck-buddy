@@ -54,6 +54,7 @@ AppSettings::AppSettings(const QString& filepath)
     : m_port{DEFAULT_PORT}
     , m_prefer_hibernation{false}
     , m_ssl_protocol{QSsl::SecureProtocols}
+    , m_force_big_picture{true}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filepath))
@@ -111,6 +112,13 @@ QSsl::SslProtocol AppSettings::getSslProtocol() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool AppSettings::getForceBigPicture() const
+{
+    return m_force_big_picture;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -140,13 +148,14 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto sunshine_apps_filepath_v = obj_v.value(QLatin1String("sunshine_apps_filepath"));
             const auto prefer_hibernation_v     = obj_v.value(QLatin1String("prefer_hibernation"));
             const auto ssl_protocol_v           = obj_v.value(QLatin1String("ssl_protocol"));
+            const auto force_big_picture_v      = obj_v.value(QLatin1String("force_big_picture"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{7};
+            constexpr int current_entries{8};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -215,6 +224,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 }
             }
 
+            if (force_big_picture_v.isBool())
+            {
+                m_force_big_picture = force_big_picture_v.toBool();
+                valid_entries++;
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -242,6 +257,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["sunshine_apps_filepath"] = m_sunshine_apps_filepath;
     obj["prefer_hibernation"]     = m_prefer_hibernation;
     obj["ssl_protocol"]           = QStringLiteral("SecureProtocols");
+    obj["force_big_picture"]      = m_force_big_picture;
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

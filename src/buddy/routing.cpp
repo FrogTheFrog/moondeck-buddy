@@ -221,10 +221,10 @@ void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control)
+void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control, bool force_big_picture)
 {
     server.route("/launchSteamApp", QHttpServerRequest::Method::Post,
-                 [&server, &pc_control](const QHttpServerRequest& request)
+                 [&server, &pc_control, force_big_picture](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
                      {
@@ -243,7 +243,7 @@ void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteamApp(*app_id)};
+                     const bool result{pc_control.launchSteamApp(*app_id, force_big_picture)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -362,13 +362,13 @@ void setupRouteLogging(server::HttpServer& server)
 //---------------------------------------------------------------------------------------------------------------------
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps, bool prefer_hibernation)
+                 os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
     routing_internal::setupPcState(server, pc_control, prefer_hibernation);
     routing_internal::setupHostInfo(server, pc_control);
-    routing_internal::setupSteamControl(server, pc_control);
+    routing_internal::setupSteamControl(server, pc_control, force_big_picture);
     routing_internal::setupResolution(server, pc_control);
     routing_internal::setupStreamControl(server, pc_control);
     routing_internal::setupGamestreamApps(server, sunshine_apps);

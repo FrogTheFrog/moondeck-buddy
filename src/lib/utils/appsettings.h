@@ -23,6 +23,7 @@ public:
     const QString&           getSunshineAppsFilepath() const;
     bool                     getPreferHibernation() const;
     QSsl::SslProtocol        getSslProtocol() const;
+    bool                     getForceBigPicture() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -34,6 +35,7 @@ private:
     QString           m_sunshine_apps_filepath;
     bool              m_prefer_hibernation;
     QSsl::SslProtocol m_ssl_protocol;
+    bool              m_force_big_picture;
 
 public:
     // TODO: remove

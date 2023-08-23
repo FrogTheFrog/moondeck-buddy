@@ -26,7 +26,7 @@ public:
     bool isRunningNow();
     bool close(std::optional<uint> grace_period_in_sec);
 
-    bool                launchApp(uint app_id);
+    bool                launchApp(uint app_id, bool force_big_picture);
     uint                getRunningApp() const;
     std::optional<uint> getTrackedActiveApp() const;
     std::optional<uint> getTrackedUpdatingApp() const;
