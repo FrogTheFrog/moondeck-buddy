@@ -9,4 +9,4 @@
 //---------------------------------------------------------------------------------------------------------------------
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps, bool prefer_hibernation);
+                 os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture);

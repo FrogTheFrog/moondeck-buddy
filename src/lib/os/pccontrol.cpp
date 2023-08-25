@@ -67,7 +67,7 @@ PcControl::~PcControl() = default;
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool PcControl::launchSteamApp(uint app_id)
+bool PcControl::launchSteamApp(uint app_id, bool force_big_picture)
 {
     const bool should_probably_hide_cursor{!m_steam_handler.isRunningNow() || getRunningApp() == 0};
     if (should_probably_hide_cursor)
@@ -76,7 +76,7 @@ bool PcControl::launchSteamApp(uint app_id)
         m_cursor_handler->hideCursor();
     }
 
-    return m_steam_handler.launchApp(app_id);
+    return m_steam_handler.launchApp(app_id, force_big_picture);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

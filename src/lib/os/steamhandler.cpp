@@ -100,7 +100,7 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
-bool SteamHandler::launchApp(uint app_id)
+bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
 {
     if (m_steam_exec_path.isEmpty())
     {
@@ -123,7 +123,7 @@ bool SteamHandler::launchApp(uint app_id)
     if (getRunningApp() != app_id)
     {
         const bool is_steam_running{m_process_handler->isRunningNow()};
-        if (is_steam_running)
+        if (force_big_picture && is_steam_running)
         {
             QProcess steam_process;
             steam_process.setStandardOutputFile(QProcess::nullDevice());
@@ -146,7 +146,7 @@ bool SteamHandler::launchApp(uint app_id)
         steam_process.setStandardOutputFile(QProcess::nullDevice());
         steam_process.setStandardErrorFile(QProcess::nullDevice());
         steam_process.setProgram(m_steam_exec_path);
-        steam_process.setArguments((is_steam_running ? QStringList{} : QStringList{"-bigpicture"})
+        steam_process.setArguments((force_big_picture && !is_steam_running ? QStringList{"-bigpicture"} : QStringList{})
                                    + QStringList{"-applaunch", QString::number(app_id)});
 
         if (!steam_process.startDetached())
