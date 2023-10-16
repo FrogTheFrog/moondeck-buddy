@@ -122,12 +122,20 @@ bool PcControl::restartPC(uint grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool PcControl::suspendPC(uint grace_period_in_sec)
+bool PcControl::suspendPC(uint grace_period_in_sec, bool close_steam)
 {
     if (m_pc_state_handler.suspendPC(grace_period_in_sec))
     {
-        closeSteam(std::nullopt);
-        restoreChangedResolution(true);
+        if (close_steam)
+        {
+            closeSteam(std::nullopt);
+            restoreChangedResolution(true);
+        }
+        else
+        {
+            endStream();
+        }
+
         emit signalShowTrayMessage(
             "Suspend in progress", m_app_meta.getAppName() + " is about to suspend you real hard :P",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
@@ -139,12 +147,20 @@ bool PcControl::suspendPC(uint grace_period_in_sec)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool PcControl::hibernatePC(uint grace_period_in_sec)
+bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
 {
     if (m_pc_state_handler.hibernatePC(grace_period_in_sec))
     {
-        closeSteam(std::nullopt);
-        restoreChangedResolution(true);
+        if (close_steam)
+        {
+            closeSteam(std::nullopt);
+            restoreChangedResolution(true);
+        }
+        else
+        {
+            endStream();
+        }
+
         emit signalShowTrayMessage(
             "Hibernation in progress", m_app_meta.getAppName() + " is about to put you into hard sleep :O",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);

@@ -24,6 +24,7 @@ public:
     bool                     getPreferHibernation() const;
     QSsl::SslProtocol        getSslProtocol() const;
     bool                     getForceBigPicture() const;
+    bool                     getCloseSteamBeforeSleep() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -36,6 +37,7 @@ private:
     bool              m_prefer_hibernation;
     QSsl::SslProtocol m_ssl_protocol;
     bool              m_force_big_picture;
+    bool              m_close_steam_before_sleep;
 
 public:
     // TODO: remove
