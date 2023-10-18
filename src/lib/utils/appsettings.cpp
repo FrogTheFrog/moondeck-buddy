@@ -55,6 +55,7 @@ AppSettings::AppSettings(const QString& filepath)
     , m_prefer_hibernation{false}
     , m_ssl_protocol{QSsl::SecureProtocols}
     , m_force_big_picture{true}
+    , m_close_steam_before_sleep{true}
     , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filepath))
@@ -119,6 +120,13 @@ bool AppSettings::getForceBigPicture() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool AppSettings::getCloseSteamBeforeSleep() const
+{
+    return m_close_steam_before_sleep;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -141,21 +149,22 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
         }
         else if (!json_data.isEmpty())
         {
-            const auto obj_v                    = json_data.object();
-            const auto port_v                   = obj_v.value(QLatin1String("port"));
-            const auto logging_rules_v          = obj_v.value(QLatin1String("logging_rules"));
-            const auto handled_displays_v       = obj_v.value(QLatin1String("handled_displays"));
-            const auto sunshine_apps_filepath_v = obj_v.value(QLatin1String("sunshine_apps_filepath"));
-            const auto prefer_hibernation_v     = obj_v.value(QLatin1String("prefer_hibernation"));
-            const auto ssl_protocol_v           = obj_v.value(QLatin1String("ssl_protocol"));
-            const auto force_big_picture_v      = obj_v.value(QLatin1String("force_big_picture"));
+            const auto obj_v                      = json_data.object();
+            const auto port_v                     = obj_v.value(QLatin1String("port"));
+            const auto logging_rules_v            = obj_v.value(QLatin1String("logging_rules"));
+            const auto handled_displays_v         = obj_v.value(QLatin1String("handled_displays"));
+            const auto sunshine_apps_filepath_v   = obj_v.value(QLatin1String("sunshine_apps_filepath"));
+            const auto prefer_hibernation_v       = obj_v.value(QLatin1String("prefer_hibernation"));
+            const auto ssl_protocol_v             = obj_v.value(QLatin1String("ssl_protocol"));
+            const auto force_big_picture_v        = obj_v.value(QLatin1String("force_big_picture"));
+            const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{8};
+            constexpr int current_entries{9};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -230,6 +239,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+            if (close_steam_before_sleep_v.isBool())
+            {
+                m_close_steam_before_sleep = close_steam_before_sleep_v.toBool();
+                valid_entries++;
+            }
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -254,10 +269,11 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["logging_rules"] = m_logging_rules;
     obj["handled_displays"] =
         QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
-    obj["sunshine_apps_filepath"] = m_sunshine_apps_filepath;
-    obj["prefer_hibernation"]     = m_prefer_hibernation;
-    obj["ssl_protocol"]           = QStringLiteral("SecureProtocols");
-    obj["force_big_picture"]      = m_force_big_picture;
+    obj["sunshine_apps_filepath"]   = m_sunshine_apps_filepath;
+    obj["prefer_hibernation"]       = m_prefer_hibernation;
+    obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
+    obj["force_big_picture"]        = m_force_big_picture;
+    obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

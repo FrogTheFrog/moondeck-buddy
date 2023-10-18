@@ -143,7 +143,8 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool prefer_hibernation)
+void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool prefer_hibernation,
+                  bool close_steam_before_sleep)
 {
     server.route(
         "/pcState", QHttpServerRequest::Method::Get,
@@ -158,7 +159,7 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool pr
         });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,
-                 [&server, &pc_control, prefer_hibernation](const QHttpServerRequest& request)
+                 [&server, &pc_control, prefer_hibernation, close_steam_before_sleep](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
                      {
@@ -188,8 +189,9 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool pr
                              result = pc_control.shutdownPC(*grace_period);
                              break;
                          case ChangePcState::Suspend:
-                             result = (prefer_hibernation && pc_control.hibernatePC(*grace_period))
-                                      || pc_control.suspendPC(*grace_period);
+                             result =
+                                 (prefer_hibernation && pc_control.hibernatePC(*grace_period, close_steam_before_sleep))
+                                 || pc_control.suspendPC(*grace_period, close_steam_before_sleep);
                              break;
                      }
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
@@ -362,11 +364,12 @@ void setupRouteLogging(server::HttpServer& server)
 //---------------------------------------------------------------------------------------------------------------------
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture)
+                 os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture,
+                 bool close_steam_before_sleep)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
-    routing_internal::setupPcState(server, pc_control, prefer_hibernation);
+    routing_internal::setupPcState(server, pc_control, prefer_hibernation, close_steam_before_sleep);
     routing_internal::setupHostInfo(server, pc_control);
     routing_internal::setupSteamControl(server, pc_control, force_big_picture);
     routing_internal::setupResolution(server, pc_control);

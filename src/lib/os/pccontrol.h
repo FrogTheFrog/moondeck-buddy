@@ -39,8 +39,8 @@ public:
 
     bool shutdownPC(uint grace_period_in_sec);
     bool restartPC(uint grace_period_in_sec);
-    bool suspendPC(uint grace_period_in_sec);
-    bool hibernatePC(uint grace_period_in_sec);
+    bool suspendPC(uint grace_period_in_sec, bool close_steam);
+    bool hibernatePC(uint grace_period_in_sec, bool close_steam);
 
     bool endStream();
 
