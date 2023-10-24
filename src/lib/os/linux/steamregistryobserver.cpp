@@ -80,7 +80,7 @@ SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QSt
 
     if (!QFile::exists(m_steam_exec))
     {
-        qFatal(qUtf8Printable("Steam binary does not exist at specified path: " + m_steam_exec));
+        qFatal("Steam binary does not exist at specified path: %s", qUtf8Printable(m_steam_exec));
     }
     else
     {
@@ -133,6 +133,7 @@ void SteamRegistryObserver::stopTrackingApp()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-cognitive-complexity)
 void SteamRegistryObserver::slotRegistryChanged()
 {
     const auto& data{m_watcher.getData()};

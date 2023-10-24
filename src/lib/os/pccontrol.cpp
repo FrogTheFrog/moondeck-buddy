@@ -40,25 +40,18 @@ const int SEC_TO_MS{1000};
 namespace os
 {
 PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
-                     const QString& registry_file_override, const QString& steam_binary_override)
+                     QString registry_file_override, QString steam_binary_override)
     : m_app_meta{app_meta}
     , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
     , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
-    , m_steam_handler
+    , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
+                      std::make_unique<SteamRegistryObserver>(std::move(registry_file_override),
+                                                              std::move(steam_binary_override))}
+    , m_stream_state_handler{
+          std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {
-    std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
-#if defined(Q_OS_LINUX)
-        std::make_unique<SteamRegistryObserver>(registry_file_override, steam_binary_override)
-#else
-        std::make_unique<SteamRegistryObserver>()
-#endif
-}
-, m_stream_state_handler{std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
-{
-    Q_UNUSED(registry_file_override);
-    Q_UNUSED(steam_binary_override);
     Q_ASSERT(m_auto_start_handler != nullptr);
     Q_ASSERT(m_cursor_handler != nullptr);
     Q_ASSERT(m_stream_state_handler != nullptr);

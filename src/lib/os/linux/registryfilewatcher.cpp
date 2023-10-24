@@ -16,7 +16,7 @@ RegistryFileWatcher::RegistryFileWatcher(QString path)
 {
     if (!QFile::exists(m_path))
     {
-        qFatal(qUtf8Printable("registry.vdf file does not exist at specified path: " + m_path));
+        qFatal("registry.vdf file does not exist at specified path: %s", qUtf8Printable(m_path));
     }
     else
     {

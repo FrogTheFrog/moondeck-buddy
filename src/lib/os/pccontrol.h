@@ -32,7 +32,7 @@ class PcControl : public QObject
 
 public:
     explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
-                       const QString& registry_file_override, const QString& steam_binary_override);
+                       QString registry_file_override, QString steam_binary_override);
     ~PcControl() override;
 
     bool launchSteamApp(uint app_id, bool force_big_picture);

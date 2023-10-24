@@ -22,6 +22,7 @@ SteamProcessListObserver::SteamProcessListObserver()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(*-static)
 uint SteamProcessListObserver::findSteamProcess() const
 {
     NativeProcessHandler proc_handler;
