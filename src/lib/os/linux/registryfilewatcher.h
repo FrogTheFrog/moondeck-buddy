@@ -24,6 +24,7 @@ public:
     ~RegistryFileWatcher() override = default;
 
     const NodeList& getData() const;
+    
 
 signals:
     void signalRegistryChanged();

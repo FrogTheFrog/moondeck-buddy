@@ -229,7 +229,7 @@ void SteamHandler::slotSteamProcessDied()
 void SteamHandler::slotSteamExecPath(const QString& path)
 {
     m_steam_exec_path = path;
-    qCDebug(lc::os) << "Steam exec path:" << m_steam_exec_path;
+    qCInfo(lc::os) << "Steam exec path:" << m_steam_exec_path;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

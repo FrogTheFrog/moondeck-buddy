@@ -5,6 +5,9 @@
 #include <QDir>
 #include <QFile>
 
+// local includes
+#include "shared/loggingcategories.h"
+
 //---------------------------------------------------------------------------------------------------------------------
 
 namespace
@@ -60,8 +63,10 @@ const T* getEntry(const QStringList& path, const os::RegistryFileWatcher::NodeLi
 
 namespace os
 {
-SteamRegistryObserver::SteamRegistryObserver()
-    : m_watcher{QDir::homePath() + "/.steam/registry.vdf"}
+SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QString steam_binary_override)
+    : m_watcher{registry_file_override.isEmpty() ? QDir::homePath() + "/.steam/registry.vdf"
+                                                 : std::move(registry_file_override)}
+    , m_steam_exec{steam_binary_override.isEmpty() ? "/usr/bin/steam" : std::move(steam_binary_override)}
 {
     connect(&m_watcher, &RegistryFileWatcher::signalRegistryChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_process_list_observer, &SteamProcessListObserver::signalListChanged, this,
@@ -72,6 +77,15 @@ SteamRegistryObserver::SteamRegistryObserver()
                 m_is_observing_apps = true;
                 slotRegistryChanged();
             });
+
+    if (!QFile::exists(m_steam_exec))
+    {
+        qFatal(qUtf8Printable("Steam binary does not exist at specified path: " + m_steam_exec));
+    }
+    else
+    {
+        qCInfo(lc::os) << "Steam binary path set to" << m_steam_exec;
+    }
 
     const int initial_delay_ms{2000};
     m_observation_delay.setInterval(initial_delay_ms);
@@ -129,18 +143,28 @@ void SteamRegistryObserver::slotRegistryChanged()
     {
         m_pid = pid;
 
+        if (m_pid != 0)
+        {
+            const uint actual_steam_pid{m_process_list_observer.findSteamProcess()};
+            if (actual_steam_pid != m_pid)
+            {
+                qCWarning(lc::os).nospace()
+                    << "Steam PID from registry.vdf does not match what we have found (normal for flatpak or "
+                       "outdated data)! Using PID "
+                    << actual_steam_pid << " (instead off " << m_pid << ") to track Steam process.";
+            }
+
+            m_pid = actual_steam_pid;
+        }
+
         m_process_list_observer.observePid(m_pid);
         emit signalSteamPID(m_pid);
     }
 
-    if (m_steam_exec.isEmpty())
+    if (!m_steam_exec.isEmpty())
     {
-        const QString hardcoded_path{"/usr/bin/steam"};
-        if (QFile::exists(hardcoded_path))
-        {
-            m_steam_exec = hardcoded_path;
-            emit signalSteamExecPath(m_steam_exec);
-        }
+        emit signalSteamExecPath(m_steam_exec);
+        m_steam_exec = {};  // Reset to no longer trigger this conditional
     }
 
     if (!m_is_observing_apps)

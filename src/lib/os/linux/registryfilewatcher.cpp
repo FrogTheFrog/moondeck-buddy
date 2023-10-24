@@ -1,6 +1,9 @@
 // header file include
 #include "registryfilewatcher.h"
 
+// system/Qt includes
+#include <QFile>
+
 // local includes
 #include "shared/loggingcategories.h"
 
@@ -11,6 +14,15 @@ namespace os
 RegistryFileWatcher::RegistryFileWatcher(QString path)
     : m_path{std::move(path)}
 {
+    if (!QFile::exists(m_path))
+    {
+        qFatal(qUtf8Printable("registry.vdf file does not exist at specified path: " + m_path));
+    }
+    else
+    {
+        qCInfo(lc::os) << "registry.vdf file path set to" << m_path;
+    }
+
     connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this, &RegistryFileWatcher::slotFileChanged);
     connect(&m_retry_timer, &QTimer::timeout, this, &RegistryFileWatcher::slotRetry);
     connect(&m_parsing_delay_timer, &QTimer::timeout, this, &RegistryFileWatcher::slotParseFile);

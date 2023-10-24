@@ -17,6 +17,7 @@ public:
     explicit SteamProcessListObserver();
     ~SteamProcessListObserver() override = default;
 
+    uint findSteamProcess() const;
     void observePid(uint pid);
     void stopObserving();
 

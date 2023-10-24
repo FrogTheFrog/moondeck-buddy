@@ -52,7 +52,8 @@ int main(int argc, char* argv[])
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl    pc_control{app_meta, app_settings.getHandledDisplays()};
+    os::PcControl    pc_control{app_meta, app_settings.getHandledDisplays(), app_settings.getRegistryFileOverride(),
+                             app_settings.getSteamBinaryOverride()};
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     const QIcon               icon{":/icons/app.ico"};

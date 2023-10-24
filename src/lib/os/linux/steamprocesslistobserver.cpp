@@ -22,6 +22,31 @@ SteamProcessListObserver::SteamProcessListObserver()
 
 //---------------------------------------------------------------------------------------------------------------------
 
+uint SteamProcessListObserver::findSteamProcess() const
+{
+    NativeProcessHandler proc_handler;
+
+    const auto pids{proc_handler.getPids()};
+    for (const auto pid : pids)
+    {
+        const QString exec_path{proc_handler.getExecPath(pid)};
+        if (exec_path.isEmpty())
+        {
+            continue;
+        }
+
+        static const QRegularExpression exec_regex{".*?Steam.+?steam", QRegularExpression::CaseInsensitiveOption};
+        if (exec_path.contains(exec_regex))
+        {
+            return pid;
+        }
+    }
+
+    return 0;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void SteamProcessListObserver::observePid(uint pid)
 {
     stopObserving();
