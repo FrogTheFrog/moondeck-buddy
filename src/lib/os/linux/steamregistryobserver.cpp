@@ -139,27 +139,30 @@ void SteamRegistryObserver::slotRegistryChanged()
     const auto& data{m_watcher.getData()};
     const auto  get_uint = [](const qint64* ptr) { return ptr == nullptr ? 0 : static_cast<uint>(*ptr); };
 
-    const auto pid{get_uint(getEntry<qint64>(PID_PATH, data))};
+    auto pid{get_uint(getEntry<qint64>(PID_PATH, data))};
     if (pid != m_pid)
     {
-        m_pid = pid;
-
-        if (m_pid != 0)
+        if (pid != 0)
         {
             const uint actual_steam_pid{m_process_list_observer.findSteamProcess()};
-            if (actual_steam_pid != m_pid)
+            if (actual_steam_pid != pid && actual_steam_pid != 0)
             {
                 qCWarning(lc::os).nospace()
                     << "Steam PID from registry.vdf does not match what we have found (normal for flatpak or "
                        "outdated data)! Using PID "
-                    << actual_steam_pid << " (instead off " << m_pid << ") to track Steam process.";
-            }
+                    << actual_steam_pid << " (instead of " << pid << ") to track Steam process.";
 
-            m_pid = actual_steam_pid;
+                pid = actual_steam_pid;
+            }
         }
 
-        m_process_list_observer.observePid(m_pid);
-        emit signalSteamPID(m_pid);
+        if (pid != m_pid)
+        {
+            m_pid = pid;
+
+            m_process_list_observer.observePid(m_pid);
+            emit signalSteamPID(m_pid);
+        }
     }
 
     if (!m_steam_exec.isEmpty())
