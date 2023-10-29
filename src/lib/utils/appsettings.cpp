@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <limits>
 #include <optional>
+#include <unordered_map>
 
 // local includes
 #include "shared/loggingcategories.h"
