@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QDir>
 #include <QFile>
+#include <chrono>
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -145,7 +146,26 @@ void SteamRegistryObserver::slotRegistryChanged()
         if (pid != 0)
         {
             const uint actual_steam_pid{m_process_list_observer.findSteamProcess()};
-            if (actual_steam_pid != pid && actual_steam_pid != 0)
+            if (actual_steam_pid == 0)
+            {
+                using namespace std::chrono_literals;
+                const bool do_recheck{m_recheck_counter++ < 10};
+
+                qCWarning(lc::os).nospace() << "Steam PID from registry.vdf indicates that the Steam process is "
+                                               "running, but it's not"
+                                            << (do_recheck ? "... Rechecking in 5 seconds." : "...");
+
+                if (do_recheck)
+                {
+                    QTimer::singleShot(5s, this, &SteamRegistryObserver::slotRegistryChanged);
+                }
+                else
+                {
+                    // Something else has triggered the slots, let's reset the counter.
+                    m_recheck_counter = 0;
+                }
+            }
+            else if (actual_steam_pid != pid)
             {
                 if (m_pid != actual_steam_pid)
                 {
@@ -154,9 +174,18 @@ void SteamRegistryObserver::slotRegistryChanged()
                            "outdated data)! Using PID "
                         << actual_steam_pid << " (instead of " << pid << ") to track Steam process.";
                 }
-
-                pid = actual_steam_pid;
             }
+
+            if (actual_steam_pid != 0)
+            {
+                m_recheck_counter = 0;
+            }
+
+            pid = actual_steam_pid;
+        }
+        else
+        {
+            m_recheck_counter = 0;
         }
 
         if (pid != m_pid)

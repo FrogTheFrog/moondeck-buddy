@@ -35,6 +35,7 @@ private:
     QString                       m_steam_exec;
     uint                          m_pid{0};
     uint                          m_global_app_id{0};
+    uint                          m_recheck_counter{0};
     std::optional<TrackedAppData> m_tracked_app_data;
     SteamProcessListObserver      m_process_list_observer;
 };
