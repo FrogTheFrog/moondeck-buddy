@@ -145,7 +145,7 @@ void SteamRegistryObserver::slotRegistryChanged()
     {
         if (pid != 0)
         {
-            const uint actual_steam_pid{m_process_list_observer.findSteamProcess()};
+            const uint actual_steam_pid{m_process_list_observer.findSteamProcess(m_pid)};
             if (actual_steam_pid == 0)
             {
                 using namespace std::chrono_literals;

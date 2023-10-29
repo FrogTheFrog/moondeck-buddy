@@ -23,11 +23,21 @@ SteamProcessListObserver::SteamProcessListObserver()
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
-uint SteamProcessListObserver::findSteamProcess() const
+uint SteamProcessListObserver::findSteamProcess(uint previous_pid) const
 {
-    NativeProcessHandler proc_handler;
+    static const QRegularExpression exec_regex{".*?Steam.+?steam$", QRegularExpression::CaseInsensitiveOption};
+    NativeProcessHandler            proc_handler;
 
     const auto pids{proc_handler.getPids()};
+    if (std::find(std::begin(pids), std::end(pids), previous_pid) != std::end(pids))
+    {
+        const QString exec_path{proc_handler.getExecPath(previous_pid)};
+        if (!exec_path.isEmpty() && exec_path.contains(exec_regex))
+        {
+            return previous_pid;
+        }
+    }
+
     for (const auto pid : pids)
     {
         const QString exec_path{proc_handler.getExecPath(pid)};
@@ -36,7 +46,6 @@ uint SteamProcessListObserver::findSteamProcess() const
             continue;
         }
 
-        static const QRegularExpression exec_regex{".*?Steam.+?steam", QRegularExpression::CaseInsensitiveOption};
         if (exec_path.contains(exec_regex))
         {
             return pid;
