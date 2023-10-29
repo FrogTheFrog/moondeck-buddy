@@ -19,8 +19,11 @@ const QString REG_PID{"pid"};
 
 namespace os
 {
-SteamRegistryObserver::SteamRegistryObserver()
+SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QString steam_binary_override)
 {
+    Q_UNUSED(registry_file_override);
+    Q_UNUSED(steam_binary_override);
+
     connect(&m_global_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_steam_exec_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_process_reg_key, &RegKey::signalValuesChanged, this, &SteamRegistryObserver::slotRegistryChanged);

@@ -25,6 +25,8 @@ public:
     QSsl::SslProtocol        getSslProtocol() const;
     bool                     getForceBigPicture() const;
     bool                     getCloseSteamBeforeSleep() const;
+    const QString&           getRegistryFileOverride() const;
+    const QString&           getSteamBinaryOverride() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -38,6 +40,8 @@ private:
     QSsl::SslProtocol m_ssl_protocol;
     bool              m_force_big_picture;
     bool              m_close_steam_before_sleep;
+    QString           m_registry_file_override;
+    QString           m_steam_binary_override;
 
 public:
     // TODO: remove

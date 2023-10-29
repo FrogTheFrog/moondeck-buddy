@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <limits>
 #include <optional>
+#include <unordered_map>
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -127,6 +128,20 @@ bool AppSettings::getCloseSteamBeforeSleep() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+const QString& AppSettings::getRegistryFileOverride() const
+{
+    return m_registry_file_override;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+const QString& AppSettings::getSteamBinaryOverride() const
+{
+    return m_steam_binary_override;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -164,8 +179,16 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
 
             // TODO: dec. once removed
-            constexpr int current_entries{9};
-            int           valid_entries{0};
+            constexpr int current_entries
+            {
+                9 +
+#if defined(Q_OS_LINUX)
+                    2
+#else
+                    0
+#endif
+            };
+            int valid_entries{0};
 
             if (port_v.isDouble())
             {
@@ -245,6 +268,23 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+#if defined(Q_OS_LINUX)
+            const auto registry_file_override_v = obj_v.value(QLatin1String("registry_file_override"));
+            const auto steam_binary_override_v  = obj_v.value(QLatin1String("steam_binary_override"));
+
+            if (registry_file_override_v.isString())
+            {
+                m_registry_file_override = registry_file_override_v.toString();
+                valid_entries++;
+            }
+
+            if (steam_binary_override_v.isString())
+            {
+                m_steam_binary_override = steam_binary_override_v.toString();
+                valid_entries++;
+            }
+#endif
+
             if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
             {
                 m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
@@ -274,6 +314,10 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
     obj["force_big_picture"]        = m_force_big_picture;
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
+#if defined(Q_OS_LINUX)
+    obj["registry_file_override"] = m_registry_file_override;
+    obj["steam_binary_override"]  = m_steam_binary_override;
+#endif
     obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
         m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 

@@ -39,14 +39,16 @@ const int SEC_TO_MS{1000};
 
 namespace os
 {
-PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays)
+PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
+                     QString registry_file_override, QString steam_binary_override)
     : m_app_meta{app_meta}
     , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
     , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
     , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
-                      std::make_unique<SteamRegistryObserver>()}
+                      std::make_unique<SteamRegistryObserver>(std::move(registry_file_override),
+                                                              std::move(steam_binary_override))}
     , m_stream_state_handler{
           std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {

@@ -31,7 +31,8 @@ class PcControl : public QObject
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays);
+    explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
+                       QString registry_file_override, QString steam_binary_override);
     ~PcControl() override;
 
     bool launchSteamApp(uint app_id, bool force_big_picture);

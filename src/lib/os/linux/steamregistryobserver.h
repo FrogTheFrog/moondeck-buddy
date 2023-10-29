@@ -16,7 +16,7 @@ class SteamRegistryObserver : public SteamRegistryObserverInterface
     Q_DISABLE_COPY(SteamRegistryObserver)
 
 public:
-    explicit SteamRegistryObserver();
+    explicit SteamRegistryObserver(QString registry_file_override, QString steam_binary_override);
     ~SteamRegistryObserver() override = default;
 
     void startAppObservation() override;

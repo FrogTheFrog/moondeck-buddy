@@ -224,26 +224,43 @@ std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
     const std::vector<uint> parent_pids{getParentPids(all_pids)};
     Q_ASSERT(all_pids.size() == parent_pids.size());
 
-    std::vector<uint> children_pids;
-    for (std::size_t i = 0; i < all_pids.size(); ++i)
+    const auto search_pids = [&all_pids, &parent_pids](uint parent_needle_pid)
     {
-        const uint parent_pid{parent_pids[i]};
-        if (parent_pid != pid)
+        std::vector<uint> children_pids;
+        for (std::size_t i = 0; i < all_pids.size(); ++i)
         {
-            continue;
+            const uint parent_pid{parent_pids[i]};
+            if (parent_pid != parent_needle_pid)
+            {
+                continue;
+            }
+
+            const uint process_pid{all_pids[i]};
+            if (process_pid == parent_needle_pid)
+            {
+                // Is this even possible? To be your own parent?
+                continue;
+            }
+
+            children_pids.push_back(process_pid);
         }
 
-        const uint process_pid{all_pids[i]};
-        if (process_pid == pid)
-        {
-            // Is this even possible? To be your own parent?
-            continue;
-        }
+        return children_pids;
+    };
 
-        children_pids.push_back(process_pid);
+    std::vector<uint> children_pids{search_pids(pid)};
+    std::vector<uint> nested_children_pids{children_pids};
+    for (const auto child_pid : children_pids)
+    {
+        std::vector<uint> nested_pids{search_pids(child_pid)};
+        std::copy(std::begin(nested_pids), std::end(nested_pids), std::back_inserter(nested_children_pids));
     }
 
-    return children_pids;
+    std::sort(std::begin(nested_children_pids), std::end(nested_children_pids));
+    auto last_unique = std::unique(std::begin(nested_children_pids), std::end(nested_children_pids));
+    nested_children_pids.erase(last_unique, std::end(nested_children_pids));
+
+    return nested_children_pids;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
