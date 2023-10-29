@@ -147,10 +147,13 @@ void SteamRegistryObserver::slotRegistryChanged()
             const uint actual_steam_pid{m_process_list_observer.findSteamProcess()};
             if (actual_steam_pid != pid && actual_steam_pid != 0)
             {
-                qCWarning(lc::os).nospace()
-                    << "Steam PID from registry.vdf does not match what we have found (normal for flatpak or "
-                       "outdated data)! Using PID "
-                    << actual_steam_pid << " (instead of " << pid << ") to track Steam process.";
+                if (m_pid != actual_steam_pid)
+                {
+                    qCWarning(lc::os).nospace()
+                        << "Steam PID from registry.vdf does not match what we have found (normal for flatpak or "
+                           "outdated data)! Using PID "
+                        << actual_steam_pid << " (instead of " << pid << ") to track Steam process.";
+                }
 
                 pid = actual_steam_pid;
             }
