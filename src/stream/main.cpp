@@ -1,39 +1,56 @@
-// system/Qt includes
-#include <QCoreApplication>
+#include <QBuffer>
+#include <csignal>
+#include <iostream>
+#include <unistd.h>
 
-// local includes
-#include "shared/appmetadata.h"
-#include "shared/loggingcategories.h"
-#include "utils/heartbeat.h"
-#include "utils/logsettings.h"
-#include "utils/singleinstanceguard.h"
-#include "utils/unixsignalhandler.h"
+const size_t max_rss_memory = 500 * 1024 * 1024;
 
-//---------------------------------------------------------------------------------------------------------------------
-
-// NOLINTNEXTLINE(*-avoid-c-arrays)
-int main(int argc, char* argv[])
+size_t getCurrentRSS()
 {
-    const shared::AppMetadata app_meta{shared::AppMetadata::App::Stream};
-
-    utils::SingleInstanceGuard guard{app_meta.getAppName()};
-    if (!guard.tryToRun())
+    long  rss = 0L;
+    FILE* fp  = NULL;
+    if ((fp = fopen("/proc/self/statm", "r")) == NULL)
     {
-        return EXIT_SUCCESS;
+        return (size_t)0L;
     }
 
-    QCoreApplication app{argc, argv};
-    QCoreApplication::setApplicationName(app_meta.getAppName());
+    if (fscanf(fp, "%*s%ld", &rss) != 1)
+    {
+        fclose(fp);
+        return (size_t)0L;
+    }
 
-    utils::installSignalHandler();
-    utils::LogSettings::getInstance().init(app_meta.getLogPath());
-    qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
+    fclose(fp);
+    return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+}
 
-    utils::Heartbeat heartbeat{app_meta.getAppName()};
-    QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
-    heartbeat.startBeating();
+int main()
+{
+    QBuffer buffer;
 
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
-    qCInfo(lc::streamMain) << "startup finished.";
-    return QCoreApplication::exec();
+    size_t rss = getCurrentRSS();
+    std::cout << "Initial RSS size = " << rss << std::endl;
+    for (size_t i = 0; i < 2000000; ++i)
+    {
+        QTextStream out{&buffer};
+
+        rss = getCurrentRSS();
+        if (rss > max_rss_memory)
+        {
+            std::cout << "Current RSS size = " << rss << " exceeds 500 Mb, quit application";
+            break;
+        }
+    }
+
+    std::cout << "Current RSS size = " << rss << std::endl;
+    if (rss <= max_rss_memory)
+    {
+        std::cout << "Mem. leak" << std::endl;
+    }
+    else
+    {
+        std::cout << "No mem. leak" << std::endl;
+    }
+
+    return 0;
 }
