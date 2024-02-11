@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QtNetwork/QNetworkInterface>
 #include <limits>
 
 // local includes
@@ -41,6 +42,30 @@ QJsonObject requestToJsonObject(const QHttpServerRequest& request)
 {
     const auto json{requestToJson(request)};
     return json.isObject() ? json.object() : QJsonObject{};
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+QString getMacAddress(const QHostAddress& address)
+{
+    static const QSet<QNetworkInterface::InterfaceType> disallowed_types{QNetworkInterface::Unknown,
+                                                                         QNetworkInterface::Loopback};
+
+    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
+    {
+        if (!disallowed_types.contains(iface.type()))
+        {
+            for (const QHostAddress& address_entry : iface.allAddresses())
+            {
+                if (address_entry.isEqual(address))
+                {
+                    return iface.hardwareAddress();
+                }
+            }
+        }
+    }
+
+    return {};
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -223,6 +248,37 @@ void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void setupHostPcInfo(server::HttpServer& server)
+{
+    server.route("/hostPcInfo", QHttpServerRequest::Method::Get,
+                 [&server](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto mac{getMacAddress(request.localAddress())};
+                     if (mac.isEmpty())
+                     {
+                         qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
+                     }
+
+#if defined(Q_OS_WIN)
+                     const QString os_type{"Windows"};
+#elif defined(Q_OS_LINUX)
+                     const QString os_type{"Linux"};
+#else
+                     const QString os_type{"Other"};
+#endif
+
+                     return QHttpServerResponse{QJsonObject{{"mac", mac}, {"os", os_type}}};
+                 });
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control, bool force_big_picture)
 {
     server.route("/launchSteamApp", QHttpServerRequest::Method::Post,
@@ -371,6 +427,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupPairing(server, pairing_manager);
     routing_internal::setupPcState(server, pc_control, prefer_hibernation, close_steam_before_sleep);
     routing_internal::setupHostInfo(server, pc_control);
+    routing_internal::setupHostPcInfo(server);
     routing_internal::setupSteamControl(server, pc_control, force_big_picture);
     routing_internal::setupResolution(server, pc_control);
     routing_internal::setupStreamControl(server, pc_control);

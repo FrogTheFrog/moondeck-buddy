@@ -31,7 +31,7 @@ QString getProcessName(DWORD pid)
         DWORD                          bytes_written{MAX_PATH};
         std::array<char16_t, MAX_PATH> buffer{};
 
-        const BOOL result = QueryFullProcessImageNameW(proc_handle, NULL,
+        const BOOL result = QueryFullProcessImageNameW(proc_handle, 0,
                                                        // NOLINTNEXTLINE(*-reinterpret-cast)
                                                        reinterpret_cast<wchar_t*>(buffer.data()), &bytes_written);
         if (result == TRUE)

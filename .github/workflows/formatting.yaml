@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Clang-format check
         run: find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} +

@@ -70,7 +70,7 @@ QString NativeProcessHandler::getExecPath(uint pid) const
         DWORD                          data_written{MAX_PATH};
         std::array<char16_t, MAX_PATH> buffer{};
 
-        const BOOL result = QueryFullProcessImageNameW(proc_handle, NULL,
+        const BOOL result = QueryFullProcessImageNameW(proc_handle, 0,
                                                        // NOLINTNEXTLINE(*-reinterpret-cast)
                                                        reinterpret_cast<wchar_t*>(buffer.data()), &data_written);
         if (result == TRUE)
