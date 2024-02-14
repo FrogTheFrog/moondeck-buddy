@@ -250,6 +250,19 @@ void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 
 void setupHostPcInfo(server::HttpServer& server)
 {
+    static const QSet<QNetworkInterface::InterfaceType> disallowed_types{QNetworkInterface::Unknown,
+                                                                         QNetworkInterface::Loopback};
+
+    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
+    {
+        if (!disallowed_types.contains(iface.type()))
+        {
+            QString macAddress = iface.hardwareAddress();
+            qDebug() << "Interface Name:" << iface.name();
+            qDebug() << "MAC Address:" << macAddress;
+        }
+    }
+
     server.route("/hostPcInfo", QHttpServerRequest::Method::Get,
                  [&server](const QHttpServerRequest& request)
                  {
