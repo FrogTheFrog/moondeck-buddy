@@ -267,7 +267,8 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                      }
                      else
                      {
-                         static const QRegularExpression regex{"^(?:[0-9A-Fa-f]{2}:){5}(?:[0-9A-Fa-f]{2})$"};
+                         static const QRegularExpression regex{
+                             "^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$"};
                          if (!mac.contains(regex))
                          {
                              qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
