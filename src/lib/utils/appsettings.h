@@ -27,6 +27,7 @@ public:
     bool                     getCloseSteamBeforeSleep() const;
     const QString&           getRegistryFileOverride() const;
     const QString&           getSteamBinaryOverride() const;
+    const QString&           getMacAddressOverride() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -42,6 +43,7 @@ private:
     bool              m_close_steam_before_sleep;
     QString           m_registry_file_override;
     QString           m_steam_binary_override;
+    QString           m_mac_address_override;
 
 public:
     // TODO: remove
