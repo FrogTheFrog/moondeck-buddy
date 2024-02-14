@@ -142,6 +142,13 @@ const QString& AppSettings::getSteamBinaryOverride() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
+const QString& AppSettings::getMacAddressOverride() const
+{
+    return m_mac_address_override;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -173,6 +180,7 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto ssl_protocol_v             = obj_v.value(QLatin1String("ssl_protocol"));
             const auto force_big_picture_v        = obj_v.value(QLatin1String("force_big_picture"));
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
+            const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
 
             // TODO: remove
             const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
@@ -181,7 +189,7 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             // TODO: dec. once removed
             constexpr int current_entries
             {
-                9 +
+                10 +
 #if defined(Q_OS_LINUX)
                     2
 #else
@@ -268,6 +276,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+            if (mac_address_override_v.isString())
+            {
+                m_mac_address_override = mac_address_override_v.toString().trimmed();
+                valid_entries++;
+            }
+
 #if defined(Q_OS_LINUX)
             const auto registry_file_override_v = obj_v.value(QLatin1String("registry_file_override"));
             const auto steam_binary_override_v  = obj_v.value(QLatin1String("steam_binary_override"));
@@ -314,6 +328,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
     obj["force_big_picture"]        = m_force_big_picture;
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
+    obj["mac_address_override"]     = m_mac_address_override;
 #if defined(Q_OS_LINUX)
     obj["registry_file_override"] = m_registry_file_override;
     obj["steam_binary_override"]  = m_steam_binary_override;

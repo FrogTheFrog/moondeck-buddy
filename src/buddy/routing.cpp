@@ -48,12 +48,12 @@ QJsonObject requestToJsonObject(const QHttpServerRequest& request)
 
 QString getMacAddress(const QHostAddress& address)
 {
-    static const QSet<QNetworkInterface::InterfaceType> disallowed_types{QNetworkInterface::Unknown,
-                                                                         QNetworkInterface::Loopback};
+    static const QSet<QNetworkInterface::InterfaceType> allowed_types{QNetworkInterface::Ethernet,
+                                                                      QNetworkInterface::Wifi};
 
     for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
     {
-        if (!disallowed_types.contains(iface.type()))
+        if (allowed_types.contains(iface.type()) && (iface.flags() & QNetworkInterface::IsRunning))
         {
             for (const QHostAddress& address_entry : iface.allAddresses())
             {
@@ -248,21 +248,34 @@ void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void setupHostPcInfo(server::HttpServer& server)
+void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_override)
 {
     server.route("/hostPcInfo", QHttpServerRequest::Method::Get,
-                 [&server](const QHttpServerRequest& request)
+                 [&server, &mac_address_override](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const auto mac{getMacAddress(request.localAddress())};
+                     auto mac{mac_address_override.isEmpty() ? getMacAddress(request.localAddress())
+                                                             : mac_address_override};
                      if (mac.isEmpty())
                      {
                          qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
+                     }
+                     else
+                     {
+                         static const QRegularExpression regex{
+                             R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
+                         if (!mac.contains(regex))
+                         {
+                             qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
+                             return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
+                         }
+
+                         mac.replace('-', ':');
                      }
 
 #if defined(Q_OS_WIN)
@@ -421,13 +434,13 @@ void setupRouteLogging(server::HttpServer& server)
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
                  os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture,
-                 bool close_steam_before_sleep)
+                 bool close_steam_before_sleep, const QString& mac_address_override)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
     routing_internal::setupPcState(server, pc_control, prefer_hibernation, close_steam_before_sleep);
     routing_internal::setupHostInfo(server, pc_control);
-    routing_internal::setupHostPcInfo(server);
+    routing_internal::setupHostPcInfo(server, mac_address_override);
     routing_internal::setupSteamControl(server, pc_control, force_big_picture);
     routing_internal::setupResolution(server, pc_control);
     routing_internal::setupStreamControl(server, pc_control);

@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
 
     // HERE WE GO!!! (a.k.a. starting point)
     setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getPreferHibernation(),
-                app_settings.getForceBigPicture(), app_settings.getCloseSteamBeforeSleep());
+                app_settings.getForceBigPicture(), app_settings.getCloseSteamBeforeSleep(),
+                app_settings.getMacAddressOverride());
 
     client_ids.load();
     if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",
