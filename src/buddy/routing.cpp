@@ -258,8 +258,8 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const auto mac{mac_address_override.isEmpty() ? getMacAddress(request.localAddress())
-                                                                   : mac_address_override};
+                     auto mac{mac_address_override.isEmpty() ? getMacAddress(request.localAddress())
+                                                             : mac_address_override};
                      if (mac.isEmpty())
                      {
                          qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
@@ -268,12 +268,14 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                      else
                      {
                          static const QRegularExpression regex{
-                             "^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$"};
+                             R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
                          if (!mac.contains(regex))
                          {
                              qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
                              return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
                          }
+
+                         mac.replace('-', ':');
                      }
 
 #if defined(Q_OS_WIN)
