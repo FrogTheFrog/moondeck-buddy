@@ -10,6 +10,7 @@ The main goal is to have reliable information about Steam state:
 Additionally, it allows to:
  * launch a Steam game;
  * close the Steam process;
+ * Turn on PC by sending a Wake-on-LAN magic packet.
  * shutdown, restart or suspend the PC.
 
 ## How to install it?
