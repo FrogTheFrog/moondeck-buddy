@@ -25,7 +25,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
-          version: "6.5.*"
+          version: "6.7.*"
       
       - name: Configure
         run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
@@ -68,7 +68,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           modules: "qtwebsockets qthttpserver"
-          version: "6.5.*"
+          version: "6.7.*"
 
       - name: Configure
         run: mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
