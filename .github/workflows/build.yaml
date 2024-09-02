@@ -24,8 +24,12 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          modules: "qtwebsockets qthttpserver"
-          version: "6.7.*"
+          aqtversion: '==3.1.*'
+          version: '6.7.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qthttpserver qtwebsockets'
       
       - name: Configure
         run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
@@ -67,8 +71,12 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          modules: "qtwebsockets qthttpserver"
-          version: "6.7.*"
+          aqtversion: '==3.1.*'
+          version: '6.7.2'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+          modules: 'qthttpserver qtwebsockets'
 
       - name: Configure
         run: mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
