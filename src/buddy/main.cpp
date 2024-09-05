@@ -59,8 +59,7 @@ int main(int argc, char* argv[])
     QObject::connect(&tray, &os::SystemTray::signalQuitApp, &app, &QApplication::quit);
 
     // Tray + pc control
-    QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, &tray,
-                     &os::SystemTray::slotShowTrayMessage);
+    QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, &tray, &os::SystemTray::slotShowTrayMessage);
 
     // Pairing manager + pairing input
     QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing, &pairing_input,

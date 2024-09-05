@@ -13,7 +13,7 @@ class NativeResolutionHandler : public NativeResolutionHandlerInterface
     Q_DISABLE_COPY(NativeResolutionHandler)
 
 public:
-    explicit NativeResolutionHandler() = default;
+    explicit NativeResolutionHandler()  = default;
     ~NativeResolutionHandler() override = default;
 
     ChangedResMap changeResolution(const DisplayPredicate& predicate) override;

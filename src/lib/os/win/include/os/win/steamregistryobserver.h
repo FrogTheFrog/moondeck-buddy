@@ -1,8 +1,8 @@
 #pragma once
 
 // local includes
-#include "os/shared/trackedappdata.h"
 #include "os/shared/steamregistryobserverinterface.h"
+#include "os/shared/trackedappdata.h"
 #include "os/win/regkey.h"
 
 //---------------------------------------------------------------------------------------------------------------------

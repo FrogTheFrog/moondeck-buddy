@@ -7,8 +7,8 @@
 #endif
 
 // local includes
-#include "shared/loggingcategories.h"
 #include "os/pccontrol.h"
+#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

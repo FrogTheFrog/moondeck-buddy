@@ -45,8 +45,8 @@ private:
     QTimer m_tray_attach_retry_timer;
     uint   m_retry_counter{0};
 
-    const QIcon&   m_icon;
-    QString        m_app_name;
-    PcControl& m_pc_control;
+    const QIcon& m_icon;
+    QString      m_app_name;
+    PcControl&   m_pc_control;
 };
 }  // namespace os
