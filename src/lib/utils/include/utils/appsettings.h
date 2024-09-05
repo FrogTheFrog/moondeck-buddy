@@ -44,9 +44,5 @@ private:
     QString           m_registry_file_override;
     QString           m_steam_binary_override;
     QString           m_mac_address_override;
-
-public:
-    // TODO: remove
-    bool m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 };
 }  // namespace utils

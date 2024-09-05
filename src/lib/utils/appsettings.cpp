@@ -57,7 +57,6 @@ AppSettings::AppSettings(const QString& filepath)
     , m_ssl_protocol{QSsl::SecureProtocols}
     , m_force_big_picture{true}
     , m_close_steam_before_sleep{true}
-    , m_nvidia_reset_mouse_acceleration_after_stream_end_hack{false}
 {
     if (!parseSettingsFile(filepath))
     {
@@ -182,14 +181,9 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
 
-            // TODO: remove
-            const auto nvidia_reset_mouse_acceleration_after_stream_end_hack_v =
-                obj_v.value(QLatin1String("nvidia_reset_mouse_acceleration_after_stream_end_hack"));
-
-            // TODO: dec. once removed
             constexpr int current_entries
             {
-                10 +
+                9 +
 #if defined(Q_OS_LINUX)
                     2
 #else
@@ -299,13 +293,6 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             }
 #endif
 
-            if (nvidia_reset_mouse_acceleration_after_stream_end_hack_v.isBool())
-            {
-                m_nvidia_reset_mouse_acceleration_after_stream_end_hack =
-                    nvidia_reset_mouse_acceleration_after_stream_end_hack_v.toBool();
-                valid_entries++;
-            }
-
             return valid_entries == current_entries;
         }
     }
@@ -333,8 +320,6 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["registry_file_override"] = m_registry_file_override;
     obj["steam_binary_override"]  = m_steam_binary_override;
 #endif
-    obj["nvidia_reset_mouse_acceleration_after_stream_end_hack"] =
-        m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
 
     QFile file{filepath};
     if (!file.exists())

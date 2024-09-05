@@ -19,11 +19,6 @@
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
 
-// TODO: remove hack
-#if defined(Q_OS_WIN)
-    #include "os/win/streamstatehandler.h"
-#endif
-
 //---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)
@@ -88,11 +83,6 @@ int main(int argc, char* argv[])
     {
         qFatal("Failed to start server!");
     }
-
-// TODO: remove once Nvidia kills GameStream
-#if defined(Q_OS_WIN)
-    getMouseAccelResetHack() = app_settings.m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
-#endif
 
     QGuiApplication::setQuitOnLastWindowClosed(false);
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
