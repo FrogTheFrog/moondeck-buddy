@@ -12,38 +12,16 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
+# Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-set(HEADERS
-    appsettings.h
-    heartbeat.h
-    jsonvalueconverter.h
-    logsettings.h
-    pairinginput.h
-    systemtray.h
-    singleinstanceguard.h
-    unixsignalhandler.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    appsettings.cpp
-    heartbeat.cpp
-    logsettings.cpp
-    pairinginput.cpp
-    systemtray.cpp
-    singleinstanceguard.cpp
-    unixsignalhandler.cpp
-    )
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/utils/*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets oslib sharedlib)
-target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets sharedlib)
+target_include_directories(${LIBNAME} PUBLIC include)

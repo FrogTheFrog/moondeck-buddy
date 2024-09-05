@@ -1,8 +1,5 @@
 // header file include
-#include "cursorhandler.h"
-
-// local includes
-#include "shared/loggingcategories.h"
+#include "os/linux/cursorhandler.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

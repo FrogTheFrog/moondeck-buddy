@@ -1,5 +1,5 @@
 // header file include
-#include "autostarthandler.h"
+#include "os/linux/autostarthandler.h"
 
 // system/Qt includes
 #include <QDir>

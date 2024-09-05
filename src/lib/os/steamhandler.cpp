@@ -1,11 +1,12 @@
 // header file include
-#include "steamhandler.h"
+#include "os/steamhandler.h"
 
 // system/Qt includes
 #include <QProcess>
 #include <QThread>
 
 // local includes
+#include "os/shared/steamregistryobserverinterface.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -43,6 +44,10 @@ SteamHandler::SteamHandler(std::unique_ptr<ProcessHandler>                 proce
 
     m_steam_close_timer.setSingleShot(true);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+SteamHandler::~SteamHandler() = default;
 
 //---------------------------------------------------------------------------------------------------------------------
 

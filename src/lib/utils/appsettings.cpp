@@ -1,5 +1,5 @@
 // header file include
-#include "appsettings.h"
+#include "utils/appsettings.h"
 
 // system/Qt includes
 #include <QDir>

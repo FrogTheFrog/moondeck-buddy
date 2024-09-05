@@ -1,5 +1,5 @@
 // header file include
-#include "sunshineapps.h"
+#include "os/sunshineapps.h"
 
 // system/Qt includes
 #include <QDir>

@@ -2,7 +2,7 @@
 # Project config
 #----------------------------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 project(MoonDeckBuddy 
         VERSION 1.6.1
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."

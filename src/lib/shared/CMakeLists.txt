@@ -12,23 +12,11 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
+# Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-set(HEADERS
-    appmetadata.h
-    enums.h
-    loggingcategories.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    appmetadata.cpp
-    loggingcategories.cpp
-    )
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/shared/*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
@@ -36,4 +24,4 @@ set(SOURCES
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${LIBNAME} PRIVATE Qt6::Core)
-target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_include_directories(${LIBNAME} PUBLIC include)

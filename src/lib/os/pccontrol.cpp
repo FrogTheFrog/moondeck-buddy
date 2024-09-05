@@ -1,30 +1,30 @@
 // header file include
-#include "pccontrol.h"
+#include "os/pccontrol.h"
 
 // os-specific includes
 #if defined(Q_OS_WIN)
-    #include "win/autostarthandler.h"
-    #include "win/cursorhandler.h"
-    #include "win/nativepcstatehandler.h"
-    #include "win/nativeprocesshandler.h"
-    #include "win/nativeresolutionhandler.h"
-    #include "win/steamregistryobserver.h"
-    #include "win/streamstatehandler.h"
+    #include "os/win/autostarthandler.h"
+    #include "os/win/cursorhandler.h"
+    #include "os/win/nativepcstatehandler.h"
+    #include "os/win/nativeprocesshandler.h"
+    #include "os/win/nativeresolutionhandler.h"
+    #include "os/win/steamregistryobserver.h"
+    #include "os/win/streamstatehandler.h"
 #elif defined(Q_OS_LINUX)
-    #include "linux/autostarthandler.h"
-    #include "linux/cursorhandler.h"
-    #include "linux/nativepcstatehandler.h"
-    #include "linux/nativeprocesshandler.h"
-    #include "linux/nativeresolutionhandler.h"
-    #include "linux/steamregistryobserver.h"
-    #include "shared/streamstatehandler.h"
+    #include "os/linux/autostarthandler.h"
+    #include "os/linux/cursorhandler.h"
+    #include "os/linux/nativepcstatehandler.h"
+    #include "os/linux/nativeprocesshandler.h"
+    #include "os/linux/nativeresolutionhandler.h"
+    #include "os/linux/steamregistryobserver.h"
+    #include "os/streamstatehandler.h"
 #else
     #error OS is not supported!
 #endif
 
 // local includes
-#include "pcstatehandler.h"
-#include "processhandler.h"
+#include "os/pcstatehandler.h"
+#include "os/processhandler.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 

@@ -1,8 +1,8 @@
 // header file include
-#include "pairingmanager.h"
+#include "server/pairingmanager.h"
 
 // local includes
-#include "clientids.h"
+#include "server/clientids.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------

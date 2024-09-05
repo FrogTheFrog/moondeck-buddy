@@ -17,7 +17,7 @@ if(WIN32)
 endif()
 
 add_executable(${EXEC_NAME} main.cpp ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core utilslib)
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core utilslib sharedlib)
 target_compile_definitions(${EXEC_NAME} PRIVATE EXEC_VERSION="${PROJECT_VERSION}")
 
 if(NOT DEBUG_MODE)

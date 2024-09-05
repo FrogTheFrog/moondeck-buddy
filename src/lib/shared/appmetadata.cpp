@@ -1,5 +1,5 @@
 // header file include
-#include "appmetadata.h"
+#include "shared/appmetadata.h"
 
 // system/Qt includes
 #include <QCoreApplication>
@@ -8,7 +8,7 @@
 #include <QTimer>
 
 // local includes
-#include "loggingcategories.h"
+#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 
