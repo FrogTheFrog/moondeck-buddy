@@ -27,5 +27,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf ossharedlib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC include)
