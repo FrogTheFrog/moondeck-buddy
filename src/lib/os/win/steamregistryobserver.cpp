@@ -1,5 +1,5 @@
 // header file include
-#include "steamregistryobserver.h"
+#include "os/win/steamregistryobserver.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

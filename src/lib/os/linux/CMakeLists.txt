@@ -14,43 +14,16 @@ find_library(PROCPS_LIBRARY NAMES proc procps REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
+# Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-set(HEADERS
-    autostarthandler.h
-    cursorhandler.h
-    nativepcstatehandler.h
-    nativeprocesshandler.h
-    nativeresolutionhandler.h
-    registryfileparser.h
-    registryfilewatcher.h
-    steamprocesslistobserver.h
-    steamregistryobserver.h
-    x11resolutionhandler.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    autostarthandler.cpp
-    cursorhandler.cpp
-    nativepcstatehandler.cpp
-    nativeprocesshandler.cpp
-    nativeresolutionhandler.cpp
-    registryfileparser.cpp
-    registryfilewatcher.cpp
-    steamprocesslistobserver.cpp
-    steamregistryobserver.cpp
-    x11resolutionhandler.cpp
-    )
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/linux/*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
-add_library(${LIBNAME} ${HEADERS} ${SOURCES} ${WAYLAND_SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus X11::X11 X11::Xrandr ${PROCPS_LIBRARY} sharedlib)
-target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+add_library(${LIBNAME} ${HEADERS} ${SOURCES})
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus X11::X11 X11::Xrandr ${PROCPS_LIBRARY} ossharedlib sharedlib)
+target_include_directories(${LIBNAME} PUBLIC include)

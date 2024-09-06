@@ -1,5 +1,5 @@
 // header file include
-#include "nativeresolutionhandler.h"
+#include "os/linux/nativeresolutionhandler.h"
 
 // local includes
 #include "shared/loggingcategories.h"

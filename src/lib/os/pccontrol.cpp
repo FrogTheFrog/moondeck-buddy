@@ -1,30 +1,27 @@
 // header file include
-#include "pccontrol.h"
+#include "os/pccontrol.h"
 
 // os-specific includes
 #if defined(Q_OS_WIN)
-    #include "win/autostarthandler.h"
-    #include "win/cursorhandler.h"
-    #include "win/nativepcstatehandler.h"
-    #include "win/nativeprocesshandler.h"
-    #include "win/nativeresolutionhandler.h"
-    #include "win/steamregistryobserver.h"
-    #include "win/streamstatehandler.h"
+    #include "os/win/autostarthandler.h"
+    #include "os/win/nativepcstatehandler.h"
+    #include "os/win/nativeprocesshandler.h"
+    #include "os/win/nativeresolutionhandler.h"
+    #include "os/win/steamregistryobserver.h"
 #elif defined(Q_OS_LINUX)
-    #include "linux/autostarthandler.h"
-    #include "linux/cursorhandler.h"
-    #include "linux/nativepcstatehandler.h"
-    #include "linux/nativeprocesshandler.h"
-    #include "linux/nativeresolutionhandler.h"
-    #include "linux/steamregistryobserver.h"
-    #include "shared/streamstatehandler.h"
+    #include "os/linux/autostarthandler.h"
+    #include "os/linux/nativepcstatehandler.h"
+    #include "os/linux/nativeprocesshandler.h"
+    #include "os/linux/nativeresolutionhandler.h"
+    #include "os/linux/steamregistryobserver.h"
 #else
     #error OS is not supported!
 #endif
 
 // local includes
-#include "pcstatehandler.h"
-#include "processhandler.h"
+#include "os/pcstatehandler.h"
+#include "os/processhandler.h"
+#include "os/streamstatehandler.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 
@@ -43,7 +40,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
                      QString registry_file_override, QString steam_binary_override)
     : m_app_meta{app_meta}
     , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
-    , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
     , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
@@ -53,7 +49,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
           std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {
     Q_ASSERT(m_auto_start_handler != nullptr);
-    Q_ASSERT(m_cursor_handler != nullptr);
     Q_ASSERT(m_stream_state_handler != nullptr);
 
     connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
@@ -71,13 +66,6 @@ PcControl::~PcControl() = default;
 
 bool PcControl::launchSteamApp(uint app_id, bool force_big_picture)
 {
-    const bool should_probably_hide_cursor{!m_steam_handler.isRunningNow() || getRunningApp() == 0};
-    if (should_probably_hide_cursor)
-    {
-        qCDebug(lc::os) << "Trying to hide cursor.";
-        m_cursor_handler->hideCursor();
-    }
-
     return m_steam_handler.launchApp(app_id, force_big_picture);
 }
 

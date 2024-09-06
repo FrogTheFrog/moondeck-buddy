@@ -1,10 +1,11 @@
 // header file include
-#include "resolutionhandler.h"
+#include "os/resolutionhandler.h"
 
 // system/Qt includes
 #include <algorithm>
 
 // local includes
+#include "os/shared/nativeresolutionhandlerinterface.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------

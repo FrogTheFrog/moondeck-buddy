@@ -1,9 +1,8 @@
 // header file include
-#include "registryfileparser.h"
+#include "os/linux/registryfileparser.h"
 
 // system/Qt includes
 #include <QFile>
-#include <QStringBuilder>
 
 // local includes
 #include "shared/loggingcategories.h"

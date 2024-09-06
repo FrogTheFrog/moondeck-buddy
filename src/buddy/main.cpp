@@ -6,6 +6,7 @@
 // local includes
 #include "os/pccontrol.h"
 #include "os/sunshineapps.h"
+#include "os/systemtray.h"
 #include "routing.h"
 #include "server/clientids.h"
 #include "server/httpserver.h"
@@ -16,13 +17,7 @@
 #include "utils/logsettings.h"
 #include "utils/pairinginput.h"
 #include "utils/singleinstanceguard.h"
-#include "utils/systemtray.h"
 #include "utils/unixsignalhandler.h"
-
-// TODO: remove hack
-#if defined(Q_OS_WIN)
-    #include "os/win/streamstatehandler.h"
-#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -57,15 +52,14 @@ int main(int argc, char* argv[])
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     const QIcon               icon{":/icons/app.ico"};
-    const utils::SystemTray   tray{icon, app_meta.getAppName(), pc_control};
+    const os::SystemTray      tray{icon, app_meta.getAppName(), pc_control};
     const utils::PairingInput pairing_input;
 
     // Tray + app
-    QObject::connect(&tray, &utils::SystemTray::signalQuitApp, &app, &QApplication::quit);
+    QObject::connect(&tray, &os::SystemTray::signalQuitApp, &app, &QApplication::quit);
 
     // Tray + pc control
-    QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, &tray,
-                     &utils::SystemTray::slotShowTrayMessage);
+    QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, &tray, &os::SystemTray::slotShowTrayMessage);
 
     // Pairing manager + pairing input
     QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing, &pairing_input,
@@ -88,11 +82,6 @@ int main(int argc, char* argv[])
     {
         qFatal("Failed to start server!");
     }
-
-// TODO: remove once Nvidia kills GameStream
-#if defined(Q_OS_WIN)
-    getMouseAccelResetHack() = app_settings.m_nvidia_reset_mouse_acceleration_after_stream_end_hack;
-#endif
 
     QGuiApplication::setQuitOnLastWindowClosed(false);
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });

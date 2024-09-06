@@ -4,7 +4,6 @@
 // system/Qt includes
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QJsonObject>
 #include <QtNetwork/QNetworkInterface>
 #include <limits>
 

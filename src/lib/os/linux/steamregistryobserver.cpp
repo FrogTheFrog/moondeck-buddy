@@ -1,5 +1,5 @@
 // header file include
-#include "steamregistryobserver.h"
+#include "os/linux/steamregistryobserver.h"
 
 // system/Qt includes
 #include <QDir>

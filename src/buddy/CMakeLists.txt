@@ -6,22 +6,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(HEADERS
-    routing.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    routing.cpp
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -32,8 +16,8 @@ if(WIN32)
     list(APPEND RESOURCES "${BUDDY_RESOURCES}/windows/resources.rc")
 endif()
 
-add_executable(${EXEC_NAME} main.cpp ${HEADERS} ${SOURCES} ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets utilslib serverlib oslib)
+add_executable(${EXEC_NAME} main.cpp routing.h routing.cpp ${RESOURCES})
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets utilslib serverlib oslib sharedlib)
 target_compile_definitions(${EXEC_NAME} PRIVATE EXEC_VERSION="${PROJECT_VERSION}")
 
 if(NOT DEBUG_MODE)

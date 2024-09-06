@@ -1,12 +1,12 @@
 // header file include
-#include "httpserver.h"
+#include "server/httpserver.h"
 
 // system/Qt includes
 #include <QFile>
 #include <QSslKey>
 
 // local includes
-#include "clientids.h"
+#include "server/clientids.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 // header file include
-#include "nativeresolutionhandler.h"
+#include "os/win/nativeresolutionhandler.h"
 
 // A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
 #include <windows.h>

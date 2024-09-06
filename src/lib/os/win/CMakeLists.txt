@@ -16,43 +16,16 @@ find_library(POWRPROF PowrProf REQUIRED)
 add_compile_definitions(PSAPI_VERSION=1)
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
+# Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-set(HEADERS
-    autostarthandler.h
-    cursorhandler.h
-    nativepcstatehandler.h
-    nativeprocesshandler.h
-    nativeresolutionhandler.h
-    regkey.h
-    processtracker.h
-    processenumerator.h
-    steamregistryobserver.h
-    streamstatehandler.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    autostarthandler.cpp
-    cursorhandler.cpp
-    nativepcstatehandler.cpp
-    nativeprocesshandler.cpp
-    nativeresolutionhandler.cpp
-    regkey.cpp
-    processtracker.cpp
-    processenumerator.cpp
-    steamregistryobserver.cpp
-    streamstatehandler.cpp
-    )
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/win/*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf sharedlib)
-target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf ossharedlib sharedlib)
+target_include_directories(${LIBNAME} PUBLIC include)

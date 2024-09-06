@@ -1,5 +1,5 @@
 // header file include
-#include "registryfilewatcher.h"
+#include "os/linux/registryfilewatcher.h"
 
 // system/Qt includes
 #include <QFile>

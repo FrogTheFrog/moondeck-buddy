@@ -1,5 +1,5 @@
 // header file include
-#include "singleinstanceguard.h"
+#include "utils/singleinstanceguard.h"
 
 // system/Qt includes
 #include <QCryptographicHash>

@@ -1,5 +1,5 @@
 // header file include
-#include "loggingcategories.h"
+#include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

@@ -26,42 +26,16 @@ ELSE()
 ENDIF()
 
 #----------------------------------------------------------------------------------------------------------------------
-# Header files
+# Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-set(HEADERS
-    autostarthandlerinterface.h
-    cursorhandlerinterface.h
-    nativepcstatehandlerinterface.h
-    nativeprocesshandlerinterface.h
-    nativeresolutionhandlerinterface.h
-    pccontrol.h
-    pcstatehandler.h
-    processhandler.h
-    resolutionhandler.h
-    steamhandler.h
-    steamregistryobserverinterface.h
-    streamstatehandlerinterface.h
-    sunshineapps.h
-    )
-
-#----------------------------------------------------------------------------------------------------------------------
-# Source files
-#----------------------------------------------------------------------------------------------------------------------
-
-set(SOURCES
-    pccontrol.cpp
-    pcstatehandler.cpp
-    processhandler.cpp
-    resolutionhandler.cpp
-    steamhandler.cpp
-    sunshineapps.cpp
-    )
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
 # Target config
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib ossharedlib sharedlib)
-target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib sharedlib utilslib PUBLIC ossharedlib)
+target_include_directories(${LIBNAME} PUBLIC include)

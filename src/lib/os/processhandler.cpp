@@ -1,11 +1,11 @@
 // header file include
-#include "processhandler.h"
+#include "os/processhandler.h"
 
 // local includes
 #include "shared/loggingcategories.h"
 
 // local includes
-#include "nativeprocesshandlerinterface.h"
+#include "os/shared/nativeprocesshandlerinterface.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 

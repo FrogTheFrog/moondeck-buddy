@@ -1,10 +1,11 @@
 // header file include
-#include "pcstatehandler.h"
+#include "os/pcstatehandler.h"
 
 // system/Qt includes
 #include <QTimer>
 
 // local includes
+#include "os/shared/nativepcstatehandlerinterface.h"
 #include "shared/loggingcategories.h"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -30,6 +31,10 @@ PcStateHandler::PcStateHandler(std::unique_ptr<NativePcStateHandlerInterface> na
 {
     Q_ASSERT(m_native_handler != nullptr);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+PcStateHandler::~PcStateHandler() = default;
 
 //---------------------------------------------------------------------------------------------------------------------
 

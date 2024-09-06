@@ -1,10 +1,9 @@
 // header file include
-#include "logsettings.h"
+#include "utils/logsettings.h"
 
 // system/Qt includes
 #include <QDateTime>
 #include <QFile>
-#include <QLoggingCategory>
 
 // local includes
 #include "shared/loggingcategories.h"
