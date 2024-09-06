@@ -4,14 +4,12 @@
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "os/win/autostarthandler.h"
-    #include "os/win/cursorhandler.h"
     #include "os/win/nativepcstatehandler.h"
     #include "os/win/nativeprocesshandler.h"
     #include "os/win/nativeresolutionhandler.h"
     #include "os/win/steamregistryobserver.h"
 #elif defined(Q_OS_LINUX)
     #include "os/linux/autostarthandler.h"
-    #include "os/linux/cursorhandler.h"
     #include "os/linux/nativepcstatehandler.h"
     #include "os/linux/nativeprocesshandler.h"
     #include "os/linux/nativeresolutionhandler.h"
@@ -42,7 +40,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
                      QString registry_file_override, QString steam_binary_override)
     : m_app_meta{app_meta}
     , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
-    , m_cursor_handler{std::make_unique<CursorHandler>()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
     , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
@@ -52,7 +49,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
           std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {
     Q_ASSERT(m_auto_start_handler != nullptr);
-    Q_ASSERT(m_cursor_handler != nullptr);
     Q_ASSERT(m_stream_state_handler != nullptr);
 
     connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
@@ -70,13 +66,6 @@ PcControl::~PcControl() = default;
 
 bool PcControl::launchSteamApp(uint app_id, bool force_big_picture)
 {
-    const bool should_probably_hide_cursor{!m_steam_handler.isRunningNow() || getRunningApp() == 0};
-    if (should_probably_hide_cursor)
-    {
-        qCDebug(lc::os) << "Trying to hide cursor.";
-        m_cursor_handler->hideCursor();
-    }
-
     return m_steam_handler.launchApp(app_id, force_big_picture);
 }
 

@@ -17,7 +17,6 @@ class AppMetadata;
 namespace os
 {
 class AutoStartHandlerInterface;
-class CursorHandlerInterface;
 class StreamStateHandlerInterface;
 }  // namespace os
 
@@ -70,7 +69,6 @@ private slots:
 private:
     const shared::AppMetadata&                   m_app_meta;
     std::unique_ptr<AutoStartHandlerInterface>   m_auto_start_handler;
-    std::unique_ptr<CursorHandlerInterface>      m_cursor_handler;
     PcStateHandler                               m_pc_state_handler;
     ResolutionHandler                            m_resolution_handler;
     SteamHandler                                 m_steam_handler;
