@@ -2,7 +2,7 @@
 # Project config
 #----------------------------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.27)
 project(MoonDeckBuddy 
         VERSION 1.6.1
         DESCRIPTION "A server-side buddy app to help control the PC and Steam from SteamDeck via the MoonDeck plugin."
@@ -57,20 +57,19 @@ endif()
 #----------------------------------------------------------------------------------------------------------------------
 
 IF (WIN32)
-    set(CPACK_GENERATOR "7Z;NSIS")
-    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
-    set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+    # General options
     set(CPACK_PACKAGE_VENDOR "MoonDeck")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY ${PROJECT_NAME})
     set(CPACK_PACKAGE_EXECUTABLES "${EXEC_NAME_BUDDY};${EXEC_NAME_BUDDY}")
-    set(CPACK_OUTPUT_FILE_PREFIX "../dist")
-    set(CPACK_NSIS_IGNORE_LICENSE_PAGE ON)
-    set(CPACK_NSIS_DISPLAY_NAME ${PROJECT_NAME})
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
-    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\app.ico")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${EXEC_NAME_BUDDY}.exe")
-    set(CPACK_NSIS_INSTALL_ROOT "\$LocalAppData\\\\Programs")
-    set(CPACK_NSIS_DEFINES "RequestExecutionLevel user")
+    set(CPACK_GENERATOR "7Z;INNOSETUP")
+
+    # INNOSETUP specific options
+    set(CPACK_INNOSETUP_IGNORE_LICENSE_PAGE ON)
+    set(CPACK_INNOSETUP_USE_MODERN_WIZARD ON)
+    set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest")
+    set(CPACK_INNOSETUP_SETUP_SetupIconFile "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app.ico")
+    set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}/bin/${EXEC_NAME_BUDDY}.exe")
+    set(CPACK_INNOSETUP_CODE_FILES "${BUDDY_RESOURCES}/windows/innocode.pas")
 ELSEIF(NOT UNIX)
     message(FATAL_ERROR "OS is not supported!")
 ENDIF()

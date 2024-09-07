@@ -13,7 +13,13 @@ set(EXEC_NAME ${EXEC_NAME_BUDDY})
 set(RESOURCES "${BUDDY_RESOURCES}/resources.qrc")
 
 if(WIN32)
+    configure_file(
+            "${BUDDY_RESOURCES}/windows/version.rc.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/version.rc"
+            @ONLY)
+
     list(APPEND RESOURCES "${BUDDY_RESOURCES}/windows/resources.rc")
+    list(APPEND RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
 endif()
 
 add_executable(${EXEC_NAME} main.cpp routing.h routing.cpp ${RESOURCES})
