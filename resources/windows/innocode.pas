@@ -32,3 +32,18 @@ begin
     end;
   end;
 end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then begin
+    // Files to always delete:
+    DeleteFile(ExpandConstant('{app}\bin\moondeckbuddy.log'));
+    DeleteFile(ExpandConstant('{app}\bin\moondeckstream.log'));
+
+    if MsgBox('Do you want to delete configuration files?', mbConfirmation, MB_YESNO) = IDYES
+    then begin
+      DeleteFile(ExpandConstant('{app}\bin\clients.json'));
+      DeleteFile(ExpandConstant('{app}\bin\settings.json'));
+    end;
+  end;
+end;
