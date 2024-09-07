@@ -14,6 +14,6 @@ class NativeSleepInhibitor : public NativeSleepInhibitorInterface
 {
 public:
     explicit NativeSleepInhibitor(const QString& /* app_name */) = default;
-    ~NativeSleepInhibitor() override = default;
+    ~NativeSleepInhibitor() override                             = default;
 };
 }  // namespace os

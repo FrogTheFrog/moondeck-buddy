@@ -1,8 +1,8 @@
 #pragma once
 
 // system/Qt includes
-#include <memory>
 #include <QString>
+#include <memory>
 
 // forward declarations
 namespace os
