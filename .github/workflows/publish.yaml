@@ -33,10 +33,9 @@ jobs:
           echo "Aready exists: ${{ steps.tagstatus.outputs.TAG_EXISTS }}"
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         if: steps.tagstatus.outputs.TAG_EXISTS == 0
         with:
-          name: dist
           path: dist
 
       - name: Tag release
