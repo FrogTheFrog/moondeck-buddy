@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 
 // local includes
+#include "os/sleepinhibitor.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 #include "utils/heartbeat.h"
@@ -29,7 +30,8 @@ int main(int argc, char* argv[])
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
 
-    utils::Heartbeat heartbeat{app_meta.getAppName()};
+    os::SleepInhibitor sleep_inhibitor{app_meta.getAppName()};
+    utils::Heartbeat   heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
