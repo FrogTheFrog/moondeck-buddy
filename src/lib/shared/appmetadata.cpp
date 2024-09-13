@@ -10,8 +10,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 #if defined(Q_OS_LINUX)
@@ -30,8 +28,6 @@ QString getConfigDir()
     return QDir::cleanPath(QDir::homePath() + "/.config");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString getAppFilePath()
 {
     const auto app_image_env = qgetenv("APPIMAGE");
@@ -44,8 +40,6 @@ QString getAppFilePath()
 }
 #endif
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace shared
 {
@@ -69,14 +63,10 @@ AppMetadata::AppMetadata(App app)
                        });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getAppName() const
 {
     return getAppName(m_current_app);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAppName(App app) const
@@ -93,8 +83,6 @@ QString AppMetadata::getAppName(App app) const
     return {};
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getLogDir() const
 {
@@ -108,21 +96,15 @@ QString AppMetadata::getLogDir() const
 #endif
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getLogName() const
 {
     return getAppName().toLower() + QStringLiteral(".log");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getLogPath() const
 {
     return QDir::cleanPath(getLogDir() + "/" + getLogName());
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getSettingsDir() const
@@ -137,22 +119,16 @@ QString AppMetadata::getSettingsDir() const
 #endif
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getSettingsName() const
 {
     return QStringLiteral("settings.json");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getSettingsPath() const
 {
     return QDir::cleanPath(getSettingsDir() + "/" + getSettingsName());
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAutoStartDir() const
@@ -167,8 +143,6 @@ QString AppMetadata::getAutoStartDir() const
 #endif
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getAutoStartName() const
 {
 #if defined(Q_OS_WIN)
@@ -180,14 +154,10 @@ QString AppMetadata::getAutoStartName() const
 #endif
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString AppMetadata::getAutoStartPath() const
 {
     return QDir::cleanPath(getAutoStartDir() + "/" + getAutoStartName());
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAutoStartExec() const

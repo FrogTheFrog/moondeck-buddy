@@ -5,8 +5,6 @@
 #include <QCoreApplication>
 #include <csignal>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 void handler(int code)
@@ -15,8 +13,6 @@ void handler(int code)
     QCoreApplication::quit();
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace utils
 {

@@ -6,8 +6,6 @@
 // local includes
 #include "os/shared/nativepcstatehandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativePcStateHandler

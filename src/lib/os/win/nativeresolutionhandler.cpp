@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 // NOLINTNEXTLINE(*-cognitive-complexity)

@@ -9,15 +9,11 @@
 #include "os/shared/steamregistryobserverinterface.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const QRegularExpression STEAM_EXEC_PATTERN{R"([\\\/]steam(?:\.exe$|$))", QRegularExpression::CaseInsensitiveOption};
 const int                MS_TO_SEC{1000};
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -45,25 +41,17 @@ SteamHandler::SteamHandler(std::unique_ptr<ProcessHandler>                 proce
     m_steam_close_timer.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 SteamHandler::~SteamHandler() = default;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool SteamHandler::isRunning() const
 {
     return m_process_handler->isRunning();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool SteamHandler::isRunningNow()
 {
     return m_process_handler->isRunningNow();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 {
@@ -101,8 +89,6 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
 bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
@@ -167,16 +153,12 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 uint SteamHandler::getRunningApp() const
 {
     return m_process_handler->isRunning()
                ? m_tracked_app && m_tracked_app->m_is_running ? m_tracked_app->m_app_id : m_global_app_id
                : 0;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::optional<uint> SteamHandler::getTrackedActiveApp() const
 {
@@ -186,16 +168,12 @@ std::optional<uint> SteamHandler::getTrackedActiveApp() const
                : std::nullopt;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
 {
     return m_process_handler->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
                ? std::make_optional(m_tracked_app->m_app_id)
                : std::nullopt;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamHandler::clearTrackedApp()
 {
@@ -205,8 +183,6 @@ void SteamHandler::clearTrackedApp()
         m_tracked_app = std::nullopt;
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamHandler::slotSteamProcessDied()
 {
@@ -229,15 +205,11 @@ void SteamHandler::slotSteamProcessDied()
     emit signalProcessStateChanged();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamHandler::slotSteamExecPath(const QString& path)
 {
     m_steam_exec_path = path;
     qCInfo(lc::os) << "Steam exec path:" << m_steam_exec_path;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamHandler::slotSteamPID(uint pid)
 {
@@ -271,8 +243,6 @@ void SteamHandler::slotSteamPID(uint pid)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamHandler::slotGlobalAppId(uint app_id)
 {
     if (app_id != m_global_app_id)
@@ -281,8 +251,6 @@ void SteamHandler::slotGlobalAppId(uint app_id)
         qCDebug(lc::os) << "Running appID change detected (via global key):" << m_global_app_id;
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamHandler::slotTrackedAppIsRunning(bool state)
 {
@@ -296,8 +264,6 @@ void SteamHandler::slotTrackedAppIsRunning(bool state)
     m_tracked_app->m_is_running = state;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamHandler::slotTrackedAppIsUpdating(bool state)
 {
     if (!m_tracked_app)
@@ -309,8 +275,6 @@ void SteamHandler::slotTrackedAppIsUpdating(bool state)
     qCDebug(lc::os).nospace() << "App " << m_tracked_app->m_app_id << " \"updating\" value change detected: " << state;
     m_tracked_app->m_is_updating = state;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamHandler::slotTerminateSteam()
 {

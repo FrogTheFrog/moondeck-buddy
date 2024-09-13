@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 bool closeProcess(DWORD pid)
@@ -46,8 +44,6 @@ bool closeProcess(DWORD pid)
     return message_sent;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void killProcess(DWORD pid)
 {
     HANDLE proc_handle = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
@@ -68,8 +64,6 @@ void killProcess(DWORD pid)
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 ProcessTracker::ProcessTracker(QRegularExpression name_regex, std::shared_ptr<ProcessEnumerator> enumerator)
@@ -80,22 +74,16 @@ ProcessTracker::ProcessTracker(QRegularExpression name_regex, std::shared_ptr<Pr
     connect(m_enumerator.get(), &ProcessEnumerator::signalProcesses, this, &ProcessTracker::slotUpdateProcessState);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool ProcessTracker::isRunning() const
 {
     return m_pid != 0;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool ProcessTracker::isRunningNow()
 {
     m_enumerator->slotEnumerate();
     return isRunning();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessTracker::close()
 {
@@ -110,8 +98,6 @@ void ProcessTracker::close()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessTracker::terminate()
 {
     if (isRunningNow())
@@ -120,8 +106,6 @@ void ProcessTracker::terminate()
         m_enumerator->slotEnumerate();
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessTracker::slotUpdateProcessState(const std::vector<ProcessEnumerator::ProcessData>& data)
 {

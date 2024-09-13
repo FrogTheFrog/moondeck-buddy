@@ -1,8 +1,6 @@
 // header file include
 #include "os/win/steamregistryobserver.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const QString REG_STEAM_PATH{R"(HKEY_CURRENT_USER\Software\Valve\Steam)"};
@@ -14,8 +12,6 @@ const QString REG_APP_RUNNING{"Running"};
 const QString REG_APP_UPDATING{"Updating"};
 const QString REG_PID{"pid"};
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -54,14 +50,10 @@ SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QSt
                        });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::startAppObservation()
 {
     m_observation_delay.start();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamRegistryObserver::stopAppObservation()
 {
@@ -75,8 +67,6 @@ void SteamRegistryObserver::stopAppObservation()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::startTrackingApp(uint app_id)
 {
     m_tracked_app_data = TrackedAppData{app_id, false, false};
@@ -87,14 +77,10 @@ void SteamRegistryObserver::startTrackingApp(uint app_id)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::stopTrackingApp()
 {
     m_app_reg_key.close();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
 void SteamRegistryObserver::slotRegistryChanged(const QMap<QString, QVariant>& changed_values)

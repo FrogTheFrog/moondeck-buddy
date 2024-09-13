@@ -10,8 +10,6 @@ namespace os
 class NativeProcessHandlerInterface;
 }  // namespace os
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class ProcessHandler : public QObject

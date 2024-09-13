@@ -4,8 +4,6 @@
 // local includes
 #include "os/linux/nativeprocesshandler.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 SteamProcessListObserver::SteamProcessListObserver()
@@ -16,8 +14,6 @@ SteamProcessListObserver::SteamProcessListObserver()
     m_check_timer.setInterval(interval_ms);
     m_check_timer.setSingleShot(true);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-static)
 uint SteamProcessListObserver::findSteamProcess(uint previous_pid) const
@@ -52,8 +48,6 @@ uint SteamProcessListObserver::findSteamProcess(uint previous_pid) const
     return 0;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamProcessListObserver::observePid(uint pid)
 {
     stopObserving();
@@ -65,22 +59,16 @@ void SteamProcessListObserver::observePid(uint pid)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamProcessListObserver::stopObserving()
 {
     m_check_timer.stop();
     m_steam_pid = 0;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const std::set<uint>& SteamProcessListObserver::getAppIds() const
 {
     return m_app_ids;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamProcessListObserver::slotCheckProcessList()
 {

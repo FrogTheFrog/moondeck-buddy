@@ -3,8 +3,6 @@
 // system/Qt includes
 #include <QtGlobal>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 struct TrackedAppData

@@ -7,8 +7,6 @@
 // local includes
 #include "shared/appmetadata.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 QString getAutoStartContents(const shared::AppMetadata& app_meta)
@@ -26,16 +24,12 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 AutoStartHandler::AutoStartHandler(const shared::AppMetadata& app_meta)
     : m_app_meta{app_meta}
 {
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void AutoStartHandler::setAutoStart(bool enable)
 {
@@ -66,8 +60,6 @@ void AutoStartHandler::setAutoStart(bool enable)
         file.write(getAutoStartContents(m_app_meta).toUtf8());
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool AutoStartHandler::isAutoStartEnabled() const
 {

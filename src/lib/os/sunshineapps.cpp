@@ -17,8 +17,6 @@
     #include "os/win/regkey.h"
 #endif
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 #if defined(Q_OS_LINUX)
@@ -39,16 +37,12 @@ QString getConfigDir()
 #endif
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 SunshineApps::SunshineApps(QString filepath)
     : m_filepath{std::move(filepath)}
 {
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
 std::optional<std::set<QString>> SunshineApps::load()

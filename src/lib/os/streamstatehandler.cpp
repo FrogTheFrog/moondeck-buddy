@@ -1,8 +1,6 @@
 // header file include
 #include "os/streamstatehandler.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 StreamStateHandler::StreamStateHandler(const QString& heartbeat_key)
@@ -12,8 +10,6 @@ StreamStateHandler::StreamStateHandler(const QString& heartbeat_key)
             &StreamStateHandler::slotHandleProcessStateChanges);
     m_helper_heartbeat.startListening();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool StreamStateHandler::endStream()
 {
@@ -27,14 +23,10 @@ bool StreamStateHandler::endStream()
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 enums::StreamState StreamStateHandler::getCurrentState() const
 {
     return m_state;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void StreamStateHandler::slotHandleProcessStateChanges()
 {

@@ -3,8 +3,6 @@
 // system/Qt includes
 #include <QObject>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace shared
 {
 class AppMetadata final : public QObject

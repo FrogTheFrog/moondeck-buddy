@@ -16,13 +16,9 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const quint16 DEFAULT_PORT{59999};
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
 {
@@ -47,8 +43,6 @@ std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 AppSettings::AppSettings(const QString& filepath)
@@ -69,84 +63,60 @@ AppSettings::AppSettings(const QString& filepath)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 quint16 AppSettings::getPort() const
 {
     return m_port;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 const QString& AppSettings::getLoggingRules() const
 {
     return m_logging_rules;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const std::set<QString>& AppSettings::getHandledDisplays() const
 {
     return m_handled_displays;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 const QString& AppSettings::getSunshineAppsFilepath() const
 {
     return m_sunshine_apps_filepath;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool AppSettings::getPreferHibernation() const
 {
     return m_prefer_hibernation;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 QSsl::SslProtocol AppSettings::getSslProtocol() const
 {
     return m_ssl_protocol;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool AppSettings::getForceBigPicture() const
 {
     return m_force_big_picture;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool AppSettings::getCloseSteamBeforeSleep() const
 {
     return m_close_steam_before_sleep;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const QString& AppSettings::getRegistryFileOverride() const
 {
     return m_registry_file_override;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 const QString& AppSettings::getSteamBinaryOverride() const
 {
     return m_steam_binary_override;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const QString& AppSettings::getMacAddressOverride() const
 {
     return m_mac_address_override;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
@@ -299,8 +269,6 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
 
     return false;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void AppSettings::saveDefaultFile(const QString& filepath) const
 {

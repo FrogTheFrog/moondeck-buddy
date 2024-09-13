@@ -9,13 +9,9 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const QStringList PID_PATH{{"Registry", "HKLM", "Software", "Valve", "Steam", "SteamPID"}};
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 const T* getEntry(const QStringList& path, const os::RegistryFileWatcher::NodeList& node_list)
@@ -60,8 +56,6 @@ const T* getEntry(const QStringList& path, const os::RegistryFileWatcher::NodeLi
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QString steam_binary_override)
@@ -93,15 +87,11 @@ SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QSt
     m_observation_delay.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::startAppObservation()
 {
     m_observation_delay.start();
     m_process_list_observer.observePid(m_pid);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SteamRegistryObserver::stopAppObservation()
 {
@@ -117,22 +107,16 @@ void SteamRegistryObserver::stopAppObservation()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::startTrackingApp(uint app_id)
 {
     m_tracked_app_data = TrackedAppData{app_id, false, false};
     slotRegistryChanged();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SteamRegistryObserver::stopTrackingApp()
 {
     m_tracked_app_data = std::nullopt;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
 void SteamRegistryObserver::slotRegistryChanged()

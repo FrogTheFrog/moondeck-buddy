@@ -11,8 +11,6 @@
 #include "shared/loggingcategories.h"
 #include "utils/jsonvalueconverter.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 QJsonDocument requestToJson(const QHttpServerRequest& request)
@@ -35,15 +33,11 @@ QJsonDocument requestToJson(const QHttpServerRequest& request)
     return json_data;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QJsonObject requestToJsonObject(const QHttpServerRequest& request)
 {
     const auto json{requestToJson(request)};
     return json.isObject() ? json.object() : QJsonObject{};
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 QString getMacAddress(const QHostAddress& address)
 {
@@ -67,18 +61,12 @@ QString getMacAddress(const QHostAddress& address)
     return {};
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const int MAX_GRACE_PERIOD_S{30};
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace routing_internal
 {
 Q_NAMESPACE
-
-//---------------------------------------------------------------------------------------------------------------------
 
 enum class PairingState
 {
@@ -88,8 +76,6 @@ enum class PairingState
 };
 Q_ENUM_NS(PairingState)
 
-//---------------------------------------------------------------------------------------------------------------------
-
 enum class ChangePcState
 {
     Restart,
@@ -98,8 +84,6 @@ enum class ChangePcState
 };
 Q_ENUM_NS(ChangePcState)
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupApiVersion(server::HttpServer& server)
 {
     server.route("/apiVersion", QHttpServerRequest::Method::Get,
@@ -107,8 +91,6 @@ void setupApiVersion(server::HttpServer& server)
                      return QJsonObject{{"version", server.getApiVersion()}};
                  });
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void setupPairing(server::HttpServer& server, server::PairingManager& pairing_manager)
 {
@@ -165,8 +147,6 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                  });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool prefer_hibernation,
                   bool close_steam_before_sleep)
 {
@@ -222,8 +202,6 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool pr
                  });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/hostInfo", QHttpServerRequest::Method::Get,
@@ -244,8 +222,6 @@ void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
                                      {"streamState", QVariant::fromValue(pc_control.getStreamState()).toString()}}};
                  });
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_override)
 {
@@ -288,8 +264,6 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                      return QHttpServerResponse{QJsonObject{{"mac", mac}, {"os", os_type}}};
                  });
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control, bool force_big_picture)
 {
@@ -343,8 +317,6 @@ void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control, bo
                  });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupResolution(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/changeResolution", QHttpServerRequest::Method::Post,
@@ -373,8 +345,6 @@ void setupResolution(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupStreamControl(server::HttpServer& server, os::PcControl& pc_control)
 {
     server.route("/endStream", QHttpServerRequest::Method::Post,
@@ -389,8 +359,6 @@ void setupStreamControl(server::HttpServer& server, os::PcControl& pc_control)
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
 {
@@ -414,8 +382,6 @@ void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_
         });
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void setupRouteLogging(server::HttpServer& server)
 {
     server.afterRequest(
@@ -428,8 +394,6 @@ void setupRouteLogging(server::HttpServer& server)
         });
 }
 }  // namespace routing_internal
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
                  os::SunshineApps& sunshine_apps, bool prefer_hibernation, bool force_big_picture,
@@ -446,8 +410,6 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupGamestreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // automoc include
 #include "routing.moc"

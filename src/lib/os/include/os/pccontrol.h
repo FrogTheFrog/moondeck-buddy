@@ -20,8 +20,6 @@ class AutoStartHandlerInterface;
 class StreamStateHandlerInterface;
 }  // namespace os
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class PcControl : public QObject

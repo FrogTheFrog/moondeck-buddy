@@ -5,8 +5,6 @@
 #include <functional>
 #include <map>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativeResolutionHandlerInterface

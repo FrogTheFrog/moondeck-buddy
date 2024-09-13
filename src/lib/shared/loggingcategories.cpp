@@ -1,8 +1,6 @@
 // header file include
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace lc
 {
 Q_LOGGING_CATEGORY(buddyMain, "buddy.main", QtInfoMsg);

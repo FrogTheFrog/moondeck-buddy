@@ -25,14 +25,10 @@
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const int SEC_TO_MS{1000};
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -57,26 +53,18 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
             &PcControl::slotHandleStreamStateChange);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // For forward declarations
 PcControl::~PcControl() = default;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::launchSteamApp(uint app_id, bool force_big_picture)
 {
     return m_steam_handler.launchApp(app_id, force_big_picture);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcControl::closeSteam(std::optional<uint> grace_period_in_sec)
 {
     return m_steam_handler.close(grace_period_in_sec);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::shutdownPC(uint grace_period_in_sec)
 {
@@ -93,8 +81,6 @@ bool PcControl::shutdownPC(uint grace_period_in_sec)
     return false;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcControl::restartPC(uint grace_period_in_sec)
 {
     if (m_pc_state_handler.restartPC(grace_period_in_sec))
@@ -109,8 +95,6 @@ bool PcControl::restartPC(uint grace_period_in_sec)
 
     return false;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::suspendPC(uint grace_period_in_sec, bool close_steam)
 {
@@ -135,8 +119,6 @@ bool PcControl::suspendPC(uint grace_period_in_sec, bool close_steam)
     return false;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
 {
     if (m_pc_state_handler.hibernatePC(grace_period_in_sec))
@@ -160,70 +142,50 @@ bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
     return false;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcControl::endStream()
 {
     return m_stream_state_handler->endStream();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 uint PcControl::getRunningApp() const
 {
     return m_steam_handler.getRunningApp();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 std::optional<uint> PcControl::getTrackedUpdatingApp() const
 {
     return m_steam_handler.getTrackedUpdatingApp();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::isSteamRunning() const
 {
     return m_steam_handler.isRunning();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 enums::StreamState PcControl::getStreamState() const
 {
     return m_stream_state_handler->getCurrentState();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 enums::PcState PcControl::getPcState() const
 {
     return m_pc_state_handler.getState();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void PcControl::setAutoStart(bool enable)
 {
     m_auto_start_handler->setAutoStart(enable);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcControl::isAutoStartEnabled() const
 {
     return m_auto_start_handler->isAutoStartEnabled();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcControl::changeResolution(uint width, uint height)
 {
     return m_resolution_handler.changeResolution(width, height);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PcControl::restoreChangedResolution(bool force)
 {
@@ -235,8 +197,6 @@ void PcControl::restoreChangedResolution(bool force)
         m_resolution_handler.restoreResolution();
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PcControl::slotHandleSteamProcessStateChange()
 {
@@ -251,8 +211,6 @@ void PcControl::slotHandleSteamProcessStateChange()
         restoreChangedResolution(false);
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PcControl::slotHandleStreamStateChange()
 {
@@ -276,8 +234,6 @@ void PcControl::slotHandleStreamStateChange()
         }
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PcControl::slotAppTrackingHasEnded()
 {

@@ -7,8 +7,6 @@
 #include <QObject>
 #include <QTimer>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 // DEPRECATED, to be removed once Nvidia is gone

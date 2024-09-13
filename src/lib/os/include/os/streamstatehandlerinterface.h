@@ -6,8 +6,6 @@
 // local includes
 #include "shared/enums.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class StreamStateHandlerInterface : public QObject

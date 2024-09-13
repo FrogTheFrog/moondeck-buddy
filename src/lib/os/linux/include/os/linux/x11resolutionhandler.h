@@ -6,8 +6,6 @@
 // local includes
 #include "os/shared/nativeresolutionhandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class X11ResolutionHandler : public NativeResolutionHandlerInterface

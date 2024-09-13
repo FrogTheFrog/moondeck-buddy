@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 // NOLINTNEXTLINE(*-swappable-parameters)
@@ -38,8 +36,6 @@ bool canDoQuery(QDBusInterface& bus, const QString& log_entry, const QString& qu
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool doQuery(QDBusInterface& bus, const QString& log_entry, const QString& query)
 {
     if (!canDoQuery(bus, log_entry, query))
@@ -59,8 +55,6 @@ bool doQuery(QDBusInterface& bus, const QString& log_entry, const QString& query
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 NativePcStateHandler::NativePcStateHandler()
@@ -73,56 +67,40 @@ NativePcStateHandler::NativePcStateHandler()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::canShutdownPC()
 {
     return canDoQuery(m_logind_bus, "shutdown", "PowerOff");
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::canRestartPC()
 {
     return canDoQuery(m_logind_bus, "restart", "Reboot");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::canSuspendPC()
 {
     return canDoQuery(m_logind_bus, "suspend", "Suspend");
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::canHibernatePC()
 {
     return canDoQuery(m_logind_bus, "hibernate", "Hibernate");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::shutdownPC()
 {
     return doQuery(m_logind_bus, "shutdown", "PowerOff");
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::restartPC()
 {
     return doQuery(m_logind_bus, "restart", "Reboot");
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::suspendPC()
 {
     return doQuery(m_logind_bus, "suspend", "Suspend");
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::hibernatePC()
 {

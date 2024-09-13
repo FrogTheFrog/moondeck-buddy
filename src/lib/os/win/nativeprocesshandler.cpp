@@ -10,8 +10,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 std::vector<uint> NativeProcessHandler::getPids() const
@@ -49,8 +47,6 @@ std::vector<uint> NativeProcessHandler::getPids() const
     return {};
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString NativeProcessHandler::getExecPath(uint pid) const
 {
     HANDLE proc_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
@@ -85,8 +81,6 @@ QString NativeProcessHandler::getExecPath(uint pid) const
     return {};
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void NativeProcessHandler::close(uint pid) const
 {
     std::vector<HWND> hwnds;
@@ -115,8 +109,6 @@ void NativeProcessHandler::close(uint pid) const
         }
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void NativeProcessHandler::terminate(uint pid) const
 {

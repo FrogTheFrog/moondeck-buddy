@@ -5,8 +5,6 @@
 #include "shared/enums.h"
 #include "utils/heartbeat.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class StreamStateHandler : public StreamStateHandlerInterface

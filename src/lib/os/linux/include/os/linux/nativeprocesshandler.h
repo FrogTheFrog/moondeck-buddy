@@ -3,8 +3,6 @@
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativeProcessHandler : public NativeProcessHandlerInterface

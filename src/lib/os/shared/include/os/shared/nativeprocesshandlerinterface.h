@@ -4,8 +4,6 @@
 #include <QRegularExpression>
 #include <QString>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativeProcessHandlerInterface

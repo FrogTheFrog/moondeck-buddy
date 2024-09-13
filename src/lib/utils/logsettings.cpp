@@ -8,8 +8,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 void removeLogFile(const QString& filepath)
@@ -20,8 +18,6 @@ void removeLogFile(const QString& filepath)
         file.remove();
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void messageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
@@ -43,8 +39,6 @@ void messageHandler(QtMsgType type, const QMessageLogContext& context, const QSt
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 LogSettings& LogSettings::getInstance()
@@ -52,8 +46,6 @@ LogSettings& LogSettings::getInstance()
     static LogSettings instance;
     return instance;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void LogSettings::init(const QString& filepath)
 {
@@ -77,14 +69,10 @@ void LogSettings::init(const QString& filepath)
     qCInfo(lc::utils) << "Log location:" << m_filepath;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const QString& LogSettings::getFilepath() const
 {
     return m_filepath;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-to-static)
 void LogSettings::setLoggingRules(const QString& rules)

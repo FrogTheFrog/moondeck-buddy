@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 struct PathComponents
@@ -20,8 +18,6 @@ struct PathComponents
     HKEY    m_key{nullptr};
     QString m_subkey{};
 };
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::optional<HKEY> PathComponents::stringToHKey(const QString& path_segment)
 {
@@ -40,8 +36,6 @@ std::optional<HKEY> PathComponents::stringToHKey(const QString& path_segment)
     }
     return std::nullopt;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::optional<PathComponents> PathComponents::parse(const QString& path)
 {
@@ -68,15 +62,11 @@ std::optional<PathComponents> PathComponents::parse(const QString& path)
     return std::nullopt;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 struct RegValueData
 {
     QByteArray m_buffer{};
     DWORD      m_type{REG_NONE};
 };
-
-//---------------------------------------------------------------------------------------------------------------------
 
 RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
 {
@@ -116,8 +106,6 @@ RegValueData getRegValueData(const HKEY& key_handle, const QString& name)
     return data;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void resetNotifier(std::unique_ptr<QWinEventNotifier>& notifier, const HKEY& key_handle, const QString& name)
 {
     auto* const handle = notifier->handle();
@@ -138,8 +126,6 @@ void resetNotifier(std::unique_ptr<QWinEventNotifier>& notifier, const HKEY& key
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void deleteNotifier(std::unique_ptr<QWinEventNotifier>& notifier)
 {
     if (notifier != nullptr)
@@ -152,8 +138,6 @@ void deleteNotifier(std::unique_ptr<QWinEventNotifier>& notifier)
         notifier.reset();
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool openKey(const PathComponents& path_components, const QString& path, HKEY& key_handle)
 {
@@ -171,16 +155,12 @@ bool openKey(const PathComponents& path_components, const QString& path, HKEY& k
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 RegKey::~RegKey()
 {
     close();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void RegKey::open(const QString& path, const QStringList& notification_names)
 {
@@ -219,8 +199,6 @@ void RegKey::open(const QString& path, const QStringList& notification_names)
     m_retry_timer.start(single_second);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void RegKey::close()
 {
     if (isOpen())
@@ -240,14 +218,10 @@ void RegKey::close()
     m_watched_names.clear();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool RegKey::isOpen() const
 {
     return m_key_handle != nullptr;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 QVariant RegKey::getValue(const QString& name) const
 {
@@ -287,14 +261,10 @@ QVariant RegKey::getValue(const QString& name) const
     return return_value;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool RegKey::isNotificationEnabled() const
 {
     return m_notifier != nullptr;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void RegKey::addNotifyOnValueChange(const QStringList& names)
 {
@@ -339,8 +309,6 @@ void RegKey::addNotifyOnValueChange(const QStringList& names)
     handleChangedValues(new_names);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void RegKey::removeNotifyOnValueChange(const QStringList& names)
 {
     for (const auto& name : names)
@@ -353,8 +321,6 @@ void RegKey::removeNotifyOnValueChange(const QStringList& names)
         deleteNotifier(m_notifier);
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void RegKey::handleChangedValues(const QStringList& names)
 {

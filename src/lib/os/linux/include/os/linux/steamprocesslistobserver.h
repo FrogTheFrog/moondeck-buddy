@@ -4,8 +4,6 @@
 #include <QTimer>
 #include <set>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SteamProcessListObserver : public QObject

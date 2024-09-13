@@ -9,8 +9,6 @@ namespace os
 class NativePcStateHandlerInterface;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class PcStateHandler : public QObject

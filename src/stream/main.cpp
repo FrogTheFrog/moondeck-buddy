@@ -10,8 +10,6 @@
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {

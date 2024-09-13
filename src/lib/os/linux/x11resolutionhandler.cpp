@@ -8,13 +8,9 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 using Resolution = os::NativeResolutionHandlerInterface::Resolution;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 int findMatchingSize(const Resolution& resolution, const XRRScreenSize* sizes, int number_of_sizes)
 {
@@ -39,8 +35,6 @@ int findMatchingSize(const Resolution& resolution, const XRRScreenSize* sizes, i
     return not_found;
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {

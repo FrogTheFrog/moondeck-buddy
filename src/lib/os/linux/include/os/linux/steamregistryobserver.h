@@ -6,8 +6,6 @@
 #include "os/shared/steamregistryobserverinterface.h"
 #include "os/shared/trackedappdata.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SteamRegistryObserver : public SteamRegistryObserverInterface

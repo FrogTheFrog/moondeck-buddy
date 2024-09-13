@@ -4,8 +4,6 @@
 // system/Qt includes
 #include <QCryptographicHash>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 QString generateKeyHash(const QString& key, const QString& salt)
@@ -19,8 +17,6 @@ QString generateKeyHash(const QString& key, const QString& salt)
     return data;
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace utils
 {
@@ -38,14 +34,10 @@ SingleInstanceGuard::SingleInstanceGuard(const QString& key)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 SingleInstanceGuard::~SingleInstanceGuard()
 {
     release();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool SingleInstanceGuard::isAnotherRunning()
 {
@@ -65,8 +57,6 @@ bool SingleInstanceGuard::isAnotherRunning()
 
     return is_running;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool SingleInstanceGuard::tryToRun()
 {
@@ -90,8 +80,6 @@ bool SingleInstanceGuard::tryToRun()
 
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SingleInstanceGuard::release()
 {

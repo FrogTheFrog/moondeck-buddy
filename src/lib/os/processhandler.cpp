@@ -7,8 +7,6 @@
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 bool matchingProcess(const QString& exec_path, const QRegularExpression& exec_regex)
@@ -21,8 +19,6 @@ bool matchingProcess(const QString& exec_path, const QRegularExpression& exec_re
     return exec_path.contains(exec_regex);
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -40,19 +36,13 @@ ProcessHandler::ProcessHandler(std::unique_ptr<NativeProcessHandlerInterface> na
     m_kill_timer.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // For forward declarations
 ProcessHandler::~ProcessHandler() = default;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::vector<uint> ProcessHandler::getPids() const
 {
     return m_native_handler->getPids();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::vector<uint> ProcessHandler::getPidsMatchingExecPath(const QRegularExpression& exec_regex) const
 {
@@ -72,8 +62,6 @@ std::vector<uint> ProcessHandler::getPidsMatchingExecPath(const QRegularExpressi
     return matching_pids;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessHandler::closeDetached(const QRegularExpression& exec_regex, uint auto_termination_timer) const
 {
     const auto pids{getPidsMatchingExecPath(exec_regex)};
@@ -82,8 +70,6 @@ void ProcessHandler::closeDetached(const QRegularExpression& exec_regex, uint au
         closeDetached(pid, exec_regex, auto_termination_timer);
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessHandler::closeDetached(uint pid, const QRegularExpression& exec_regex, uint auto_termination_timer) const
 {
@@ -106,8 +92,6 @@ void ProcessHandler::closeDetached(uint pid, const QRegularExpression& exec_rege
                            }
                        });
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool ProcessHandler::startMonitoring(uint pid, const QRegularExpression& exec_regex)
 {
@@ -134,8 +118,6 @@ bool ProcessHandler::startMonitoring(uint pid, const QRegularExpression& exec_re
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessHandler::stopMonitoring()
 {
     m_pid        = 0;
@@ -143,8 +125,6 @@ void ProcessHandler::stopMonitoring()
     m_check_timer.stop();
     m_kill_timer.stop();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessHandler::close(std::optional<uint> auto_termination_timer)
 {
@@ -158,8 +138,6 @@ void ProcessHandler::close(std::optional<uint> auto_termination_timer)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessHandler::terminate()
 {
     if (isRunningNow())
@@ -168,14 +146,10 @@ void ProcessHandler::terminate()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool ProcessHandler::isRunning() const
 {
     return m_pid != 0;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool ProcessHandler::isRunningNow()
 {
@@ -186,8 +160,6 @@ bool ProcessHandler::isRunningNow()
 
     return isRunning();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessHandler::slotCheckState()
 {

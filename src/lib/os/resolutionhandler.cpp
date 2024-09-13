@@ -8,15 +8,11 @@
 #include "os/shared/nativeresolutionhandlerinterface.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const int RETRY_TIME{10};
 const int SEC_TO_MS{1000};
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -32,14 +28,10 @@ ResolutionHandler::ResolutionHandler(std::unique_ptr<NativeResolutionHandlerInte
     m_restore_retry_timer.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 ResolutionHandler::~ResolutionHandler()
 {
     restoreResolution();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool ResolutionHandler::changeResolution(uint width, uint height)
 {
@@ -81,8 +73,6 @@ bool ResolutionHandler::changeResolution(uint width, uint height)
     }
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ResolutionHandler::restoreResolution()
 {

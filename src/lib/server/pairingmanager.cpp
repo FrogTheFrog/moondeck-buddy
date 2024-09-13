@@ -5,8 +5,6 @@
 #include "server/clientids.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace server
 {
 PairingManager::PairingManager(ClientIds& client_ids)
@@ -14,28 +12,20 @@ PairingManager::PairingManager(ClientIds& client_ids)
 {
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PairingManager::isPaired(const QString& client_id) const
 {
     return m_client_ids.containsId(client_id);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PairingManager::isPairing(const QString& client_id) const
 {
     return m_pairing_data && m_pairing_data->m_id == client_id;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PairingManager::isPairing() const
 {
     return static_cast<bool>(m_pairing_data);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-identifier-length)
 bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
@@ -63,8 +53,6 @@ bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // NOLINTNEXTLINE(*-identifier-length)
 bool PairingManager::abortPairing(const QString& id)
 {
@@ -84,8 +72,6 @@ bool PairingManager::abortPairing(const QString& id)
     m_pairing_data = std::nullopt;
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PairingManager::slotFinishPairing(uint pin)
 {
@@ -107,8 +93,6 @@ void PairingManager::slotFinishPairing(uint pin)
 
     m_pairing_data = std::nullopt;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PairingManager::slotPairingRejected()
 {

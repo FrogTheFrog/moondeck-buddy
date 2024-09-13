@@ -9,8 +9,6 @@ namespace server
 class ClientIds;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace server
 {
 class HttpServer
@@ -43,15 +41,11 @@ private:
     QHttpServer m_server;
 };
 
-//---------------------------------------------------------------------------------------------------------------------
-
 template<typename Rule, typename... Args>
 bool HttpServer::route(Args&&... args)
 {
     return m_server.route<Rule>(std::forward<Args>(args)...);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<typename ViewHandler>
 void HttpServer::afterRequest(ViewHandler&& viewHandler)

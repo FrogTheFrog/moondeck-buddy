@@ -12,8 +12,6 @@ namespace os
 class PcControl;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SystemTray : public QObject

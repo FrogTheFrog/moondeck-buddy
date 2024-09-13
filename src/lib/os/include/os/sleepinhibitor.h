@@ -10,8 +10,6 @@ namespace os
 class NativeSleepInhibitorInterface;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SleepInhibitor final

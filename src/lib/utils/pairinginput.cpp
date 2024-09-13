@@ -1,16 +1,12 @@
 // header file include
 #include "utils/pairinginput.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const int DEFAULT_TIMEOUT{1 * 60 * 1000 /*1 minute*/};
 const int MIN_PIN_VALUE{1000};
 const int MAX_PIN_VALUE{9999};
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace utils
 {
@@ -38,16 +34,12 @@ PairingInput::PairingInput()
     m_timeout.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void PairingInput::slotRequestUserInputForPairing()
 {
     m_dialog.close();
     m_timeout.start(DEFAULT_TIMEOUT);
     m_dialog.open();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void PairingInput::slotAbortPairing()
 {

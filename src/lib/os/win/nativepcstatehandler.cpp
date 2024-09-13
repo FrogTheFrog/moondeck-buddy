@@ -10,8 +10,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 bool acquirePrivilege()
@@ -50,8 +48,6 @@ bool acquirePrivilege()
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 NativePcStateHandler::NativePcStateHandler()
@@ -63,35 +59,25 @@ NativePcStateHandler::NativePcStateHandler()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::canShutdownPC()
 {
     return m_privilege_acquired;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::canRestartPC()
 {
     return m_privilege_acquired;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::canSuspendPC()
 {
     return m_privilege_acquired;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::canHibernatePC()
 {
     return m_privilege_acquired;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::shutdownPC()
 {
@@ -109,8 +95,6 @@ bool NativePcStateHandler::shutdownPC()
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::restartPC()
 {
     if (!canRestartPC())
@@ -127,8 +111,6 @@ bool NativePcStateHandler::restartPC()
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool NativePcStateHandler::suspendPC()
 {
     if (!canSuspendPC())
@@ -144,8 +126,6 @@ bool NativePcStateHandler::suspendPC()
 
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool NativePcStateHandler::hibernatePC()
 {

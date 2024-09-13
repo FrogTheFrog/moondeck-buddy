@@ -8,8 +8,6 @@
 // local includes
 #include "os/shared/nativeresolutionhandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class ResolutionHandler : public QObject

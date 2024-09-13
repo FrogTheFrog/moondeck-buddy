@@ -4,8 +4,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 bool isWaylandSession()
@@ -45,8 +43,6 @@ bool isWaylandSession()
     return false;
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {

@@ -6,8 +6,6 @@
 // local includes
 #include "os/shared/nativesleepinhibitorinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativeSleepInhibitor : public NativeSleepInhibitorInterface

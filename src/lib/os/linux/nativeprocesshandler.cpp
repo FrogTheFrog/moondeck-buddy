@@ -13,8 +13,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 uint getParentPid(uint pid)
@@ -41,8 +39,6 @@ uint getParentPid(uint pid)
 
     return proc_info.ppid;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 QString getCmdline(uint pid)
 {
@@ -83,8 +79,6 @@ QString getCmdline(uint pid)
     return cmdline.join(' ');
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 std::vector<uint> getPids()
 {
     const QDir        proc_dir{"/proc"};
@@ -109,16 +103,12 @@ std::vector<uint> getPids()
     return pids;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 std::vector<uint> getParentPids(const std::vector<uint>& pids)
 {
     std::vector<uint> parent_pids;
     std::transform(std::cbegin(pids), std::cend(pids), std::back_inserter(parent_pids), getParentPid);
     return parent_pids;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::vector<uint> getRelatedPids(uint pid)
 {
@@ -157,8 +147,6 @@ std::vector<uint> getRelatedPids(uint pid)
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 std::vector<uint> NativeProcessHandler::getPids() const
@@ -166,15 +154,11 @@ std::vector<uint> NativeProcessHandler::getPids() const
     return ::getPids();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QString NativeProcessHandler::getExecPath(uint pid) const
 {
     const QFileInfo info{"/proc/" + QString::number(pid) + "/exe"};
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void NativeProcessHandler::close(uint pid) const
 {
@@ -192,8 +176,6 @@ void NativeProcessHandler::close(uint pid) const
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void NativeProcessHandler::terminate(uint pid) const
 {
     const auto related_pids{getRelatedPids(pid)};
@@ -209,8 +191,6 @@ void NativeProcessHandler::terminate(uint pid) const
         }
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
 {
@@ -262,8 +242,6 @@ std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
 
     return nested_children_pids;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-to-static)
 QString NativeProcessHandler::getCmdline(uint pid) const

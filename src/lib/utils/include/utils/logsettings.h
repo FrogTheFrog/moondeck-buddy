@@ -3,8 +3,6 @@
 // system/Qt includes
 #include <QString>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 class LogSettings final

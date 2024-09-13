@@ -8,8 +8,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 QString getProcessName(DWORD pid)
@@ -46,8 +44,6 @@ QString getProcessName(DWORD pid)
     return {};
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 std::vector<DWORD> enumProcesses()
 {
     std::vector<DWORD> handles;
@@ -81,8 +77,6 @@ std::vector<DWORD> enumProcesses()
 
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 ProcessEnumerator::ProcessEnumerator()
@@ -91,8 +85,6 @@ ProcessEnumerator::ProcessEnumerator()
     m_timer.setSingleShot(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessEnumerator::start(uint interval_ms)
 {
     m_started = true;
@@ -100,15 +92,11 @@ void ProcessEnumerator::start(uint interval_ms)
     slotEnumerate();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ProcessEnumerator::stop()
 {
     m_started = false;
     m_timer.stop();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ProcessEnumerator::slotEnumerate()
 {

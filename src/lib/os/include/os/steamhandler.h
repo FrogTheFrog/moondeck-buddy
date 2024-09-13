@@ -13,8 +13,6 @@ namespace os
 class SteamRegistryObserverInterface;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SteamHandler : public QObject

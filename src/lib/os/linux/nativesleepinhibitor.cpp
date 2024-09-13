@@ -8,8 +8,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 NativeSleepInhibitor::NativeSleepInhibitor(const QString& app_name)

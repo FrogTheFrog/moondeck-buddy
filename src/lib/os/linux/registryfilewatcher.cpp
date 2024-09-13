@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 RegistryFileWatcher::RegistryFileWatcher(QString path)
@@ -39,14 +37,10 @@ RegistryFileWatcher::RegistryFileWatcher(QString path)
     QTimer::singleShot(0, this, &RegistryFileWatcher::slotRetry);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const RegistryFileWatcher::NodeList& RegistryFileWatcher::getData() const
 {
     return m_parser.getRoot();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void RegistryFileWatcher::slotFileChanged()
 {
@@ -62,8 +56,6 @@ void RegistryFileWatcher::slotFileChanged()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void RegistryFileWatcher::slotRetry()
 {
     if (!m_file_watcher.addPath(m_path))
@@ -77,8 +69,6 @@ void RegistryFileWatcher::slotRetry()
         m_parsing_delay_timer.start();
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void RegistryFileWatcher::slotParseFile()
 {

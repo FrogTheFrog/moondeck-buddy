@@ -9,8 +9,6 @@
 #include <QVariant>
 #include <QWinEventNotifier>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class RegKey : public QObject

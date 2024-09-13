@@ -5,8 +5,6 @@
 #include "os/shared/trackedappdata.h"
 #include "os/win/regkey.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SteamRegistryObserver : public SteamRegistryObserverInterface

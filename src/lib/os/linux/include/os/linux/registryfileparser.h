@@ -3,8 +3,6 @@
 // system/Qt includes
 #include <QObject>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 // Note: this is a simplified parser - does not support macros, comments and other stuff

@@ -10,8 +10,6 @@
 #include "os/pccontrol.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_control)
@@ -42,8 +40,6 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
     slotTryAttach();
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void SystemTray::slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
                                      int millisecondsTimeoutHint)
 {
@@ -54,8 +50,6 @@ void SystemTray::slotShowTrayMessage(const QString& title, const QString& messag
 
     m_tray_icon->showMessage(title, message, icon, millisecondsTimeoutHint);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void SystemTray::slotTryAttach()
 {

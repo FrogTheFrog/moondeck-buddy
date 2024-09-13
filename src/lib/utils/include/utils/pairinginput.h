@@ -5,8 +5,6 @@
 #include <QUuid>
 #include <QtWidgets/QInputDialog>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 class PairingInput : public QObject

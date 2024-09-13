@@ -8,8 +8,6 @@
 // local includes
 #include "os/linux/registryfileparser.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class RegistryFileWatcher : public QObject

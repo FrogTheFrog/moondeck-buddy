@@ -11,16 +11,12 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace server
 {
 ClientIds::ClientIds(QString filepath)
     : m_filepath{std::move(filepath)}
 {
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-cognitive-complexity)
 void ClientIds::load()
@@ -73,8 +69,6 @@ void ClientIds::load()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ClientIds::save()
 {
     QJsonArray json_data;
@@ -104,21 +98,15 @@ void ClientIds::save()
     qCInfo(lc::server) << "Finished saving:" << m_filepath;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool ClientIds::containsId(const QString& client_id) const
 {
     return m_ids.contains(client_id);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void ClientIds::addId(const QString& client_id)
 {
     m_ids.emplace(client_id);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void ClientIds::removeId(const QString& client_id)
 {

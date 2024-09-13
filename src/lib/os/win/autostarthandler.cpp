@@ -10,16 +10,12 @@
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 AutoStartHandler::AutoStartHandler(const shared::AppMetadata& app_meta)
     : m_app_meta{app_meta}
 {
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void AutoStartHandler::setAutoStart(bool enable)
 {
@@ -42,8 +38,6 @@ void AutoStartHandler::setAutoStart(bool enable)
         }
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool AutoStartHandler::isAutoStartEnabled() const
 {

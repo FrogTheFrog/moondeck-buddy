@@ -3,8 +3,6 @@
 // system/Qt includes
 #include <QObject>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class SteamRegistryObserverInterface : public QObject

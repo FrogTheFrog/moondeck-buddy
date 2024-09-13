@@ -13,22 +13,12 @@
     #error OS is not supported!
 #endif
 
-//---------------------------------------------------------------------------------------------------------------------
-
-namespace
-{
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 SleepInhibitor::SleepInhibitor(const QString& app_name)
     : m_impl{std::make_unique<NativeSleepInhibitor>(app_name)}
 {
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // For forward declarations
 SleepInhibitor::~SleepInhibitor() = default;

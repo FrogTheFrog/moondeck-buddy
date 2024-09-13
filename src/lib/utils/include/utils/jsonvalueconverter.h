@@ -5,15 +5,11 @@
 #include <QJsonValue>
 #include <QMetaEnum>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 
 template<class T>
 struct JsonValueConverter;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 requires std::is_enum_v<T>
@@ -38,8 +34,6 @@ struct JsonValueConverter<T>
     }
 };
 
-//---------------------------------------------------------------------------------------------------------------------
-
 template<>
 struct JsonValueConverter<QString>
 {
@@ -49,8 +43,6 @@ struct JsonValueConverter<QString>
     }
 };
 
-//---------------------------------------------------------------------------------------------------------------------
-
 template<>
 struct JsonValueConverter<bool>
 {
@@ -59,8 +51,6 @@ struct JsonValueConverter<bool>
         return json.isBool() ? std::make_optional(json.toBool()) : std::nullopt;
     }
 };
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<>
 struct JsonValueConverter<int>
@@ -80,8 +70,6 @@ struct JsonValueConverter<int>
         return std::nullopt;
     }
 };
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<>
 struct JsonValueConverter<uint>
@@ -103,16 +91,12 @@ struct JsonValueConverter<uint>
     }
 };
 
-//---------------------------------------------------------------------------------------------------------------------
-
 template<class T>
 std::optional<T> getJsonValue(const QJsonObject& json, const char* field, auto&&... args)
 {
     const auto field_value{json.value(field)};
     return JsonValueConverter<T>::convert(field_value, std::forward<decltype(args)>(args)...);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 std::optional<std::optional<T>> getNullableJsonValue(const QJsonObject& json, const char* field, auto&&... args)

@@ -4,8 +4,6 @@
 #include <QSharedMemory>
 #include <QTimer>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 class Heartbeat final : public QObject

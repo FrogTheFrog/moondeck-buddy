@@ -7,8 +7,6 @@
 // local includes
 #include "os/win/processenumerator.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 // DEPRECATED, to be removed once Nvidia is gone

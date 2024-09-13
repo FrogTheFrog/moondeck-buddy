@@ -9,8 +9,6 @@ namespace server
 class ClientIds;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace server
 {
 class PairingManager : public QObject

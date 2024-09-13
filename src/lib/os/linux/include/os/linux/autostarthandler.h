@@ -12,8 +12,6 @@ namespace shared
 class AppMetadata;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class AutoStartHandler : public AutoStartHandlerInterface

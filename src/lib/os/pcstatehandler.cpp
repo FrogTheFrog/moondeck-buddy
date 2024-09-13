@@ -8,21 +8,15 @@
 #include "os/shared/nativepcstatehandlerinterface.h"
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 const int SEC_TO_MS{1000};
-
-//---------------------------------------------------------------------------------------------------------------------
 
 int getTimeoutTime(uint grace_period_in_sec)
 {
     return static_cast<int>(grace_period_in_sec) * SEC_TO_MS;
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace os
 {
@@ -32,18 +26,12 @@ PcStateHandler::PcStateHandler(std::unique_ptr<NativePcStateHandlerInterface> na
     Q_ASSERT(m_native_handler != nullptr);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 PcStateHandler::~PcStateHandler() = default;
-
-//---------------------------------------------------------------------------------------------------------------------
 
 enums::PcState PcStateHandler::getState() const
 {
     return m_state;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
 {
@@ -51,15 +39,11 @@ bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
                          &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcStateHandler::restartPC(uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
                          &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcStateHandler::suspendPC(uint grace_period_in_sec)
 {
@@ -67,15 +51,11 @@ bool PcStateHandler::suspendPC(uint grace_period_in_sec)
                          &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
                          &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)

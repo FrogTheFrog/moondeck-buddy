@@ -7,8 +7,6 @@
 // local includes
 #include "shared/loggingcategories.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 bool isWhitespace(char byte)
@@ -16,55 +14,39 @@ bool isWhitespace(char byte)
     return byte == '\n' || byte == ' ' || byte == '\t' || byte == '\r';
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool isQuote(char byte)
 {
     return byte == '"';
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool isGroupStart(char byte)
 {
     return byte == '{';
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool isGroupEnd(char byte)
 {
     return byte == '}';
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool isEscape(char byte)
 {
     return byte == '\\';
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool isEscapable(char byte)
 {
     return byte == '\n' || byte == '\t' || byte == '\r' || byte == '\\' || byte == '\"';
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 using Node = os::RegistryFileParser::Node;
 QString toString(qsizetype indent_level, const Node& node);
 QString toString(qsizetype indent_level, const Node::List& node_list);
-
-//---------------------------------------------------------------------------------------------------------------------
 
 QString indent(qsizetype level)
 {
     return QString{level * 2, ' '};
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*-no-recursion)
 QString toString(qsizetype indent_level, const Node& node)
@@ -89,8 +71,6 @@ QString toString(qsizetype indent_level, const Node& node)
     return result;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 // NOLINTNEXTLINE(*-no-recursion)
 QString toString(qsizetype indent_level, const Node::List& node_list)
 {
@@ -103,16 +83,12 @@ QString toString(qsizetype indent_level, const Node::List& node_list)
 }
 }  // namespace
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 const Node::List& RegistryFileParser::getRoot() const
 {
     return m_root;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool RegistryFileParser::parse(const QString& path)
 {
@@ -147,8 +123,6 @@ bool RegistryFileParser::parse(const QString& path)
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool RegistryFileParser::processByte(const char byte)
 {
     if (m_data.m_next_byte_escaped)
@@ -173,8 +147,6 @@ bool RegistryFileParser::processByte(const char byte)
     return m_data.m_is_quoted ? processInQuotedMode(byte) : processInUnquotedMode(byte);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool RegistryFileParser::processInQuotedMode(const char byte)
 {
     if (isQuote(byte))
@@ -186,8 +158,6 @@ bool RegistryFileParser::processInQuotedMode(const char byte)
     m_data.m_buffer.push_back(byte);
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool RegistryFileParser::processInUnquotedMode(const char byte)
 {
@@ -212,8 +182,6 @@ bool RegistryFileParser::processInUnquotedMode(const char byte)
     m_data.m_buffer.push_back(byte);
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool RegistryFileParser::enterGroup()
 {
@@ -244,8 +212,6 @@ bool RegistryFileParser::enterGroup()
     return true;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool RegistryFileParser::leaveGroup()
 {
     if (!m_data.m_expecting_key_value)
@@ -263,8 +229,6 @@ bool RegistryFileParser::leaveGroup()
     m_data.m_parents.pop_back();
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool RegistryFileParser::saveBuffer()
 {
@@ -305,8 +269,6 @@ bool RegistryFileParser::saveBuffer()
     m_data.m_buffer.clear();
     return true;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 bool RegistryFileParser::saveBufferAndFlipSearch()
 {

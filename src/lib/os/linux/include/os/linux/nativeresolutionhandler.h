@@ -4,8 +4,6 @@
 #include "os/linux/x11resolutionhandler.h"
 #include "os/shared/nativeresolutionhandlerinterface.h"
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace os
 {
 class NativeResolutionHandler : public NativeResolutionHandlerInterface

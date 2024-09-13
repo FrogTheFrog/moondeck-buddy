@@ -5,8 +5,6 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace
 {
 QString generateKeyHash(const QString& key, const QString& salt)
@@ -20,14 +18,10 @@ QString generateKeyHash(const QString& key, const QString& salt)
     return data;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 const int  TIME_INDEX{0};
 const int  TERMINATE_INDEX{1};
 const uint HEARTBEAT_INTERVAL{500};
 const uint HEARTBEAT_TIMEOUT{2000};
-
-//---------------------------------------------------------------------------------------------------------------------
 
 class HeartbeatAccessor final
 {
@@ -47,8 +41,6 @@ private:
     QSharedMemory& m_shared_mem;
 };
 
-//---------------------------------------------------------------------------------------------------------------------
-
 HeartbeatAccessor::HeartbeatAccessor(QSharedMemory& shared_mem)
     : m_shared_mem{shared_mem}
 {
@@ -58,8 +50,6 @@ HeartbeatAccessor::HeartbeatAccessor(QSharedMemory& shared_mem)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 HeartbeatAccessor::~HeartbeatAccessor()
 {
     if (!m_shared_mem.unlock())
@@ -67,8 +57,6 @@ HeartbeatAccessor::~HeartbeatAccessor()
         qFatal("Failed to unlock shared memory %s", qUtf8Printable(m_shared_mem.key()));
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void HeartbeatAccessor::setTime(const QDateTime& time)
 {
@@ -79,8 +67,6 @@ void HeartbeatAccessor::setTime(const QDateTime& time)
     mem_ptr[TIME_INDEX] = time_ms;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 QDateTime HeartbeatAccessor::getTime() const
 {
     // NOLINTNEXTLINE(*-reinterpret-cast)
@@ -88,8 +74,6 @@ QDateTime HeartbeatAccessor::getTime() const
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], Qt::UTC);
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void HeartbeatAccessor::setShouldTerminate(bool terminate)
 {
@@ -99,8 +83,6 @@ void HeartbeatAccessor::setShouldTerminate(bool terminate)
     mem_ptr[TERMINATE_INDEX] = static_cast<qint64>(terminate);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool HeartbeatAccessor::getShouldTerminate() const
 {
     // NOLINTNEXTLINE(*-reinterpret-cast)
@@ -109,8 +91,6 @@ bool HeartbeatAccessor::getShouldTerminate() const
     return static_cast<bool>(mem_ptr[TERMINATE_INDEX]);
 }
 }  // namespace
-
-//---------------------------------------------------------------------------------------------------------------------
 
 namespace utils
 {
@@ -141,8 +121,6 @@ Heartbeat::Heartbeat(const QString& key)
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void Heartbeat::startBeating()
 {
     if (m_is_listening)
@@ -157,8 +135,6 @@ void Heartbeat::startBeating()
         slotBeating(true);
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void Heartbeat::startListening()
 {
@@ -175,22 +151,16 @@ void Heartbeat::startListening()
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 void Heartbeat::terminate()
 {
     HeartbeatAccessor memory{m_shared_mem};
     memory.setShouldTerminate(true);
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
 bool Heartbeat::isAlive() const
 {
     return m_is_beating || m_is_alive;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void Heartbeat::slotBeating(bool fresh_start)
 {
@@ -208,8 +178,6 @@ void Heartbeat::slotBeating(bool fresh_start)
 
     m_timer.start();
 }
-
-//---------------------------------------------------------------------------------------------------------------------
 
 void Heartbeat::slotListening()
 {

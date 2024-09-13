@@ -4,8 +4,6 @@
 #include <QSharedMemory>
 #include <QSystemSemaphore>
 
-//---------------------------------------------------------------------------------------------------------------------
-
 namespace utils
 {
 // From https://stackoverflow.com/questions/5006547/qt-best-practice-for-a-single-instance-app-protection
