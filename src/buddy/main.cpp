@@ -104,9 +104,9 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
             const QObject anchor;
             QTimer::singleShot(terminate_timeout_ms, &anchor, [&listener]() { listener(true); });
             QTimer::singleShot(0, &anchor, [&listener]() { listener(false); });
-            QObject::connect(&buddy_heartbeat, utils::Heartbeat::signalStateChanged, &anchor,
+            QObject::connect(&buddy_heartbeat, &utils::Heartbeat::signalStateChanged, &anchor,
                              [&listener]() { listener(false); });
-            QObject::connect(&stream_heartbeat, utils::Heartbeat::signalStateChanged, &anchor,
+            QObject::connect(&stream_heartbeat, &utils::Heartbeat::signalStateChanged, &anchor,
                              [&listener]() { listener(false); });
 
             return_code = QCoreApplication::exec();
