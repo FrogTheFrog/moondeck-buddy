@@ -45,9 +45,9 @@ jobs:
           tag: "v${{ steps.project_version.outputs.VERSION }}"
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: steps.tagstatus.outputs.TAG_EXISTS == 0
         with: 
           tag_name: "v${{ steps.project_version.outputs.VERSION }}"
-          files: dist/*
+          files: moondeckbuddy-*/*
           draft: true
