@@ -1,9 +1,11 @@
 // system/Qt includes
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QDir>
 #include <QMainWindow>
 
 // local includes
+#include "os/autostarthandler.h"
 #include "os/pccontrol.h"
 #include "os/sunshineapps.h"
 #include "os/systemtray.h"
@@ -19,20 +21,84 @@
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
 
+namespace
+{
+std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppMetadata& app_meta)
+{
+    const QCommandLineOption help_option{{"h", "help"}, "Displays help on commandline options."};
+    const QCommandLineOption version_option{{"v", "version"}, "Displays version information."};
+    const QCommandLineOption enable_autostart_option{"enable-autostart", "Enable the autostart for Buddy."};
+    const QCommandLineOption disable_autostart_option{"disable-autostart", "Disable the autostart for Buddy."};
+
+    parser.addOption(help_option);
+    parser.addOption(version_option);
+    parser.addOption(enable_autostart_option);
+    parser.addOption(disable_autostart_option);
+
+    if (!parser.parse(QCoreApplication::arguments()))
+    {
+        qCWarning(lc::buddyMain) << "failed to parse arguments:" << parser.unknownOptionNames();
+        return EXIT_FAILURE;
+    }
+
+    if (const auto unknown_args = parser.positionalArguments(); !unknown_args.empty())
+    {
+        qCWarning(lc::buddyMain) << "failed to parse unknown arguments:" << unknown_args;
+        return EXIT_FAILURE;
+    }
+
+    if (parser.isSet(help_option))
+    {
+        parser.showHelp();
+        Q_UNREACHABLE_RETURN(EXIT_SUCCESS);
+    }
+
+    if (parser.isSet(version_option))
+    {
+        parser.showVersion();
+        Q_UNREACHABLE_RETURN(EXIT_SUCCESS);
+    }
+
+    if (parser.isSet(enable_autostart_option) || parser.isSet(disable_autostart_option))
+    {
+        const bool           enable{parser.isSet(enable_autostart_option)};
+        os::AutoStartHandler auto_start_handler{app_meta};
+        auto_start_handler.setAutoStart(enable);
+
+        if (enable != auto_start_handler.isAutoStartEnabled())
+        {
+            qCWarning(lc::buddyMain) << "failed to enable autostart.";
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
+
+    return std::nullopt;
+}
+}  // namespace
+
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
     constexpr int             api_version{4};
     const shared::AppMetadata app_meta{shared::AppMetadata::App::Buddy};
 
+    QApplication app{argc, argv};
+    QCoreApplication::setApplicationName(app_meta.getAppName());
+    QCoreApplication::setApplicationVersion(EXEC_VERSION);
+
+    QCommandLineParser parser;
+    if (const auto result = parseArguments(parser, app_meta); result)
+    {
+        return *result;
+    }
+
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
     if (!guard.tryToRun())
     {
-        return EXIT_SUCCESS;
+        qCWarning(lc::buddyMain) << "another instance of" << app_meta.getAppName() << "is already running!";
+        return EXIT_FAILURE;
     }
-
-    QApplication app{argc, argv};
-    QCoreApplication::setApplicationName(app_meta.getAppName());
 
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());

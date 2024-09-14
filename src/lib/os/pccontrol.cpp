@@ -3,13 +3,11 @@
 
 // os-specific includes
 #if defined(Q_OS_WIN)
-    #include "os/win/autostarthandler.h"
     #include "os/win/nativepcstatehandler.h"
     #include "os/win/nativeprocesshandler.h"
     #include "os/win/nativeresolutionhandler.h"
     #include "os/win/steamregistryobserver.h"
 #elif defined(Q_OS_LINUX)
-    #include "os/linux/autostarthandler.h"
     #include "os/linux/nativepcstatehandler.h"
     #include "os/linux/nativeprocesshandler.h"
     #include "os/linux/nativeresolutionhandler.h"
@@ -35,7 +33,7 @@ namespace os
 PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
                      QString registry_file_override, QString steam_binary_override)
     : m_app_meta{app_meta}
-    , m_auto_start_handler{std::make_unique<AutoStartHandler>(m_app_meta)}
+    , m_auto_start_handler{m_app_meta}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
     , m_steam_handler{std::make_unique<ProcessHandler>(std::make_unique<NativeProcessHandler>()),
@@ -44,7 +42,6 @@ PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString
     , m_stream_state_handler{
           std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
 {
-    Q_ASSERT(m_auto_start_handler != nullptr);
     Q_ASSERT(m_stream_state_handler != nullptr);
 
     connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
@@ -174,12 +171,12 @@ enums::PcState PcControl::getPcState() const
 
 void PcControl::setAutoStart(bool enable)
 {
-    m_auto_start_handler->setAutoStart(enable);
+    m_auto_start_handler.setAutoStart(enable);
 }
 
 bool PcControl::isAutoStartEnabled() const
 {
-    return m_auto_start_handler->isAutoStartEnabled();
+    return m_auto_start_handler.isAutoStartEnabled();
 }
 
 bool PcControl::changeResolution(uint width, uint height)

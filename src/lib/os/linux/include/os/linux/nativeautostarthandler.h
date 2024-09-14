@@ -4,7 +4,7 @@
 #include <QtGlobal>
 
 // local includes
-#include "os/shared/autostarthandlerinterface.h"
+#include "os/shared/nativeautostarthandlerinterface.h"
 
 // forward declarations
 namespace shared
@@ -14,13 +14,13 @@ class AppMetadata;
 
 namespace os
 {
-class AutoStartHandler : public AutoStartHandlerInterface
+class NativeAutoStartHandler : public NativeAutoStartHandlerInterface
 {
-    Q_DISABLE_COPY(AutoStartHandler)
+    Q_DISABLE_COPY(NativeAutoStartHandler)
 
 public:
-    explicit AutoStartHandler(const shared::AppMetadata& app_meta);
-    virtual ~AutoStartHandler() override = default;
+    explicit NativeAutoStartHandler(const shared::AppMetadata& app_meta);
+    ~NativeAutoStartHandler() override = default;
 
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;

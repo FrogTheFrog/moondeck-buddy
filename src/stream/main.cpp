@@ -15,14 +15,16 @@ int main(int argc, char* argv[])
 {
     const shared::AppMetadata app_meta{shared::AppMetadata::App::Stream};
 
+    QCoreApplication app{argc, argv};
+    QCoreApplication::setApplicationName(app_meta.getAppName());
+    QCoreApplication::setApplicationVersion(EXEC_VERSION);
+
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
     if (!guard.tryToRun())
     {
-        return EXIT_SUCCESS;
+        qCWarning(lc::streamMain) << "another instance of" << app_meta.getAppName() << "is already running!";
+        return EXIT_FAILURE;
     }
-
-    QCoreApplication app{argc, argv};
-    QCoreApplication::setApplicationName(app_meta.getAppName());
 
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());

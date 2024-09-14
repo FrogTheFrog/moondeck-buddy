@@ -2,10 +2,10 @@
 
 namespace os
 {
-class AutoStartHandlerInterface
+class NativeAutoStartHandlerInterface
 {
 public:
-    virtual ~AutoStartHandlerInterface() = default;
+    virtual ~NativeAutoStartHandlerInterface() = default;
 
     virtual void setAutoStart(bool enable)  = 0;
     virtual bool isAutoStartEnabled() const = 0;

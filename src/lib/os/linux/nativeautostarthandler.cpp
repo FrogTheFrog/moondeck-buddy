@@ -1,5 +1,5 @@
 // header file include
-#include "os/linux/autostarthandler.h"
+#include "os/linux/nativeautostarthandler.h"
 
 // system/Qt includes
 #include <QDir>
@@ -26,12 +26,12 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
 
 namespace os
 {
-AutoStartHandler::AutoStartHandler(const shared::AppMetadata& app_meta)
+NativeAutoStartHandler::NativeAutoStartHandler(const shared::AppMetadata& app_meta)
     : m_app_meta{app_meta}
 {
 }
 
-void AutoStartHandler::setAutoStart(bool enable)
+void NativeAutoStartHandler::setAutoStart(bool enable)
 {
     const auto dir{m_app_meta.getAutoStartDir()};
     QFile      file{m_app_meta.getAutoStartPath()};
@@ -61,7 +61,7 @@ void AutoStartHandler::setAutoStart(bool enable)
     }
 }
 
-bool AutoStartHandler::isAutoStartEnabled() const
+bool NativeAutoStartHandler::isAutoStartEnabled() const
 {
     QFile file{m_app_meta.getAutoStartPath()};
 

@@ -19,17 +19,27 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
     , m_app_name{std::move(app_name)}
     , m_pc_control{pc_control}
 {
-    QObject::connect(&m_autostart_action, &QAction::triggered, this,
-                     [this]()
-                     {
-                         m_pc_control.setAutoStart(!m_pc_control.isAutoStartEnabled());
-                         m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
-                     });
-    QObject::connect(&m_quit_action, &QAction::triggered, this, &SystemTray::signalQuitApp);
-    QObject::connect(&m_tray_attach_retry_timer, &QTimer::timeout, this, &SystemTray::slotTryAttach);
+    connect(&m_autostart_action, &QAction::triggered, this,
+            [this]()
+            {
+                if (m_autostart_action.isChecked() == m_pc_control.isAutoStartEnabled())
+                {
+                    // Only set if states are in sync, otherwise just sync the state...
+                    m_pc_control.setAutoStart(!m_pc_control.isAutoStartEnabled());
+                }
+
+                m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
+            });
+    connect(&m_menu, &QMenu::aboutToShow, this,
+            [this]()
+            {
+                // Sync the state in case it was set via cmd
+                m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
+            });
+    connect(&m_quit_action, &QAction::triggered, this, &SystemTray::signalQuitApp);
+    connect(&m_tray_attach_retry_timer, &QTimer::timeout, this, &SystemTray::slotTryAttach);
 
     m_autostart_action.setCheckable(true);
-    m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
 
     m_menu.addAction(&m_autostart_action);
     m_menu.addAction(&m_quit_action);
