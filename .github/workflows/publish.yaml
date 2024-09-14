@@ -49,5 +49,7 @@ jobs:
         if: steps.tagstatus.outputs.TAG_EXISTS == 0
         with: 
           tag_name: "v${{ steps.project_version.outputs.VERSION }}"
-          files: moondeckbuddy-*/*
+          files: |
+            moondeckbuddy-windows/*
+            moondeckbuddy-linux/*
           draft: true
