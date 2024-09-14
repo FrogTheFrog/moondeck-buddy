@@ -22,13 +22,12 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
     connect(&m_autostart_action, &QAction::triggered, this,
             [this]()
             {
-                if (m_autostart_action.isChecked() == m_pc_control.isAutoStartEnabled())
+                m_pc_control.setAutoStart(m_autostart_action.isChecked());
+                if (m_autostart_action.isChecked() != m_pc_control.isAutoStartEnabled())
                 {
-                    // Only set if states are in sync, otherwise just sync the state...
-                    m_pc_control.setAutoStart(!m_pc_control.isAutoStartEnabled());
+                    qCWarning(lc::utils) << "failed to enable/disable autostart!";
+                    m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
                 }
-
-                m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
             });
     connect(&m_menu, &QMenu::aboutToShow, this,
             [this]()
