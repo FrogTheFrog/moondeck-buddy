@@ -16,6 +16,7 @@
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
+#include "utils/heartbeat.h"
 #include "utils/logsettings.h"
 #include "utils/pairinginput.h"
 #include "utils/singleinstanceguard.h"
@@ -29,21 +30,23 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
     const QCommandLineOption version_option{{"v", "version"}, "Displays version information."};
     const QCommandLineOption enable_autostart_option{"enable-autostart", "Enable the autostart for Buddy."};
     const QCommandLineOption disable_autostart_option{"disable-autostart", "Disable the autostart for Buddy."};
+    const QCommandLineOption close_all_option{"close-all", "Close running Buddy and Stream instances."};
 
     parser.addOption(help_option);
     parser.addOption(version_option);
     parser.addOption(enable_autostart_option);
     parser.addOption(disable_autostart_option);
+    parser.addOption(close_all_option);
 
     if (!parser.parse(QCoreApplication::arguments()))
     {
-        qCWarning(lc::buddyMain) << "failed to parse arguments:" << parser.unknownOptionNames();
+        qInfo() << "Failed to parse arguments:" << parser.unknownOptionNames();
         return EXIT_FAILURE;
     }
 
     if (const auto unknown_args = parser.positionalArguments(); !unknown_args.empty())
     {
-        qCWarning(lc::buddyMain) << "failed to parse unknown arguments:" << unknown_args;
+        qInfo() << "Failed to parse unknown arguments:" << unknown_args;
         return EXIT_FAILURE;
     }
 
@@ -59,6 +62,7 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
         Q_UNREACHABLE_RETURN(EXIT_SUCCESS);
     }
 
+    std::optional<int> return_code;
     if (parser.isSet(enable_autostart_option) || parser.isSet(disable_autostart_option))
     {
         const bool           enable{parser.isSet(enable_autostart_option)};
@@ -67,13 +71,58 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
 
         if (enable != auto_start_handler.isAutoStartEnabled())
         {
-            qCWarning(lc::buddyMain) << "failed to enable autostart.";
+            qInfo() << "Failed to enable autostart.";
             return EXIT_FAILURE;
         }
-        return EXIT_SUCCESS;
+
+        return_code = EXIT_SUCCESS;
     }
 
-    return std::nullopt;
+    if (parser.isSet(close_all_option))
+    {
+        utils::Heartbeat buddy_heartbeat{app_meta.getAppName(shared::AppMetadata::App::Buddy)};
+        utils::Heartbeat stream_heartbeat{app_meta.getAppName(shared::AppMetadata::App::Stream)};
+
+        buddy_heartbeat.startListening();
+        stream_heartbeat.startListening();
+
+        buddy_heartbeat.terminate();
+        stream_heartbeat.terminate();
+
+        {
+            constexpr int terminate_timeout_ms{5000};
+            const auto    listener{[&buddy_heartbeat, &stream_heartbeat](const bool timeout)
+                                {
+                                    if (!timeout && (buddy_heartbeat.isAlive() || stream_heartbeat.isAlive()))
+                                    {
+                                        return;
+                                    }
+
+                                    QCoreApplication::quit();
+                                }};
+
+            const QObject anchor;
+            QTimer::singleShot(terminate_timeout_ms, &anchor, [&listener]() { listener(true); });
+            QTimer::singleShot(0, &anchor, [&listener]() { listener(false); });
+            QObject::connect(&buddy_heartbeat, utils::Heartbeat::signalStateChanged, &anchor,
+                             [&listener]() { listener(false); });
+            QObject::connect(&stream_heartbeat, utils::Heartbeat::signalStateChanged, &anchor,
+                             [&listener]() { listener(false); });
+
+            return_code = QCoreApplication::exec();
+        }
+
+        if (return_code == EXIT_SUCCESS)
+        {
+            if (buddy_heartbeat.isAlive() || stream_heartbeat.isAlive())
+            {
+                qInfo() << "Failed to terminate active Buddy and/or Stream instance.";
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
+    return return_code;
 }
 }  // namespace
 
@@ -103,6 +152,10 @@ int main(int argc, char* argv[])
     utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     qCInfo(lc::buddyMain) << "startup. Version:" << EXEC_VERSION;
+
+    utils::Heartbeat heartbeat{app_meta.getAppName()};
+    QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
+    heartbeat.startBeating();
 
     const utils::AppSettings app_settings{app_meta.getSettingsPath()};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());

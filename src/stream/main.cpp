@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
 
-    os::SleepInhibitor sleep_inhibitor{app_meta.getAppName()};
-    utils::Heartbeat   heartbeat{app_meta.getAppName()};
+    const os::SleepInhibitor sleep_inhibitor{app_meta.getAppName()};
+    utils::Heartbeat         heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 

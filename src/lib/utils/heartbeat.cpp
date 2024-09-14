@@ -18,10 +18,10 @@ QString generateKeyHash(const QString& key, const QString& salt)
     return data;
 }
 
-const int  TIME_INDEX{0};
-const int  TERMINATE_INDEX{1};
-const uint HEARTBEAT_INTERVAL{500};
-const uint HEARTBEAT_TIMEOUT{2000};
+constexpr int TIME_INDEX{0};
+constexpr int TERMINATE_INDEX{1};
+constexpr int HEARTBEAT_INTERVAL{250};
+constexpr int HEARTBEAT_TIMEOUT{2000};
 
 class HeartbeatAccessor final
 {
@@ -118,6 +118,16 @@ Heartbeat::Heartbeat(const QString& key)
     {
         qFatal("Failed to attach to shared memory %s (%s). Reason: %s", qUtf8Printable(key),
                qUtf8Printable(m_shared_mem.key()), qUtf8Printable(m_shared_mem.errorString()));
+    }
+}
+
+Heartbeat::~Heartbeat()
+{
+    if (m_is_beating)
+    {
+        HeartbeatAccessor memory{m_shared_mem};
+        // Set the final time so that the other process can quickly determine that the heartbeat is gone
+        memory.setTime(QDateTime::currentDateTimeUtc().addMSecs(-HEARTBEAT_TIMEOUT).addMSecs(HEARTBEAT_INTERVAL));
     }
 }
 

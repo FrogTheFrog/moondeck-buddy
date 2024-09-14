@@ -13,7 +13,7 @@ class Heartbeat final : public QObject
 
 public:
     explicit Heartbeat(const QString& key);
-    ~Heartbeat() override = default;
+    ~Heartbeat() override;
 
     void startBeating();
     void startListening();
