@@ -129,8 +129,9 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    constexpr int             api_version{4};
-    const shared::AppMetadata app_meta{shared::AppMetadata::App::Buddy};
+    constexpr int              api_version{4};
+    const shared::AppMetadata  app_meta{shared::AppMetadata::App::Buddy};
+    utils::SingleInstanceGuard guard{app_meta.getAppName()};
 
     QApplication app{argc, argv};
     QCoreApplication::setApplicationName(app_meta.getAppName());
@@ -142,7 +143,6 @@ int main(int argc, char* argv[])
         return *result;
     }
 
-    utils::SingleInstanceGuard guard{app_meta.getAppName()};
     if (!guard.tryToRun())
     {
         qCWarning(lc::buddyMain) << "another instance of" << app_meta.getAppName() << "is already running!";

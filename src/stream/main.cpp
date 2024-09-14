@@ -13,13 +13,13 @@
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    const shared::AppMetadata app_meta{shared::AppMetadata::App::Stream};
+    const shared::AppMetadata  app_meta{shared::AppMetadata::App::Stream};
+    utils::SingleInstanceGuard guard{app_meta.getAppName()};
 
     QCoreApplication app{argc, argv};
     QCoreApplication::setApplicationName(app_meta.getAppName());
     QCoreApplication::setApplicationVersion(EXEC_VERSION);
 
-    utils::SingleInstanceGuard guard{app_meta.getAppName()};
     if (!guard.tryToRun())
     {
         qCWarning(lc::streamMain) << "another instance of" << app_meta.getAppName() << "is already running!";
