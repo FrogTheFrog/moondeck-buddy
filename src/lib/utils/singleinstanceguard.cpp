@@ -1,8 +1,10 @@
 // header file include
 #include "utils/singleinstanceguard.h"
 
-// A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
-#include <windows.h>
+#if defined(QT_OS_WINDOWS)
+    // A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
+    #include <windows.h>
+#endif
 
 // system/Qt includes
 #include <QCryptographicHash>
@@ -36,8 +38,10 @@ SingleInstanceGuard::SingleInstanceGuard(const QString& key)
         fix.attach();
     }
 
+#if defined(QT_OS_WINDOWS)
     // OS will clean up this mutex (used by installer)
     CreateMutexA(nullptr, FALSE, key.toLatin1());
+#endif
 }
 
 SingleInstanceGuard::~SingleInstanceGuard()
