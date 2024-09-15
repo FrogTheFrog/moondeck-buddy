@@ -10,7 +10,7 @@ if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
     ARGS="${@:3}"
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
-        exec "$HERE/usr/bin/$BINARY_NAME" "$ARGS"
+        exec "$HERE/usr/bin/$BINARY_NAME" $ARGS
     else
         echo "$BINARY_NAME does not exist!"
         exit 1
@@ -22,11 +22,11 @@ elif [ ! -z $APPIMAGE ] ; then
         # Replace the app image env with the symlink as it will be used
         # to create an autostart script
         SYMLINK_PATH="$(realpath -s "$ARGV0")"
-        APPIMAGE=$SYMLINK_PATH exec "$HERE/usr/bin/$BINARY_NAME" "$ARGS"
+        APPIMAGE=$SYMLINK_PATH exec "$HERE/usr/bin/$BINARY_NAME" $ARGS
     else
-        exec "$HERE/usr/bin/MoonDeckBuddy" "$ARGS"
+        exec "$HERE/usr/bin/MoonDeckBuddy" $ARGS
     fi
 else
     ARGS="$@"
-    exec "$HERE/usr/bin/MoonDeckBuddy" "$ARGS"
+    exec "$HERE/usr/bin/MoonDeckBuddy" $ARGS
 fi
