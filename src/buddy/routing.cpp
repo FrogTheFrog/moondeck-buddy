@@ -87,9 +87,7 @@ Q_ENUM_NS(ChangePcState)
 void setupApiVersion(server::HttpServer& server)
 {
     server.route("/apiVersion", QHttpServerRequest::Method::Get,
-                 [&server]() {
-                     return QJsonObject{{"version", server.getApiVersion()}};
-                 });
+                 [&server]() { return QJsonObject{{"version", server.getApiVersion()}}; });
 }
 
 void setupPairing(server::HttpServer& server, server::PairingManager& pairing_manager)
@@ -150,8 +148,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
 void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool prefer_hibernation,
                   bool close_steam_before_sleep)
 {
-    server.route(
-        "/pcState", QHttpServerRequest::Method::Get,
+    server.route("/pcState", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
@@ -159,7 +156,8 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool pr
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-            return QHttpServerResponse{QJsonObject{{"state", QVariant::fromValue(pc_control.getPcState()).toString()}}};
+                     return QHttpServerResponse{
+                         QJsonObject{{"state", QVariant::fromValue(pc_control.getPcState()).toString()}}};
                  });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,

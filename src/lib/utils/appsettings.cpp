@@ -151,13 +151,11 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
 
-            constexpr int current_entries
-            {
-                9 +
+            constexpr int current_entries{9 +
 #if defined(Q_OS_LINUX)
-                    2
+                                          2
 #else
-                    0
+                                          0
 #endif
             };
             int valid_entries{0};
