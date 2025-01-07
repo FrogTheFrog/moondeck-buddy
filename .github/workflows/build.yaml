@@ -26,8 +26,6 @@ jobs:
         with:
           version: '6.8.*'
           host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
           modules: 'qthttpserver qtwebsockets'
       
       - name: Configure
@@ -71,8 +69,6 @@ jobs:
         with:
           version: '6.8.*'
           host: 'linux'
-          target: 'desktop'
-          arch: 'linux_gcc_64'
           modules: 'qthttpserver qtwebsockets'
 
       - name: Configure
