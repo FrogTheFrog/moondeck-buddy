@@ -59,7 +59,7 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libproc2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
+        run: sudo apt-get install ninja-build libxrandr-dev libfuse2 libxcb-cursor-dev
 
       - name: Checkout
         uses: actions/checkout@v4
