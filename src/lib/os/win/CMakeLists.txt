@@ -8,7 +8,7 @@ set(LIBNAME osspecificlib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Core Network REQUIRED)
 qt_standard_project_setup()
 
 find_library(PSAPI Psapi REQUIRED)
@@ -27,5 +27,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Psapi PowrProf ossharedlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Network Psapi PowrProf ossharedlib sharedlib ws2_32 iphlpapi)
 target_include_directories(${LIBNAME} PUBLIC include)

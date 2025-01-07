@@ -11,6 +11,11 @@
 #include "shared/loggingcategories.h"
 #include "utils/jsonvalueconverter.h"
 
+// os-specific includes
+#if defined(Q_OS_WIN)
+    #include "os/win/nativenetworkhandler.h"
+#endif
+
 namespace
 {
 QJsonDocument requestToJson(const QHttpServerRequest& request)
@@ -41,6 +46,9 @@ QJsonObject requestToJsonObject(const QHttpServerRequest& request)
 
 QString getMacAddress(const QHostAddress& address)
 {
+    #if defined(Q_OS_WIN)
+    return os::NativeNetworkHandler::GetMacAddressFromQHostAddress(address);
+    #else
     static const QSet<QNetworkInterface::InterfaceType> allowed_types{QNetworkInterface::Ethernet,
                                                                       QNetworkInterface::Wifi};
 
@@ -59,6 +67,7 @@ QString getMacAddress(const QHostAddress& address)
     }
 
     return {};
+    #endif
 }
 
 const int MAX_GRACE_PERIOD_S{30};
