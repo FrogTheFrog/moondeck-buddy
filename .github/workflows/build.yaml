@@ -25,7 +25,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           aqtversion: '==3.1.*'
-          version: '6.7.2'
+          version: '6.8.*'
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
@@ -60,7 +60,7 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libprocps-dev libxrandr-dev libfuse2 libxcb-cursor-dev
+        run: sudo apt-get install ninja-build libprocps2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,7 +71,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           aqtversion: '==3.1.*'
-          version: '6.7.2'
+          version: '6.8.*'
           host: 'linux'
           target: 'desktop'
           arch: 'linux_gcc_64'
