@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QTimeZone>
 
 namespace
 {
@@ -72,7 +73,7 @@ QDateTime HeartbeatAccessor::getTime() const
     // NOLINTNEXTLINE(*-reinterpret-cast)
     const qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
     // NOLINTNEXTLINE(*-pointer-arithmetic)
-    return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], Qt::UTC);
+    return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], QTimeZone::UTC);
 }
 
 void HeartbeatAccessor::setShouldTerminate(bool terminate)

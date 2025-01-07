@@ -33,7 +33,8 @@ public:
     template<typename ViewHandler>
     void afterRequest(ViewHandler&& viewHandler);
 
-    void setMissingHandler(QHttpServer::MissingHandler handler);
+    template<typename Handler>
+    void setMissingHandler(Handler&& handler);
 
 private:
     int         m_api_version;
@@ -50,6 +51,12 @@ bool HttpServer::route(Args&&... args)
 template<typename ViewHandler>
 void HttpServer::afterRequest(ViewHandler&& viewHandler)
 {
-    return m_server.afterRequest(std::forward<ViewHandler>(viewHandler));
+    return m_server.addAfterRequestHandler(&m_server, std::forward<ViewHandler>(viewHandler));
+}
+
+template<typename Handler>
+void HttpServer::setMissingHandler(Handler&& handler)
+{
+    return m_server.setMissingHandler(&m_server, std::forward<Handler>(handler));
 }
 }  // namespace server

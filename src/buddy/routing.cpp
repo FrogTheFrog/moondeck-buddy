@@ -152,15 +152,15 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control, bool pr
 {
     server.route(
         "/pcState", QHttpServerRequest::Method::Get,
-        [&server, &pc_control](const QHttpServerRequest& request)
-        {
-            if (!server.isAuthorized(request))
-            {
-                return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-            }
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
 
             return QHttpServerResponse{QJsonObject{{"state", QVariant::fromValue(pc_control.getPcState()).toString()}}};
-        });
+                 });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,
                  [&server, &pc_control, prefer_hibernation, close_steam_before_sleep](const QHttpServerRequest& request)
@@ -385,7 +385,7 @@ void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_
 void setupRouteLogging(server::HttpServer& server)
 {
     server.afterRequest(
-        [](const QHttpServerRequest& request, QHttpServerResponse&& resp)
+        [](const QHttpServerRequest& request, QHttpServerResponse& resp)
         {
             qCDebug(lc::buddyMain) << Qt::endl
                                    << "Request:" << request << "|" << request.body() << Qt::endl
