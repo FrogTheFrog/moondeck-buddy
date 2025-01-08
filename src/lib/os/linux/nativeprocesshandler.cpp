@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <csignal>
-#include <proc/readproc.h>
+#include <libproc2/pids.h>
 #include <sys/types.h>
 
 // local includes
@@ -15,68 +15,71 @@
 
 namespace
 {
-uint getParentPid(uint pid)
+template<class ItemValue, class Getter>
+ItemValue getPidItem(const uint pid, const pids_item item, const ItemValue& fallback, Getter&& getter)
 {
-    const std::array<uint, 2> pids{pid, 0};
+    pids_item items[] = {item};
 
-    proc_t proc_info;
-    memset(&proc_info, 0, sizeof(proc_info));
-
-    // NOLINTNEXTLINE(*-vararg)
-    PROCTAB*   proc = openproc(PROC_FILLSTATUS | PROC_PID, pids.data());
-    const auto cleanup{qScopeGuard(
-        [&]()
-        {
-            if (proc != nullptr)
-            {
-                closeproc(proc);
-            }
-        })};
-    if (readproc(proc, &proc_info) == nullptr)
+    pids_info* info{nullptr};
+    if (int error = procps_pids_new(&info, items, sizeof(items)); error < 0)
     {
-        return 0;
+        qWarning(lc::os) << "Failed at procps_pids_new for" << pid << "-" << lc::getErrorString(error * -1);
+        return fallback;
     }
 
-    return proc_info.ppid;
+    const auto cleanup{qScopeGuard([&]() { procps_pids_unref(&info); })};
+
+    uint  pids[] = {pid};
+    auto* result{procps_pids_select(info, pids, sizeof(pids), PIDS_SELECT_PID)};
+
+    if (!result)
+    {
+        qWarning(lc::os) << "Failed at procps_pids_select for" << pid << "-" << lc::getErrorString(errno);
+        return fallback;
+    }
+
+    if (!result->counts || result->counts->total <= 0)
+    {
+        return fallback;
+    }
+
+    const auto* head_ptr{result->stacks && result->stacks[0]->head ? result->stacks[0]->head : nullptr};
+    if (!head_ptr)
+    {
+        qWarning(lc::os) << "Failed at procps_pids_select for" << pid << "-" << lc::getErrorString(errno);
+        return fallback;
+    }
+
+    return std::forward<Getter>(getter)(head_ptr->result);
+}
+
+uint getParentPid(uint pid)
+{
+    return getPidItem(pid, PIDS_ID_PPID, 0u,
+                      [](const auto& result) { return result.s_int >= 0 ? static_cast<uint>(result.s_int) : 0u; });
 }
 
 QString getCmdline(uint pid)
 {
-    const std::array<uint, 2> pids{pid, 0};
+    return getPidItem(pid, PIDS_ID_PPID, QString{},
+                      [](const auto& result)
+                      {
+                          auto* ptr_list{result.strv};
+                          if (ptr_list == nullptr)
+                          {
+                              return QString{};
+                          }
 
-    proc_t proc_info;
-    memset(&proc_info, 0, sizeof(proc_info));
+                          QStringList cmdline;
+                          while (*ptr_list)
+                          {
+                              cmdline.append(*ptr_list);
+                              // NOLINTNEXTLINE(*-pointer-arithmetic)
+                              ++ptr_list;
+                          }
 
-    // NOLINTNEXTLINE(*-vararg)
-    PROCTAB*   proc = openproc(PROC_FILLCOM | PROC_PID, pids.data());
-    const auto cleanup{qScopeGuard(
-        [&]()
-        {
-            if (proc != nullptr)
-            {
-                closeproc(proc);
-            }
-        })};
-    if (readproc(proc, &proc_info) == nullptr)
-    {
-        return {};
-    }
-
-    auto* ptr_list{proc_info.cmdline};
-    if (ptr_list == nullptr)
-    {
-        return {};
-    }
-
-    QStringList cmdline;
-    while (*ptr_list != nullptr)
-    {
-        cmdline.append(*ptr_list);
-        // NOLINTNEXTLINE(*-pointer-arithmetic)
-        ptr_list++;
-    }
-
-    return cmdline.join(' ');
+                          return cmdline.join(' ');
+                      });
 }
 
 std::vector<uint> getPids()
@@ -85,7 +88,7 @@ std::vector<uint> getPids()
     const auto        dirs{proc_dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot)};
     std::vector<uint> pids;
 
-    pids.reserve(static_cast<std::size_t>(dirs.size()));
+    pids.reserve(dirs.size());
 
     for (const auto& dir : dirs)
     {
