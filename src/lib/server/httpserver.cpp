@@ -65,18 +65,18 @@ bool HttpServer::startServer(quint16 port, const QString& ssl_cert_file, const Q
         ssl_server->setSslConfiguration(ssl_conf);
     }
 
+    if (!ssl_server->listen(QHostAddress::Any, port))
+    {
+        qCWarning(lc::server) << "Server could not start listening at port" << port;
+        return false;
+    }
+
     if (!m_server.bind(ssl_server.get()))
     {
         qCWarning(lc::server) << "Failed to bind the ssl server!";
         return false;
     }
-    auto* ssl_server_ptr{ssl_server.release()};
-
-    if (!ssl_server_ptr || !ssl_server_ptr->listen(QHostAddress::Any, port))
-    {
-        qCWarning(lc::server) << "Server could not start listening at port" << port;
-        return false;
-    }
+    ssl_server.release();  // m_server has taken over the ownership!
 
     qCInfo(lc::server) << "Server started listening at port" << port;
     return true;
