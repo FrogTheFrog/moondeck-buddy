@@ -2,7 +2,7 @@
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ if(WIN32)
 endif()
 
 add_executable(${EXEC_NAME} main.cpp routing.h routing.cpp ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets utilslib serverlib oslib sharedlib)
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network utilslib serverlib oslib osspecificlib sharedlib)
 target_compile_definitions(${EXEC_NAME} PRIVATE EXEC_VERSION="${PROJECT_VERSION}")
 
 if(NOT DEBUG_MODE)

@@ -27,14 +27,11 @@ public:
     int  getApiVersion() const;
     bool isAuthorized(const QHttpServerRequest& request) const;
 
-    template<typename Rule = QHttpServerRouterRule, typename... Args>
-    bool route(Args&&... args);
+    template<typename Functor>
+    bool route(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
 
     template<typename ViewHandler>
-    void afterRequest(ViewHandler&& viewHandler);
-
-    template<typename Handler>
-    void setMissingHandler(Handler&& handler);
+    void afterRequest(ViewHandler&& view_handler);
 
 private:
     int         m_api_version;
@@ -42,21 +39,16 @@ private:
     QHttpServer m_server;
 };
 
-template<typename Rule, typename... Args>
-bool HttpServer::route(Args&&... args)
+template<typename Functor>
+bool HttpServer::route(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor)
 {
-    return m_server.route<Rule>(std::forward<Args>(args)...);
+    static_assert(!std::is_member_function_pointer_v<Functor>, "Member function pointer are not allowed!");
+    return m_server.route(path_pattern, method, std::forward<Functor>(functor));
 }
 
 template<typename ViewHandler>
-void HttpServer::afterRequest(ViewHandler&& viewHandler)
+void HttpServer::afterRequest(ViewHandler&& view_handler)
 {
-    return m_server.addAfterRequestHandler(&m_server, std::forward<ViewHandler>(viewHandler));
-}
-
-template<typename Handler>
-void HttpServer::setMissingHandler(Handler&& handler)
-{
-    return m_server.setMissingHandler(&m_server, std::forward<Handler>(handler));
+    return m_server.addAfterRequestHandler(&m_server, std::forward<ViewHandler>(view_handler));
 }
 }  // namespace server

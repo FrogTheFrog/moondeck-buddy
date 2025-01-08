@@ -4,10 +4,10 @@
 // system/Qt includes
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QtNetwork/QNetworkInterface>
 #include <limits>
 
 // local includes
+#include "os/networkinfo.h"
 #include "shared/loggingcategories.h"
 #include "utils/jsonvalueconverter.h"
 
@@ -37,28 +37,6 @@ QJsonObject requestToJsonObject(const QHttpServerRequest& request)
 {
     const auto json{requestToJson(request)};
     return json.isObject() ? json.object() : QJsonObject{};
-}
-
-QString getMacAddress(const QHostAddress& address)
-{
-    static const QSet<QNetworkInterface::InterfaceType> allowed_types{QNetworkInterface::Ethernet,
-                                                                      QNetworkInterface::Wifi};
-
-    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
-    {
-        if (allowed_types.contains(iface.type()) && (iface.flags() & QNetworkInterface::IsRunning))
-        {
-            for (const QHostAddress& address_entry : iface.allAddresses())
-            {
-                if (address_entry.isEqual(address))
-                {
-                    return iface.hardwareAddress();
-                }
-            }
-        }
-    }
-
-    return {};
 }
 
 const int MAX_GRACE_PERIOD_S{30};
@@ -231,7 +209,7 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     auto mac{mac_address_override.isEmpty() ? getMacAddress(request.localAddress())
+                     auto mac{mac_address_override.isEmpty() ? os::NetworkInfo::getMacAddress(request.localAddress())
                                                              : mac_address_override};
                      if (mac.isEmpty())
                      {
@@ -388,7 +366,6 @@ void setupRouteLogging(server::HttpServer& server)
             qCDebug(lc::buddyMain) << Qt::endl
                                    << "Request:" << request << "|" << request.body() << Qt::endl
                                    << "Response:" << resp.statusCode() << "|" << resp.data();
-            return std::move(resp);
         });
 }
 }  // namespace routing_internal

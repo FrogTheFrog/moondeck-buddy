@@ -8,7 +8,7 @@ set(LIBNAME oslib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets Network REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -37,5 +37,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets osspecificlib sharedlib utilslib PUBLIC ossharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network osspecificlib sharedlib utilslib PUBLIC ossharedlib)
 target_include_directories(${LIBNAME} PUBLIC include)
