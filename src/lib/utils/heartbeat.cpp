@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QTimeZone>
 
 namespace
 {
@@ -72,7 +73,7 @@ QDateTime HeartbeatAccessor::getTime() const
     // NOLINTNEXTLINE(*-reinterpret-cast)
     const qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
     // NOLINTNEXTLINE(*-pointer-arithmetic)
-    return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], Qt::UTC);
+    return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], QTimeZone::UTC);
 }
 
 void HeartbeatAccessor::setShouldTerminate(bool terminate)
@@ -100,7 +101,23 @@ Heartbeat::Heartbeat(const QString& key)
     m_timer.setInterval(HEARTBEAT_INTERVAL);
     m_timer.setSingleShot(true);
 
-    if (m_shared_mem.create(sizeof(qint64) * 2))
+    // On UNIX the shared memory segment will survive a crash, so we have to make sure to clean it up in such cases.
+    const auto try_create_shared_mem = [&]()
+    {
+        constexpr qsizetype size{sizeof(qint64) * 2};
+        auto                result{m_shared_mem.create(size)};
+#if defined(Q_OS_LINUX)
+        if (!result)
+        {
+            m_shared_mem.attach();
+            m_shared_mem.detach();
+            result = m_shared_mem.create(size);
+        }
+#endif
+        return result;
+    };
+
+    if (try_create_shared_mem())
     {
         HeartbeatAccessor memory{m_shared_mem};
         memory.setShouldTerminate(false);
