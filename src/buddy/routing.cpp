@@ -205,10 +205,10 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
     server.route("/hostPcInfo", QHttpServerRequest::Method::Get,
                  [&server, &mac_address_override](const QHttpServerRequest& request)
                  {
-                      if (!server.isAuthorized(request))
-                      {
-                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-                      }
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
 
                      auto mac{mac_address_override.isEmpty() ? os::NetworkInfo::getMacAddress(request.localAddress())
                                                              : mac_address_override};
