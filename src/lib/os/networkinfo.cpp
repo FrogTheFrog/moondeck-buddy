@@ -2,12 +2,16 @@
 #include "os/networkinfo.h"
 
 // system/Qt includes
+#if defined(Q_OS_WIN)
 // clang-format off
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-// clang-format on
-#include <vector>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <iphlpapi.h>
+    // clang-format on
+    #include <vector>
+#else
+    #include <QtNetwork/QNetworkInterface>
+#endif
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -93,7 +97,7 @@ QString NetworkInfo::getMacAddress(const QHostAddress& host_address)
         {
             for (const QHostAddress& address_entry : iface.allAddresses())
             {
-                if (address_entry.isEqual(address))
+                if (address_entry.isEqual(host_address))
                 {
                     return iface.hardwareAddress();
                 }
