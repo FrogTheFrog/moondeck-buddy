@@ -18,10 +18,10 @@ namespace
 template<class ItemValue, class Getter>
 ItemValue getPidItem(const uint pid, const pids_item item, const ItemValue& fallback, Getter&& getter)
 {
-    pids_item items[] = {item};
+    std::array items{item};
 
     pids_info* info{nullptr};
-    if (int error = procps_pids_new(&info, items, sizeof(items)); error < 0)
+    if (const int error = procps_pids_new(&info, items.data(), items.size()); error < 0)
     {
         qWarning(lc::os) << "Failed at procps_pids_new for" << pid << "-" << lc::getErrorString(error * -1);
         return fallback;
@@ -29,8 +29,8 @@ ItemValue getPidItem(const uint pid, const pids_item item, const ItemValue& fall
 
     const auto cleanup{qScopeGuard([&]() { procps_pids_unref(&info); })};
 
-    uint  pids[] = {pid};
-    auto* result{procps_pids_select(info, pids, sizeof(pids), PIDS_SELECT_PID)};
+    std::array  pids{pid};
+    const auto* result{procps_pids_select(info, pids.data(), pids.size(), PIDS_SELECT_PID)};
 
     if (!result)
     {
@@ -53,15 +53,15 @@ ItemValue getPidItem(const uint pid, const pids_item item, const ItemValue& fall
     return std::forward<Getter>(getter)(head_ptr->result);
 }
 
-uint getParentPid(uint pid)
+uint getParentPid(const uint pid)
 {
     return getPidItem(pid, PIDS_ID_PPID, 0u,
                       [](const auto& result) { return result.s_int >= 0 ? static_cast<uint>(result.s_int) : 0u; });
 }
 
-QString getCmdline(uint pid)
+QString getCmdline(const uint pid)
 {
-    return getPidItem(pid, PIDS_ID_PPID, QString{},
+    return getPidItem(pid, PIDS_CMDLINE_V, QString{},
                       [](const auto& result)
                       {
                           auto* ptr_list{result.strv};
