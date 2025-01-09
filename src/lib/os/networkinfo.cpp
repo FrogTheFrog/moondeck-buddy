@@ -9,25 +9,34 @@
     #include <iphlpapi.h>
     // clang-format on
     #include <vector>
-#else
-    #include <QtNetwork/QNetworkInterface>
 #endif
+#include <QtNetwork/QNetworkInterface>
 
 // local includes
 #include "shared/loggingcategories.h"
 
 namespace
 {
-#if defined(Q_OS_WIN)
-QString normalizeIPv4MappedAddress(const QString& ip)
+QString getMacAddressGeneric(const QHostAddress& host_address)
 {
-    if (ip.startsWith("::ffff:"))
+    static const QSet allowed_types{QNetworkInterface::Ethernet, QNetworkInterface::Wifi};
+
+    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
     {
-        return ip.mid(7);  // Strip the "::ffff:" prefix
+        if (allowed_types.contains(iface.type()) && iface.flags().testFlag(QNetworkInterface::IsRunning))
+        {
+            for (const QHostAddress& address_entry : QNetworkInterface::allAddresses())
+            {
+                if (address_entry.isEqual(host_address))
+                {
+                    return iface.hardwareAddress();
+                }
+            }
+        }
     }
-    return ip;
+
+    return {};
 }
-#endif
 }  // namespace
 
 namespace os
@@ -49,63 +58,48 @@ QString NetworkInfo::getMacAddress(const QHostAddress& host_address)
 
     if (result != NO_ERROR)
     {
-        qCWarning(lc::os) << "GetAdaptersAddresses failed with error:" << lc::getErrorString(result);
-        return {};
+        qCWarning(lc::os) << "GetAdaptersAddresses failed with error (using fallback):" << lc::getErrorString(result);
+        return getMacAddressGeneric(host_address);
     }
 
-    const QString target_ip{normalizeIPv4MappedAddress(host_address.toString())};
-    while (addresses)
+    while (addresses != nullptr)
     {
-        for (auto unicast_address = addresses->FirstUnicastAddress; unicast_address != nullptr;
-             unicast_address      = unicast_address->Next)
+        for (auto* unicast_address = addresses->FirstUnicastAddress; unicast_address != nullptr;
+             unicast_address       = unicast_address->Next)
         {
-            char str_buffer[INET6_ADDRSTRLEN] = {0};
-            if (getnameinfo(unicast_address->Address.lpSockaddr, unicast_address->Address.iSockaddrLength, str_buffer,
-                            sizeof(str_buffer), nullptr, 0, NI_NUMERICHOST)
+            if (getnameinfo(unicast_address->Address.lpSockaddr, unicast_address->Address.iSockaddrLength, nullptr, 0,
+                            nullptr, 0, NI_NUMERICHOST)
                 != 0)
             {
                 qCWarning(lc::os) << "WSAGetLastError failed with error:" << lc::getErrorString(WSAGetLastError());
                 return {};
             }
 
-            const QString adapter_pp{QString::fromLatin1(str_buffer)};
-            if (target_ip == adapter_pp)
+            const QHostAddress address_entry(unicast_address->Address.lpSockaddr);
+            if (host_address.isEqual(address_entry))
             {
-                const QString mac_address = QString("%1:%2:%3:%4:%5:%6")
-                                                .arg(addresses->PhysicalAddress[0], 2, 16, QLatin1Char('0'))
-                                                .arg(addresses->PhysicalAddress[1], 2, 16, QLatin1Char('0'))
-                                                .arg(addresses->PhysicalAddress[2], 2, 16, QLatin1Char('0'))
-                                                .arg(addresses->PhysicalAddress[3], 2, 16, QLatin1Char('0'))
-                                                .arg(addresses->PhysicalAddress[4], 2, 16, QLatin1Char('0'))
-                                                .arg(addresses->PhysicalAddress[5], 2, 16, QLatin1Char('0'))
-                                                .toUpper();
+                if (addresses->PhysicalAddressLength > 0)
+                {
+                    QString mac_address = QString("%1:%2:%3:%4:%5:%6")
+                                              .arg(addresses->PhysicalAddress[0], 2, 16, QLatin1Char('0'))
+                                              .arg(addresses->PhysicalAddress[1], 2, 16, QLatin1Char('0'))
+                                              .arg(addresses->PhysicalAddress[2], 2, 16, QLatin1Char('0'))
+                                              .arg(addresses->PhysicalAddress[3], 2, 16, QLatin1Char('0'))
+                                              .arg(addresses->PhysicalAddress[4], 2, 16, QLatin1Char('0'))
+                                              .arg(addresses->PhysicalAddress[5], 2, 16, QLatin1Char('0'))
+                                              .toUpper();
 
-                return mac_address;
+                    return mac_address;
+                }
+
+                qCDebug(lc::os) << "Using fallback MAC detection, because no physical address found for"
+                                << address_entry;
+                return getMacAddressGeneric(address_entry);
             }
         }
         addresses = addresses->Next;
     }
-
-    return {};
-#else
-    static const QSet<QNetworkInterface::InterfaceType> allowed_types{QNetworkInterface::Ethernet,
-                                                                      QNetworkInterface::Wifi};
-
-    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
-    {
-        if (allowed_types.contains(iface.type()) && (iface.flags() & QNetworkInterface::IsRunning))
-        {
-            for (const QHostAddress& address_entry : iface.allAddresses())
-            {
-                if (address_entry.isEqual(host_address))
-                {
-                    return iface.hardwareAddress();
-                }
-            }
-        }
-    }
-
-    return {};
 #endif
+    return getMacAddressGeneric(host_address);
 }
 }  // namespace os
