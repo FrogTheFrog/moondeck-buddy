@@ -48,7 +48,8 @@ qint64 readRemainingLines(std::vector<QString>& lines, QFile& file, const qint64
 
 namespace os
 {
-SteamLogTracker::SteamLogTracker(const QString& main_filename, const QString& backup_filename)
+SteamLogTracker::SteamLogTracker(const std::filesystem::path& main_filename,
+                                 const std::filesystem::path& backup_filename)
     : m_main_filename{main_filename}
     , m_backup_filename{backup_filename}
 {
@@ -56,7 +57,7 @@ SteamLogTracker::SteamLogTracker(const QString& main_filename, const QString& ba
     m_watch_timer.setInterval(1000);
     m_watch_timer.setSingleShot(true);
 
-    slotOnTimeout();
+    QTimer::singleShot(0, this, &SteamLogTracker::slotOnTimeout);
 }
 
 void SteamLogTracker::slotOnTimeout()
@@ -75,8 +76,8 @@ void SteamLogTracker::slotOnTimeout()
 
     if (!m_initialized)
     {
-        qCInfo(lc::os) << "performing initial log read for files" << m_main_filename << "and" << m_backup_filename
-                       << ".";
+        qCInfo(lc::os) << "performing initial log read for files" << m_main_filename.generic_string() << "and"
+                       << m_backup_filename.generic_string() << ".";
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
@@ -87,7 +88,8 @@ void SteamLogTracker::slotOnTimeout()
                 return;
             }
 
-            qCInfo(lc::os) << "skipping file" << m_backup_filename << "for initial read, because it does not exist.";
+            qCInfo(lc::os) << "skipping file" << m_backup_filename.generic_string()
+                           << "for initial read, because it does not exist.";
         }
 
         std::vector<QString> lines;
@@ -106,7 +108,7 @@ void SteamLogTracker::slotOnTimeout()
 
     if (was_main_file_appended)
     {
-        qCDebug(lc::os) << "file" << m_main_filename << "was appended.";
+        qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "was appended.";
 
         std::vector<QString> lines;
         m_last_read_pos  = readRemainingLines(lines, main_file, m_last_read_pos);
@@ -118,7 +120,8 @@ void SteamLogTracker::slotOnTimeout()
 
     if (was_main_file_switched_with_backup)
     {
-        qCDebug(lc::os) << "file" << m_main_filename << "was switched with" << m_backup_filename << ".";
+        qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "was switched with"
+                        << m_backup_filename.generic_string() << ".";
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
@@ -135,6 +138,6 @@ void SteamLogTracker::slotOnTimeout()
         return;
     }
 
-    qCDebug(lc::os) << "file" << m_main_filename << "did not change.";
+    qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "did not change.";
 }
 }  // namespace os
