@@ -9,6 +9,23 @@
 
 namespace
 {
+bool openForReading(QFile& file)
+{
+    if (!file.exists())
+    {
+        qCDebug(lc::os) << "file" << file.fileName() << "does not exist yet.";
+        return false;
+    }
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qCWarning(lc::os) << "file" << file.fileName() << "could not be opened!";
+        return false;
+    }
+
+    return true;
+}
+
 qint64 readRemainingLines(std::vector<QString>& lines, QFile& file, const qint64 start_offset)
 {
     QTextStream stream{&file};
@@ -47,15 +64,8 @@ void SteamLogTracker::slotOnTimeout()
     const auto start_timer_on_exit{qScopeGuard([this]() { m_watch_timer.start(); })};
 
     QFile main_file{m_main_filename};
-    if (!main_file.exists())
+    if (!openForReading(main_file))
     {
-        qCDebug(lc::os) << "file" << m_main_filename << "does not exist yet.";
-        return;
-    }
-
-    if (!main_file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qCWarning(lc::os) << "file" << m_main_filename << "could not be opened!";
         return;
     }
 
@@ -63,30 +73,56 @@ void SteamLogTracker::slotOnTimeout()
     const bool was_main_file_appended{current_main_file_size > m_last_prev_size};
     const bool was_main_file_switched_with_backup{current_main_file_size < m_last_prev_size};
 
+    if (!m_initialized)
+    {
+        qCInfo(lc::os) << "performing initial log read for files" << m_main_filename << "and" << m_backup_filename
+                       << ".";
+
+        QFile backup_file{m_backup_filename};
+        if (!openForReading(backup_file))
+        {
+            if (backup_file.exists())
+            {
+                // Warning already logged.
+                return;
+            }
+
+            qCInfo(lc::os) << "skipping file" << m_backup_filename << "for initial read, because it does not exist.";
+        }
+
+        std::vector<QString> lines;
+        if (backup_file.isOpen())
+        {
+            readRemainingLines(lines, backup_file, 0);
+        }
+
+        m_last_read_pos  = readRemainingLines(lines, main_file, 0);
+        m_last_prev_size = current_main_file_size;
+        m_initialized    = true;
+
+        onLogChanged(lines);
+        return;
+    }
+
     if (was_main_file_appended)
     {
-        qCWarning(lc::os) << "file" << m_main_filename << "was appended.";
+        qCDebug(lc::os) << "file" << m_main_filename << "was appended.";
 
         std::vector<QString> lines;
         m_last_read_pos  = readRemainingLines(lines, main_file, m_last_read_pos);
         m_last_prev_size = current_main_file_size;
 
         onLogChanged(lines);
+        return;
     }
-    else if (was_main_file_switched_with_backup)
+
+    if (was_main_file_switched_with_backup)
     {
-        qCWarning(lc::os) << "file" << m_main_filename << "was switched with" << m_backup_filename << ".";
+        qCDebug(lc::os) << "file" << m_main_filename << "was switched with" << m_backup_filename << ".";
 
         QFile backup_file{m_backup_filename};
-        if (!backup_file.exists())
+        if (!openForReading(backup_file))
         {
-            qCDebug(lc::os) << "file" << m_backup_filename << "does not exist yet.";
-            return;
-        }
-
-        if (!backup_file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            qCWarning(lc::os) << "file" << m_backup_filename << "could not be opened!";
             return;
         }
 
@@ -96,10 +132,9 @@ void SteamLogTracker::slotOnTimeout()
         m_last_prev_size = current_main_file_size;
 
         onLogChanged(lines);
+        return;
     }
-    else
-    {
-        qCWarning(lc::os) << "file" << m_main_filename << "did not change.";
-    }
+
+    qCDebug(lc::os) << "file" << m_main_filename << "did not change.";
 }
 }  // namespace os

@@ -25,5 +25,6 @@ private:
     QString m_backup_filename;
     qint64  m_last_prev_size{0};
     qint64  m_last_read_pos{0};
+    bool    m_initialized{false};
 };
 }  // namespace os
