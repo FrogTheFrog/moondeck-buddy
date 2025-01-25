@@ -70,7 +70,7 @@ jobs:
           ./autogen.sh
           ./configure
           make
-          make install
+          sudo make install
 
       - name: Checkout
         uses: actions/checkout@v4
