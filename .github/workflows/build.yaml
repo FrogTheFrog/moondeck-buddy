@@ -59,10 +59,11 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libxrandr-dev libfuse2 libxcb-cursor-dev autopoint
+        run: sudo apt-get install ninja-build libxrandr-dev libfuse2 libxcb-cursor-dev
 
       - name: Build libproc2
         run: |
+          sudo apt-get install autopoint autoconf automake libtool-bin gettext libncursesw5-dev dejagnu libnuma-dev libsystemd-dev
           wget https://github.com/warmchang/procps/archive/refs/tags/v4.0.5.zip -O procps.zip
           unzip procps.zip
           cd procps-4.0.5
