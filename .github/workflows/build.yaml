@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: error
 
   Linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Stay on 22.04 for now as the next release increments GLIBC
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
