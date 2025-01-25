@@ -65,7 +65,7 @@ jobs:
         run: |
           wget https://github.com/warmchang/procps/archive/refs/tags/v4.0.5.zip -O procps.zip
           unzip procps.zip
-          cd procps
+          cd procps-4.0.5
           ./autogen.sh
           ./configure
           make
