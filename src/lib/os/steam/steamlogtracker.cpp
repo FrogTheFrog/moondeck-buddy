@@ -1,5 +1,5 @@
 // header file include
-#include "os/steamlogtracker.h"
+#include "os/steam/steamlogtracker.h"
 
 // system/Qt includes
 #include <QFile>

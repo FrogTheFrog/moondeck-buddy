@@ -1,5 +1,8 @@
 // header file include
-#include "os/steamcontentlogtracker.h"
+#include "os/steam/steamcontentlogtracker.h"
+
+// system/Qt includes
+#include <QRegularExpression>
 
 // local includes
 #include "shared/loggingcategories.h"

@@ -2,35 +2,20 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME oslib)
+set(LIBNAME ossteamlib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core Widgets Network REQUIRED)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
-
-#----------------------------------------------------------------------------------------------------------------------
-# Subdirectories
-#----------------------------------------------------------------------------------------------------------------------
-
-add_subdirectory(shared)
-add_subdirectory(steam)
-
-IF(WIN32)
-    add_subdirectory(win)
-ELSEIF(UNIX)
-    add_subdirectory(linux)
-ELSE()
-    message(FATAL_ERROR "OS is not supported!")
-ENDIF()
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/*.h")
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/steam/*.h")
 file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -38,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network osspecificlib sharedlib utilslib PUBLIC ossharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core sharedlib)
 target_include_directories(${LIBNAME} PUBLIC include)
