@@ -1,11 +1,8 @@
 #pragma once
 
-// system/Qt includes
-#include <QTimer>
-
 // local includes
-#include "os/processhandler.h"
 #include "os/shared/trackedappdata.h"
+#include "os/steam/steamprocesstracker.h"
 
 // forward declarations
 namespace os
@@ -21,7 +18,7 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(std::unique_ptr<ProcessHandler>                 process_handler,
+    explicit SteamHandler(QString steam_exec_path, std::unique_ptr<SteamProcessTracker> steam_process_tracker,
                           std::unique_ptr<SteamRegistryObserverInterface> registry_observer);
     ~SteamHandler() override;
 
@@ -39,19 +36,17 @@ signals:
     void signalProcessStateChanged();
 
 private slots:
-    void slotSteamProcessDied();
-    void slotSteamExecPath(const QString& path);
-    void slotSteamPID(uint pid);
+    void slotSteamProcessStateChanged();
     void slotGlobalAppId(uint app_id);
     void slotTrackedAppIsRunning(bool state);
     void slotTrackedAppIsUpdating(bool state);
     void slotTerminateSteam();
 
 private:
-    std::unique_ptr<ProcessHandler>                 m_process_handler;
+    QString                                         m_steam_exec_path;
+    std::unique_ptr<SteamProcessTracker>            m_steam_process_tracker;
     std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
 
-    QString                       m_steam_exec_path;
     uint                          m_global_app_id{0};
     std::optional<TrackedAppData> m_tracked_app;
     QTimer                        m_steam_close_timer;

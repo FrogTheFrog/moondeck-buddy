@@ -58,10 +58,9 @@ const T* getEntry(const QStringList& path, const os::RegistryFileWatcher::NodeLi
 
 namespace os
 {
-SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QString steam_binary_override)
+SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override)
     : m_watcher{registry_file_override.isEmpty() ? QDir::homePath() + "/.steam/registry.vdf"
                                                  : std::move(registry_file_override)}
-    , m_steam_exec{steam_binary_override.isEmpty() ? "/usr/bin/steam" : std::move(steam_binary_override)}
 {
     connect(&m_watcher, &RegistryFileWatcher::signalRegistryChanged, this, &SteamRegistryObserver::slotRegistryChanged);
     connect(&m_process_list_observer, &SteamProcessListObserver::signalListChanged, this,
@@ -72,15 +71,6 @@ SteamRegistryObserver::SteamRegistryObserver(QString registry_file_override, QSt
                 m_is_observing_apps = true;
                 slotRegistryChanged();
             });
-
-    if (!QFile::exists(m_steam_exec))
-    {
-        qFatal("Steam binary does not exist at specified path: %s", qUtf8Printable(m_steam_exec));
-    }
-    else
-    {
-        qCInfo(lc::os) << "Steam binary path set to" << m_steam_exec;
-    }
 
     const int initial_delay_ms{2000};
     m_observation_delay.setInterval(initial_delay_ms);
@@ -177,14 +167,7 @@ void SteamRegistryObserver::slotRegistryChanged()
             m_pid = pid;
 
             m_process_list_observer.observePid(m_pid);
-            emit signalSteamPID(m_pid);
         }
-    }
-
-    if (!m_steam_exec.isEmpty())
-    {
-        emit signalSteamExecPath(m_steam_exec);
-        m_steam_exec = {};  // Reset to no longer trigger this conditional
     }
 
     if (!m_is_observing_apps)

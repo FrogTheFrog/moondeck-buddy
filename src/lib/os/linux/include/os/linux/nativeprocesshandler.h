@@ -15,10 +15,11 @@ public:
 
     std::vector<uint> getPids() const override;
     QString           getExecPath(uint pid) const override;
+    QDateTime         getStartTime(uint pid) const override;
     void              close(uint pid) const override;
     void              terminate(uint pid) const override;
 
-    std::vector<uint> getChildrenPids(uint pid) const;
-    QString           getCmdline(uint pid) const;
+    std::vector<uint> getChildrenPids(uint pid) const;  // TODO: maybe remove
+    QString           getCmdline(uint pid) const;       // TODO: maybe remove
 };
 }  // namespace os

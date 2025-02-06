@@ -19,8 +19,6 @@ public:
     virtual void stopTrackingApp()             = 0;
 
 signals:
-    void signalSteamExecPath(const QString& path);
-    void signalSteamPID(uint pid);
     void signalGlobalAppId(uint app_id);
     void signalTrackedAppIsRunning(bool state);
     void signalTrackedAppIsUpdating(bool state);

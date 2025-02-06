@@ -163,6 +163,12 @@ QString NativeProcessHandler::getExecPath(uint pid) const
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
 }
 
+QDateTime NativeProcessHandler::getStartTime(uint pid) const
+{
+    Q_UNUSED(pid);
+    return QDateTime{};
+}
+
 void NativeProcessHandler::close(uint pid) const
 {
     const auto related_pids{getRelatedPids(pid)};

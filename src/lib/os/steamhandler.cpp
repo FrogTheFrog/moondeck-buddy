@@ -11,25 +11,23 @@
 
 namespace
 {
-const QRegularExpression STEAM_EXEC_PATTERN{R"([\\\/]steam(?:\.exe$|$))", QRegularExpression::CaseInsensitiveOption};
-const int                MS_TO_SEC{1000};
+const int MS_TO_SEC{1000};
 }  // namespace
 
 namespace os
 {
-SteamHandler::SteamHandler(std::unique_ptr<ProcessHandler>                 process_handler,
+SteamHandler::SteamHandler(QString steam_exec_path, std::unique_ptr<SteamProcessTracker> steam_process_tracker,
                            std::unique_ptr<SteamRegistryObserverInterface> registry_observer)
-    : m_process_handler{std::move(process_handler)}
+    : m_steam_exec_path{std::move(steam_exec_path)}
+    , m_steam_process_tracker{std::move(steam_process_tracker)}
     , m_registry_observer{std::move(registry_observer)}
 {
-    Q_ASSERT(m_process_handler != nullptr);
-    Q_ASSERT(m_registry_observer != nullptr);
+    Q_ASSERT(!steam_exec_path.isEmpty());
+    Q_ASSERT(m_steam_process_tracker);
+    Q_ASSERT(m_registry_observer);
 
-    connect(m_process_handler.get(), &ProcessHandler::signalProcessDied, this, &SteamHandler::slotSteamProcessDied);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalSteamExecPath, this,
-            &SteamHandler::slotSteamExecPath);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalSteamPID, this,
-            &SteamHandler::slotSteamPID);
+    connect(m_steam_process_tracker.get(), &SteamProcessTracker::signalProcessStateChanged, this,
+            &SteamHandler::slotSteamProcessStateChanged);
     connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalGlobalAppId, this,
             &SteamHandler::slotGlobalAppId);
     connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalTrackedAppIsRunning, this,
@@ -45,36 +43,28 @@ SteamHandler::~SteamHandler() = default;
 
 bool SteamHandler::isRunning() const
 {
-    return m_process_handler->isRunning();
+    return m_steam_process_tracker->isRunning();
 }
 
 bool SteamHandler::isRunningNow()
 {
-    return m_process_handler->isRunningNow();
+    return m_steam_process_tracker->isRunningNow();
 }
 
 bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 {
-    if (!m_process_handler->isRunningNow())
+    if (!m_steam_process_tracker->isRunningNow())
     {
         m_steam_close_timer.stop();
         return true;
     }
 
-    // Try to shutdown steam gracefully first
-    if (!m_steam_exec_path.isEmpty())
+    // Try to shut down steam gracefully first
+    const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
+    if (!result)
     {
-        const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
-        if (!result)
-        {
-            qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
-            m_process_handler->close(std::nullopt);
-        }
-    }
-    else
-    {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
-        m_process_handler->close(std::nullopt);
+        qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
+        m_steam_process_tracker->close(std::nullopt);
     }
 
     if (grace_period_in_sec)
@@ -113,7 +103,7 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
 
     if (getRunningApp() != app_id)
     {
-        const bool is_steam_running{m_process_handler->isRunningNow()};
+        const bool is_steam_running{m_steam_process_tracker->isRunningNow()};
         if (force_big_picture && is_steam_running)
         {
             QProcess steam_process;
@@ -155,14 +145,14 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
 
 uint SteamHandler::getRunningApp() const
 {
-    return m_process_handler->isRunning()
+    return m_steam_process_tracker->isRunning()
                ? m_tracked_app && m_tracked_app->m_is_running ? m_tracked_app->m_app_id : m_global_app_id
                : 0;
 }
 
 std::optional<uint> SteamHandler::getTrackedActiveApp() const
 {
-    return m_process_handler->isRunning() && m_tracked_app
+    return m_steam_process_tracker->isRunning() && m_tracked_app
                    && (m_tracked_app->m_is_running || m_tracked_app->m_is_updating)
                ? std::make_optional(m_tracked_app->m_app_id)
                : std::nullopt;
@@ -170,7 +160,7 @@ std::optional<uint> SteamHandler::getTrackedActiveApp() const
 
 std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
 {
-    return m_process_handler->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
+    return m_steam_process_tracker->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
                ? std::make_optional(m_tracked_app->m_app_id)
                : std::nullopt;
 }
@@ -184,63 +174,26 @@ void SteamHandler::clearTrackedApp()
     }
 }
 
-void SteamHandler::slotSteamProcessDied()
+void SteamHandler::slotSteamProcessStateChanged()
 {
-    qCDebug(lc::os) << "Steam is no longer running!";
+    const bool currently_running{m_steam_process_tracker->isRunning()};
+    if (currently_running)
+    {
+        qCDebug(lc::os) << "Steam is running! PID " << m_steam_process_tracker->getProcessData().m_pid;
+        m_registry_observer->startAppObservation();
+    }
+    else
+    {
+        qCDebug(lc::os) << "Steam is no longer running!";
 
-    m_registry_observer->stopAppObservation();
-    clearTrackedApp();
+        m_registry_observer->stopAppObservation();
+        clearTrackedApp();
 
-    m_steam_close_timer.stop();
-    m_global_app_id = 0;
-
-#if defined(Q_OS_LINUX)
-    // On linux there is a race condition where the crashed Steam process may leave the reaper process (game) running...
-    // Let's kill it for fun!
-    const uint forced_termination_ms{5000};
-    m_process_handler->closeDetached(QRegularExpression(".*?Steam.+?reaper", QRegularExpression::CaseInsensitiveOption),
-                                     forced_termination_ms);
-#endif
+        m_steam_close_timer.stop();
+        m_global_app_id = 0;
+    }
 
     emit signalProcessStateChanged();
-}
-
-void SteamHandler::slotSteamExecPath(const QString& path)
-{
-    m_steam_exec_path = path;
-    qCInfo(lc::os) << "Steam exec path:" << m_steam_exec_path;
-}
-
-void SteamHandler::slotSteamPID(uint pid)
-{
-    const bool currently_running{m_process_handler->isRunning()};
-    if (pid == 0)
-    {
-        if (currently_running)
-        {
-            qCDebug(lc::os) << "Steam is no longer running according to registry. Waiting for actual shutdown.";
-        }
-        return;
-    }
-
-    if (!m_process_handler->startMonitoring(pid, STEAM_EXEC_PATTERN))
-    {
-        qCDebug(lc::os) << "Failed to start monitoring Steam process" << pid << "(probably outdated)...";
-        if (currently_running)
-        {
-            Q_ASSERT(m_process_handler->isRunning() == false);
-            emit signalProcessStateChanged();
-        }
-        return;
-    }
-
-    if (!currently_running)
-    {
-        qCDebug(lc::os) << "Steam is running!";
-        Q_ASSERT(m_process_handler->isRunning() == true);
-        m_registry_observer->startAppObservation();
-        emit signalProcessStateChanged();
-    }
 }
 
 void SteamHandler::slotGlobalAppId(uint app_id)
@@ -281,6 +234,6 @@ void SteamHandler::slotTerminateSteam()
     qCWarning(lc::os) << "Forcefully killing Steam...";
 
     const uint time_to_kill{10000};
-    m_process_handler->close(time_to_kill);
+    m_steam_process_tracker->close(time_to_kill);
 }
 }  // namespace os

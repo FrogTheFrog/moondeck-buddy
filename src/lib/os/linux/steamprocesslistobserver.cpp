@@ -1,6 +1,9 @@
 // header file include
 #include "os/linux/steamprocesslistobserver.h"
 
+// system/Qt includes
+#include <QRegularExpression>
+
 // local includes
 #include "os/linux/nativeprocesshandler.h"
 
