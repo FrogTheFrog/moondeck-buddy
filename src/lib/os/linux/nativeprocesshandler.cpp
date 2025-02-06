@@ -82,6 +82,21 @@ QString getCmdline(const uint pid)
                       });
 }
 
+QDateTime getStartTime(const uint pid)
+{
+    return getPidItem(pid, PIDS_TICS_BEGAN, QDateTime{},
+                      [](const auto& result)
+                      {
+                          if (result.ull_int > 0)
+                          {
+                              static const auto hertz{procps_hertz_get()};
+                              return QDateTime{};
+                          }
+
+                          return QDateTime{};
+                      });
+}
+
 std::vector<uint> getPids()
 {
     const QDir        proc_dir{"/proc"};
@@ -165,8 +180,7 @@ QString NativeProcessHandler::getExecPath(uint pid) const
 
 QDateTime NativeProcessHandler::getStartTime(uint pid) const
 {
-    Q_UNUSED(pid);
-    return QDateTime{};
+    return ::getStartTime(pid);
 }
 
 void NativeProcessHandler::close(uint pid) const
