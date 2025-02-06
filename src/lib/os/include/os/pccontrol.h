@@ -11,10 +11,10 @@
 #include "os/steamhandler.h"
 
 // forward declarations
-namespace shared
+namespace utils
 {
-class AppMetadata;
-}  // namespace shared
+class AppSettings;
+}  // namespace utils
 namespace os
 {
 class AutoStartHandlerInterface;
@@ -29,8 +29,7 @@ class PcControl : public QObject
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
-                       QString registry_file_override);
+    explicit PcControl(const utils::AppSettings& app_settings);
     ~PcControl() override;
 
     bool launchSteamApp(uint app_id, bool force_big_picture);
@@ -66,7 +65,7 @@ private slots:
     void slotAppTrackingHasEnded();
 
 private:
-    const shared::AppMetadata&                   m_app_meta;
+    const utils::AppSettings&                    m_app_settings;
     AutoStartHandler                             m_auto_start_handler;
     PcStateHandler                               m_pc_state_handler;
     ResolutionHandler                            m_resolution_handler;

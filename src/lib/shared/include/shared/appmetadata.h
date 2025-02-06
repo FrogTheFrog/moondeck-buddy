@@ -7,9 +7,6 @@ namespace shared
 {
 class AppMetadata final : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(AppMetadata)
-
 public:
     enum class App
     {
@@ -35,6 +32,8 @@ public:
     QString getAutoStartName() const;
     QString getAutoStartPath() const;
     QString getAutoStartExec() const;
+
+    QString getDefaultSteamExecutable() const;
 
 private:
     App m_current_app;

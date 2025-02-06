@@ -137,14 +137,14 @@ void SteamProcessTracker::slotCheckState()
         m_data.m_log_dir = getLogsDir(exec_path);
         if (m_data.m_log_dir.empty())
         {
-            qWarning(lc::os) << "Could not resolve log directory for running Steam process! PID: " << pid;
+            qWarning(lc::os) << "Could not resolve log directory for running Steam process! PID:" << pid;
             break;
         }
 
         m_data.m_start_time = m_native_handler->getStartTime(pid);
         if (!m_data.m_start_time.isValid())
         {
-            qWarning(lc::os) << "Could not resolve start time for running Steam process! PID: " << pid;
+            qWarning(lc::os) << "Could not resolve start time for running Steam process! PID:" << pid;
             break;
         }
 

@@ -20,8 +20,8 @@
 #include "os/pcstatehandler.h"
 #include "os/steam/steamprocesstracker.h"
 #include "os/streamstatehandler.h"
-#include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
+#include "utils/appsettings.h"
 
 namespace
 {
@@ -30,16 +30,16 @@ const int SEC_TO_MS{1000};
 
 namespace os
 {
-PcControl::PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
-                     QString registry_file_override)
-    : m_app_meta{app_meta}
-    , m_auto_start_handler{m_app_meta}
+PcControl::PcControl(const utils::AppSettings& app_settings)
+    : m_app_settings{app_settings}
+    , m_auto_start_handler{m_app_settings.getAppMetadata()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
-    , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), handled_displays}
-    , m_steam_handler{"LOL_EXEC", std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>()),
-                      std::make_unique<SteamRegistryObserver>(std::move(registry_file_override))}
-    , m_stream_state_handler{
-          std::make_unique<StreamStateHandler>(m_app_meta.getAppName(shared::AppMetadata::App::Stream))}
+    , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), m_app_settings.getHandledDisplays()}
+    , m_steam_handler{m_app_settings.getSteamExecutablePath(),
+                      std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>()),
+                      std::make_unique<SteamRegistryObserver>(m_app_settings.getRegistryFileOverride())}
+    , m_stream_state_handler{std::make_unique<StreamStateHandler>(
+          m_app_settings.getAppMetadata().getAppName(shared::AppMetadata::App::Stream))}
 {
     Q_ASSERT(m_stream_state_handler != nullptr);
 
@@ -68,9 +68,9 @@ bool PcControl::shutdownPC(uint grace_period_in_sec)
     {
         closeSteam(std::nullopt);
         restoreChangedResolution(true);
-        emit signalShowTrayMessage("Shutdown in progress", m_app_meta.getAppName() + " is putting you to sleep :)",
-                                   QSystemTrayIcon::MessageIcon::Information,
-                                   static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        emit signalShowTrayMessage(
+            "Shutdown in progress", m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
 
@@ -83,9 +83,9 @@ bool PcControl::restartPC(uint grace_period_in_sec)
     {
         closeSteam(std::nullopt);
         restoreChangedResolution(true);
-        emit signalShowTrayMessage("Restart in progress", m_app_meta.getAppName() + " is giving you new life :?",
-                                   QSystemTrayIcon::MessageIcon::Information,
-                                   static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        emit signalShowTrayMessage(
+            "Restart in progress", m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
 
@@ -107,7 +107,8 @@ bool PcControl::suspendPC(uint grace_period_in_sec, bool close_steam)
         }
 
         emit signalShowTrayMessage(
-            "Suspend in progress", m_app_meta.getAppName() + " is about to suspend you real hard :P",
+            "Suspend in progress",
+            m_app_settings.getAppMetadata().getAppName() + " is about to suspend you real hard :P",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }
@@ -130,7 +131,8 @@ bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
         }
 
         emit signalShowTrayMessage(
-            "Hibernation in progress", m_app_meta.getAppName() + " is about to put you into hard sleep :O",
+            "Hibernation in progress",
+            m_app_settings.getAppMetadata().getAppName() + " is about to put you into hard sleep :O",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
         return true;
     }

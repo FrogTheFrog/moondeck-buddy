@@ -45,22 +45,29 @@ std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
 
 namespace utils
 {
-AppSettings::AppSettings(const QString& filepath)
-    : m_port{DEFAULT_PORT}
+AppSettings::AppSettings(const shared::AppMetadata& app_metadata)
+    : m_app_metadata{app_metadata}
+    , m_port{DEFAULT_PORT}
     , m_prefer_hibernation{false}
     , m_ssl_protocol{QSsl::SecureProtocols}
     , m_force_big_picture{true}
     , m_close_steam_before_sleep{true}
 {
-    if (!parseSettingsFile(filepath))
+    auto settings_path{m_app_metadata.getSettingsPath()};
+    if (!parseSettingsFile(settings_path))
     {
-        qCInfo(lc::utils) << "Saving default settings to" << filepath;
-        saveDefaultFile(filepath);
-        if (!parseSettingsFile(filepath))
+        qCInfo(lc::utils) << "Saving default settings to" << settings_path;
+        saveDefaultFile(settings_path);
+        if (!parseSettingsFile(settings_path))
         {
-            qFatal("Failed to parse \"%s\"!", qUtf8Printable(filepath));
+            qFatal("Failed to parse \"%s\"!", qUtf8Printable(settings_path));
         }
     }
+}
+
+const shared::AppMetadata& AppSettings::getAppMetadata() const
+{
+    return m_app_metadata;
 }
 
 quint16 AppSettings::getPort() const
@@ -108,9 +115,9 @@ const QString& AppSettings::getRegistryFileOverride() const
     return m_registry_file_override;
 }
 
-const QString& AppSettings::getSteamBinaryOverride() const
+QString AppSettings::getSteamExecutablePath() const
 {
-    return m_steam_binary_override;
+    return m_steam_exec_override.isEmpty() ? m_app_metadata.getDefaultSteamExecutable() : m_steam_exec_override;
 }
 
 const QString& AppSettings::getMacAddressOverride() const
@@ -246,7 +253,7 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
 
 #if defined(Q_OS_LINUX)
             const auto registry_file_override_v = obj_v.value(QLatin1String("registry_file_override"));
-            const auto steam_binary_override_v  = obj_v.value(QLatin1String("steam_binary_override"));
+            const auto steam_exec_override_v    = obj_v.value(QLatin1String("steam_exec_override"));
 
             if (registry_file_override_v.isString())
             {
@@ -254,9 +261,9 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
-            if (steam_binary_override_v.isString())
+            if (steam_exec_override_v.isString())
             {
-                m_steam_binary_override = steam_binary_override_v.toString();
+                m_steam_exec_override = steam_exec_override_v.toString();
                 valid_entries++;
             }
 #endif
@@ -284,7 +291,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["mac_address_override"]     = m_mac_address_override;
 #if defined(Q_OS_LINUX)
     obj["registry_file_override"] = m_registry_file_override;
-    obj["steam_binary_override"]  = m_steam_binary_override;
+    obj["steam_exec_override"]    = m_steam_exec_override;
 #endif
 
     QFile file{filepath};

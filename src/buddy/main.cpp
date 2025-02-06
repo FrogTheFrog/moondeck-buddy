@@ -157,14 +157,14 @@ int main(int argc, char* argv[])
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
-    const utils::AppSettings app_settings{app_meta.getSettingsPath()};
+    const utils::AppSettings app_settings{app_meta};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
 
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl    pc_control{app_meta, app_settings.getHandledDisplays(), app_settings.getRegistryFileOverride()};
+    os::PcControl    pc_control{app_settings};
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     const QIcon               icon{":/icons/app.ico"};

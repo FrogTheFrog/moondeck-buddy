@@ -171,4 +171,16 @@ QString AppMetadata::getAutoStartExec() const
     #error OS is not supported!
 #endif
 }
+
+QString AppMetadata::getDefaultSteamExecutable() const
+{
+#if defined(Q_OS_WIN)
+    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);
+    return "meh";
+#elif defined(Q_OS_LINUX)
+    return "/usr/bin/steam";
+#else
+    #error OS is not supported!
+#endif
+}
 }  // namespace shared

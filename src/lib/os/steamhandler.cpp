@@ -22,7 +22,7 @@ SteamHandler::SteamHandler(QString steam_exec_path, std::unique_ptr<SteamProcess
     , m_steam_process_tracker{std::move(steam_process_tracker)}
     , m_registry_observer{std::move(registry_observer)}
 {
-    Q_ASSERT(!steam_exec_path.isEmpty());
+    Q_ASSERT(!m_steam_exec_path.isEmpty());
     Q_ASSERT(m_steam_process_tracker);
     Q_ASSERT(m_registry_observer);
 
