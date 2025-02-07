@@ -18,7 +18,8 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(QString steam_exec_path, std::unique_ptr<SteamProcessTracker> steam_process_tracker,
+    explicit SteamHandler(std::function<QString()>                        m_steam_exec_path_getter,
+                          std::unique_ptr<SteamProcessTracker>            steam_process_tracker,
                           std::unique_ptr<SteamRegistryObserverInterface> registry_observer);
     ~SteamHandler() override;
 
@@ -43,7 +44,7 @@ private slots:
     void slotTerminateSteam();
 
 private:
-    QString                                         m_steam_exec_path;
+    std::function<QString()>                        m_steam_exec_path_getter;
     std::unique_ptr<SteamProcessTracker>            m_steam_process_tracker;
     std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
 

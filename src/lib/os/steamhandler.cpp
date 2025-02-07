@@ -16,13 +16,14 @@ const int MS_TO_SEC{1000};
 
 namespace os
 {
-SteamHandler::SteamHandler(QString steam_exec_path, std::unique_ptr<SteamProcessTracker> steam_process_tracker,
+SteamHandler::SteamHandler(std::function<QString()>                        steam_exec_path_getter,
+                           std::unique_ptr<SteamProcessTracker>            steam_process_tracker,
                            std::unique_ptr<SteamRegistryObserverInterface> registry_observer)
-    : m_steam_exec_path{std::move(steam_exec_path)}
+    : m_steam_exec_path_getter{std::move(steam_exec_path_getter)}
     , m_steam_process_tracker{std::move(steam_process_tracker)}
     , m_registry_observer{std::move(registry_observer)}
 {
-    Q_ASSERT(!m_steam_exec_path.isEmpty());
+    Q_ASSERT(m_steam_exec_path_getter);
     Q_ASSERT(m_steam_process_tracker);
     Q_ASSERT(m_registry_observer);
 
@@ -60,10 +61,19 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
     }
 
     // Try to shut down steam gracefully first
-    const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
-    if (!result)
+    const auto exec_path = m_steam_exec_path_getter();
+    if (!exec_path.isEmpty())
     {
-        qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
+        const auto result = QProcess::startDetached(exec_path, {"-shutdown"});
+        if (!result)
+        {
+            qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
+            m_steam_process_tracker->close(std::nullopt);
+        }
+    }
+    else
+    {
+        qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
         m_steam_process_tracker->close(std::nullopt);
     }
 
@@ -83,7 +93,8 @@ bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
 // NOLINTNEXTLINE(*-cognitive-complexity)
 bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
 {
-    if (m_steam_exec_path.isEmpty())
+    const auto exec_path = m_steam_exec_path_getter();
+    if (exec_path.isEmpty())
     {
         qCWarning(lc::os) << "Steam EXEC path is not available yet!";
         return false;
@@ -109,7 +120,7 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
             QProcess steam_process;
             steam_process.setStandardOutputFile(QProcess::nullDevice());
             steam_process.setStandardErrorFile(QProcess::nullDevice());
-            steam_process.setProgram(m_steam_exec_path);
+            steam_process.setProgram(exec_path);
             steam_process.setArguments({"steam://open/bigpicture"});
 
             if (!steam_process.startDetached())
@@ -126,7 +137,7 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
         QProcess steam_process;
         steam_process.setStandardOutputFile(QProcess::nullDevice());
         steam_process.setStandardErrorFile(QProcess::nullDevice());
-        steam_process.setProgram(m_steam_exec_path);
+        steam_process.setProgram(exec_path);
         steam_process.setArguments((force_big_picture && !is_steam_running ? QStringList{"-bigpicture"} : QStringList{})
                                    + QStringList{"-applaunch", QString::number(app_id)});
 
@@ -179,7 +190,8 @@ void SteamHandler::slotSteamProcessStateChanged()
     const bool currently_running{m_steam_process_tracker->isRunning()};
     if (currently_running)
     {
-        qCDebug(lc::os) << "Steam is running! PID " << m_steam_process_tracker->getProcessData().m_pid;
+        const auto& data{m_steam_process_tracker->getProcessData()};
+        qCDebug(lc::os) << "Steam is running! PID:" << data.m_pid << "START_TIME:" << data.m_start_time;
         m_registry_observer->startAppObservation();
     }
     else

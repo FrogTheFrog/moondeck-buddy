@@ -10,6 +10,8 @@
 // local includes
 #include "shared/loggingcategories.h"
 
+#include <QTimeZone>
+
 namespace
 {
 template<class Getter>
@@ -111,20 +113,33 @@ QDateTime NativeProcessHandler::getStartTime(uint pid) const
                                  return QDateTime{};
                              }
 
-                             FILETIME   start_time{};
-                             FILETIME   exit_time{};
-                             FILETIME   kernel_time{};
-                             FILETIME   user_time{};
-                             const BOOL result =
-                                 GetProcessTimes(handle, &start_time, &exit_time, &kernel_time, &user_time);
+                             FILETIME start_time{};
+                             FILETIME exit_time{};
+                             FILETIME kernel_time{};
+                             FILETIME user_time{};
+                             BOOL result = GetProcessTimes(handle, &start_time, &exit_time, &kernel_time, &user_time);
 
                              if (result == TRUE)
                              {
-                                 return QDateTime{};
+                                 SYSTEMTIME time_utc{};
+                                 result = FileTimeToSystemTime(&start_time, &time_utc);
+                                 if (result == TRUE)
+                                 {
+                                     const QDateTime datetime{QDate{time_utc.wYear, time_utc.wMonth, time_utc.wDay},
+                                                              QTime{time_utc.wHour, time_utc.wMinute, time_utc.wSecond,
+                                                                    time_utc.wMilliseconds},
+                                                              QTimeZone::UTC};
+                                     return datetime.toLocalTime();
+                                 }
+
+                                 qDebug(lc::os)
+                                     << "FileTimeToSystemTime failed: " << lc::getErrorString(GetLastError());
+                             }
+                             else
+                             {
+                                 qDebug(lc::os) << "GetProcessTimes failed: " << lc::getErrorString(GetLastError());
                              }
 
-                             qDebug(lc::os)
-                                 << "QueryFullProcessImageNameW failed: " << lc::getErrorString(GetLastError());
                              return QDateTime{};
                          });
 }

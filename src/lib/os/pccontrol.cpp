@@ -1,6 +1,9 @@
 // header file include
 #include "os/pccontrol.h"
 
+// system/Qt includes
+#include <QFileInfo>
+
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "os/win/nativepcstatehandler.h"
@@ -35,7 +38,16 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
     , m_auto_start_handler{m_app_settings.getAppMetadata()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
     , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), m_app_settings.getHandledDisplays()}
-    , m_steam_handler{m_app_settings.getSteamExecutablePath(),
+    , m_steam_handler{[this]()
+                      {
+                          auto exec_path{m_app_settings.getSteamExecutablePath()};
+                          if (QFileInfo::exists(exec_path))
+                          {
+                              return exec_path;
+                          }
+
+                          return QString{};
+                      },
                       std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>()),
                       std::make_unique<SteamRegistryObserver>(m_app_settings.getRegistryFileOverride())}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>(
