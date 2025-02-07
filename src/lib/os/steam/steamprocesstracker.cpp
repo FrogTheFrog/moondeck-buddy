@@ -121,9 +121,9 @@ void SteamProcessTracker::slotCheckState()
 
         // clang-format off
         static const QRegularExpression exec_regex{
-            R"((?:.+?steam\.exe$))"     // Windows
-            R"(|)"                      // OR
-            R"((?:.*?Steam.+?steam$))", // Linux
+            R"((?:.+?Steam\\steam\.exe$))"  // Windows
+            R"(|)"                         // OR
+            R"((?:.*?Steam.+?steam$))",    // Linux
             QRegularExpression::CaseInsensitiveOption};
         // clang-format on
 

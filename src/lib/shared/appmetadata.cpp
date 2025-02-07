@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QCoreApplication>
 #include <QDir>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
 
@@ -175,8 +176,8 @@ QString AppMetadata::getAutoStartExec() const
 QString AppMetadata::getDefaultSteamExecutable() const
 {
 #if defined(Q_OS_WIN)
-    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);
-    return "meh";
+    const QSettings settings(R"(HKEY_CURRENT_USER\Software\Valve\Steam)", QSettings::NativeFormat);
+    return settings.value("SteamExe").toString();
 #elif defined(Q_OS_LINUX)
     return "/usr/bin/steam";
 #else
