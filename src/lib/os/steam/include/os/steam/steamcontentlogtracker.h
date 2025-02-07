@@ -8,7 +8,7 @@ namespace os
 class SteamContentLogTracker : public SteamLogTracker
 {
 public:
-    explicit SteamContentLogTracker(const std::filesystem::path& logs_dir);
+    explicit SteamContentLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
     ~SteamContentLogTracker() override = default;
 
 protected:

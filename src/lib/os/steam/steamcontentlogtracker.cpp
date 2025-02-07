@@ -9,8 +9,9 @@
 
 namespace os
 {
-SteamContentLogTracker::SteamContentLogTracker(const std::filesystem::path& logs_dir)
-    : SteamLogTracker(logs_dir / "content_log.txt", logs_dir / "content_log.txt.backup")
+SteamContentLogTracker::SteamContentLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter)
+    : SteamLogTracker(logs_dir / "webhelper.txt", logs_dir / "webhelper.previous.txt",
+                      std::move(first_entry_time_filter))
 {
 }
 

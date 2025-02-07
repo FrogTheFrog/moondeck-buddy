@@ -7,6 +7,7 @@
 
 // local includes
 #include "os/shared/steamregistryobserverinterface.h"
+#include "os/steam/steamwebhelperlogtracker.h"
 #include "shared/loggingcategories.h"
 
 namespace
@@ -191,18 +192,22 @@ void SteamHandler::slotSteamProcessStateChanged()
     if (currently_running)
     {
         const auto& data{m_steam_process_tracker->getProcessData()};
-        qCDebug(lc::os) << "Steam is running! PID:" << data.m_pid << "START_TIME:" << data.m_start_time;
+        qCInfo(lc::os) << "Steam is running! PID:" << data.m_pid << "START_TIME:" << data.m_start_time;
         m_registry_observer->startAppObservation();
+
+        m_log_trackers = {std::make_unique<SteamWebHelperLogTracker>(data.m_log_dir, data.m_start_time)};
     }
     else
     {
-        qCDebug(lc::os) << "Steam is no longer running!";
+        qCInfo(lc::os) << "Steam is no longer running!";
 
         m_registry_observer->stopAppObservation();
         clearTrackedApp();
 
         m_steam_close_timer.stop();
         m_global_app_id = 0;
+
+        m_log_trackers = {};
     }
 
     emit signalProcessStateChanged();

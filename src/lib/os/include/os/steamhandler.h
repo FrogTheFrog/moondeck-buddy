@@ -7,8 +7,9 @@
 // forward declarations
 namespace os
 {
+class SteamWebHelperLogTracker;
 class SteamRegistryObserverInterface;
-}
+}  // namespace os
 
 namespace os
 {
@@ -44,8 +45,14 @@ private slots:
     void slotTerminateSteam();
 
 private:
+    struct LogTrackers
+    {
+        std::unique_ptr<SteamWebHelperLogTracker> m_web_helper;
+    };
+
     std::function<QString()>                        m_steam_exec_path_getter;
     std::unique_ptr<SteamProcessTracker>            m_steam_process_tracker;
+    LogTrackers                                     m_log_trackers;
     std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
 
     uint                          m_global_app_id{0};
