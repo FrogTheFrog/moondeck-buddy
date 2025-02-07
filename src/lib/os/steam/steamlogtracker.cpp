@@ -61,7 +61,7 @@ void SteamLogTracker::slotOnTimeout()
     if (!m_initialized)
     {
         qCInfo(lc::os) << "performing initial log read for files" << m_main_filename.generic_string() << "and"
-                       << m_backup_filename.generic_string() << ".";
+                       << m_backup_filename.generic_string();
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
@@ -106,7 +106,7 @@ void SteamLogTracker::slotOnTimeout()
     if (was_main_file_switched_with_backup)
     {
         qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "was switched with"
-                        << m_backup_filename.generic_string() << ".";
+                        << m_backup_filename.generic_string();
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
