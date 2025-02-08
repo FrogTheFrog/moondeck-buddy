@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <csignal>
 #include <libproc2/pids.h>
+#include <libproc2/stat.h>
 #include <sys/types.h>
 
 // local includes
@@ -15,6 +16,24 @@
 
 namespace
 {
+std::optional<unsigned int> getBootTime()
+{
+    static unsigned int boot_time{0};
+    if (boot_time == 0)
+    {
+        stat_info* stat_info{nullptr};
+        if (const int error = procps_stat_new(&stat_info); error < 0)
+        {
+            qWarning(lc::os) << "Failed at procps_stat_new: " << lc::getErrorString(error * -1);
+            return std::nullopt;
+        }
+
+        boot_time = STAT_GET(stat_info, STAT_SYS_TIME_OF_BOOT, ul_int);
+        procps_stat_unref(&stat_info);
+    }
+    return boot_time;
+}
+
 template<class ItemValue, class Getter>
 ItemValue getPidItem(const uint pid, const pids_item item, const ItemValue& fallback, Getter&& getter)
 {
@@ -84,16 +103,18 @@ QString getCmdline(const uint pid)
 
 QDateTime getStartTime(const uint pid)
 {
-    return getPidItem(pid, PIDS_TICS_BEGAN, QDateTime{},
+    return getPidItem(pid, PIDS_TIME_START, QDateTime{},
                       [](const auto& result)
                       {
-                          if (result.ull_int > 0)
+                          const auto boot_time{getBootTime()};
+                          if (!boot_time)
                           {
-                              static const auto hertz{procps_hertz_get()};
                               return QDateTime{};
                           }
 
-                          return QDateTime{};
+                          const auto milliseconds{static_cast<int>(std::round((result.real) * 1000.0))};
+                          const auto datetime{QDateTime::fromSecsSinceEpoch(*boot_time)};
+                          return datetime.addMSecs(milliseconds);
                       });
 }
 
