@@ -39,11 +39,9 @@ SteamProcessTracker::SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInt
     Q_ASSERT(m_native_handler != nullptr);
 
     connect(&m_check_timer, &QTimer::timeout, this, &SteamProcessTracker::slotCheckState);
-    connect(&m_kill_timer, &QTimer::timeout, this, [this]() { terminate(); });
 
     m_check_timer.setInterval(1000);
     m_check_timer.setSingleShot(true);
-    m_kill_timer.setSingleShot(true);
 
     QTimer::singleShot(0, this, &SteamProcessTracker::slotCheckState);
 }
@@ -51,22 +49,16 @@ SteamProcessTracker::SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInt
 // For forward declarations
 SteamProcessTracker::~SteamProcessTracker() = default;
 
-void SteamProcessTracker::close(const std::optional<uint>& auto_termination_timer)
+void SteamProcessTracker::close()
 {
     if (isRunningNow())
     {
         m_native_handler->close(m_data.m_pid);
-        if (auto_termination_timer)
-        {
-            m_kill_timer.start(static_cast<int>(*auto_termination_timer));
-        }
     }
 }
 
 void SteamProcessTracker::terminate()
 {
-    m_kill_timer.stop();
-
     if (isRunningNow())
     {
         m_native_handler->terminate(m_data.m_pid);

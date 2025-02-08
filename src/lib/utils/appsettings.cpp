@@ -80,11 +80,6 @@ const QString& AppSettings::getLoggingRules() const
     return m_logging_rules;
 }
 
-const std::set<QString>& AppSettings::getHandledDisplays() const
-{
-    return m_handled_displays;
-}
-
 const QString& AppSettings::getSunshineAppsFilepath() const
 {
     return m_sunshine_apps_filepath;
@@ -110,14 +105,16 @@ bool AppSettings::getCloseSteamBeforeSleep() const
     return m_close_steam_before_sleep;
 }
 
-const QString& AppSettings::getRegistryFileOverride() const
-{
-    return m_registry_file_override;
-}
-
 QString AppSettings::getSteamExecutablePath() const
 {
-    return m_steam_exec_override.isEmpty() ? m_app_metadata.getDefaultSteamExecutable() : m_steam_exec_override;
+    const auto& exec_path{m_steam_exec_override.isEmpty() ? m_app_metadata.getDefaultSteamExecutable()
+                                                          : m_steam_exec_override};
+    if (QFileInfo::exists(exec_path))
+    {
+        return exec_path;
+    }
+
+    return QString{};
 }
 
 const QString& AppSettings::getMacAddressOverride() const
@@ -150,22 +147,16 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto obj_v                      = json_data.object();
             const auto port_v                     = obj_v.value(QLatin1String("port"));
             const auto logging_rules_v            = obj_v.value(QLatin1String("logging_rules"));
-            const auto handled_displays_v         = obj_v.value(QLatin1String("handled_displays"));
             const auto sunshine_apps_filepath_v   = obj_v.value(QLatin1String("sunshine_apps_filepath"));
             const auto prefer_hibernation_v       = obj_v.value(QLatin1String("prefer_hibernation"));
             const auto ssl_protocol_v             = obj_v.value(QLatin1String("ssl_protocol"));
             const auto force_big_picture_v        = obj_v.value(QLatin1String("force_big_picture"));
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
+            const auto steam_exec_override_v      = obj_v.value(QLatin1String("steam_exec_override"));
 
-            constexpr int current_entries{9 +
-#if defined(Q_OS_LINUX)
-                                          2
-#else
-                                          0
-#endif
-            };
-            int valid_entries{0};
+            constexpr int current_entries{9};
+            int           valid_entries{0};
 
             if (port_v.isDouble())
             {
@@ -186,30 +177,6 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             {
                 m_logging_rules = logging_rules_v.toString();
                 valid_entries++;
-            }
-
-            if (handled_displays_v.isArray())
-            {
-                m_handled_displays.clear();
-
-                bool             some_entries_were_skipped{false};
-                const QJsonArray entries = handled_displays_v.toArray();
-                for (const auto& entry : entries)
-                {
-                    const QString entry_string{entry.isString() ? entry.toString() : QString{}};
-                    if (entry_string.isEmpty() || m_logging_rules.contains(entry_string))
-                    {
-                        some_entries_were_skipped = true;
-                        continue;
-                    }
-
-                    m_handled_displays.insert(entry_string);
-                }
-
-                if (!some_entries_were_skipped)
-                {
-                    valid_entries++;
-                }
             }
 
             if (sunshine_apps_filepath_v.isString())
@@ -251,22 +218,11 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
-#if defined(Q_OS_LINUX)
-            const auto registry_file_override_v = obj_v.value(QLatin1String("registry_file_override"));
-            const auto steam_exec_override_v    = obj_v.value(QLatin1String("steam_exec_override"));
-
-            if (registry_file_override_v.isString())
-            {
-                m_registry_file_override = registry_file_override_v.toString();
-                valid_entries++;
-            }
-
             if (steam_exec_override_v.isString())
             {
                 m_steam_exec_override = steam_exec_override_v.toString();
                 valid_entries++;
             }
-#endif
 
             return valid_entries == current_entries;
         }
@@ -279,20 +235,15 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
 {
     QJsonObject obj;
 
-    obj["port"]          = m_port;
-    obj["logging_rules"] = m_logging_rules;
-    obj["handled_displays"] =
-        QJsonArray::fromStringList({std::cbegin(m_handled_displays), std::cend(m_handled_displays)});
+    obj["port"]                     = m_port;
+    obj["logging_rules"]            = m_logging_rules;
     obj["sunshine_apps_filepath"]   = m_sunshine_apps_filepath;
     obj["prefer_hibernation"]       = m_prefer_hibernation;
     obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
     obj["force_big_picture"]        = m_force_big_picture;
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
     obj["mac_address_override"]     = m_mac_address_override;
-#if defined(Q_OS_LINUX)
-    obj["registry_file_override"] = m_registry_file_override;
-    obj["steam_exec_override"]    = m_steam_exec_override;
-#endif
+    obj["steam_exec_override"]      = m_steam_exec_override;
 
     QFile file{filepath};
     if (!file.exists())

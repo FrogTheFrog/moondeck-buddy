@@ -1,20 +1,13 @@
 // header file include
 #include "os/pccontrol.h"
 
-// system/Qt includes
-#include <QFileInfo>
-
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "os/win/nativepcstatehandler.h"
     #include "os/win/nativeprocesshandler.h"
-    #include "os/win/nativeresolutionhandler.h"
-    #include "os/win/steamregistryobserver.h"
 #elif defined(Q_OS_LINUX)
     #include "os/linux/nativepcstatehandler.h"
     #include "os/linux/nativeprocesshandler.h"
-    #include "os/linux/nativeresolutionhandler.h"
-    #include "os/linux/steamregistryobserver.h"
 #else
     #error OS is not supported!
 #endif
@@ -28,8 +21,9 @@
 
 namespace
 {
-const int SEC_TO_MS{1000};
-}
+constexpr int DEFAULT_TIMEOUT_S{10};
+constexpr int DEFAULT_TIMEOUT_MS{DEFAULT_TIMEOUT_S * 1000};
+}  // namespace
 
 namespace os
 {
@@ -37,26 +31,13 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
     : m_app_settings{app_settings}
     , m_auto_start_handler{m_app_settings.getAppMetadata()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
-    , m_resolution_handler{std::make_unique<NativeResolutionHandler>(), m_app_settings.getHandledDisplays()}
-    , m_steam_handler{[this]()
-                      {
-                          auto exec_path{m_app_settings.getSteamExecutablePath()};
-                          if (QFileInfo::exists(exec_path))
-                          {
-                              return exec_path;
-                          }
-
-                          return QString{};
-                      },
-                      std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>()),
-                      std::make_unique<SteamRegistryObserver>(m_app_settings.getRegistryFileOverride())}
+    , m_steam_handler{m_app_settings, std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>())}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>(
           m_app_settings.getAppMetadata().getAppName(shared::AppMetadata::App::Stream))}
 {
     Q_ASSERT(m_stream_state_handler != nullptr);
 
-    connect(&m_steam_handler, &SteamHandler::signalProcessStateChanged, this,
-            &PcControl::slotHandleSteamProcessStateChange);
+    connect(&m_steam_handler, &SteamHandler::signalSteamClosed, this, &PcControl::slotHandleSteamClosed);
     connect(m_stream_state_handler.get(), &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
 }
@@ -64,88 +45,75 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
 // For forward declarations
 PcControl::~PcControl() = default;
 
-bool PcControl::launchSteamApp(uint app_id, bool force_big_picture)
+bool PcControl::isSteamReady() const
 {
-    return m_steam_handler.launchApp(app_id, force_big_picture);
+    return {};  // TODO
 }
 
-bool PcControl::closeSteam(std::optional<uint> grace_period_in_sec)
+bool PcControl::closeSteam()
 {
-    return m_steam_handler.close(grace_period_in_sec);
+    return m_steam_handler.close();
 }
 
-bool PcControl::shutdownPC(uint grace_period_in_sec)
+bool PcControl::launchSteamApp(uint app_id)
 {
-    if (m_pc_state_handler.shutdownPC(grace_period_in_sec))
+    return m_steam_handler.launchApp(app_id);
+}
+
+const std::optional<bool>& PcControl::getAppState() const
+{
+    static const std::optional<bool> tmp;
+    return tmp;  // TODO
+}
+
+bool PcControl::shutdownPC()
+{
+    if (m_pc_state_handler.shutdownPC(DEFAULT_TIMEOUT_S))
     {
-        closeSteam(std::nullopt);
-        restoreChangedResolution(true);
-        emit signalShowTrayMessage(
-            "Shutdown in progress", m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
-            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        closeSteam();
+        endStream();
+        emit signalShowTrayMessage("Shutdown in progress",
+                                   m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
+                                   QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
         return true;
     }
 
     return false;
 }
 
-bool PcControl::restartPC(uint grace_period_in_sec)
+bool PcControl::restartPC()
 {
-    if (m_pc_state_handler.restartPC(grace_period_in_sec))
+    if (m_pc_state_handler.restartPC(DEFAULT_TIMEOUT_S))
     {
-        closeSteam(std::nullopt);
-        restoreChangedResolution(true);
-        emit signalShowTrayMessage(
-            "Restart in progress", m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
-            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+        closeSteam();
+        endStream();
+        emit signalShowTrayMessage("Restart in progress",
+                                   m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
+                                   QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
         return true;
     }
 
     return false;
 }
 
-bool PcControl::suspendPC(uint grace_period_in_sec, bool close_steam)
+bool PcControl::suspendOrHibernatePC()
 {
-    if (m_pc_state_handler.suspendPC(grace_period_in_sec))
+    const bool hibernation{m_app_settings.getPreferHibernation()};
+    const bool result{hibernation ? m_pc_state_handler.hibernatePC(DEFAULT_TIMEOUT_S)
+                                  : m_pc_state_handler.suspendPC(DEFAULT_TIMEOUT_S)};
+    if (result)
     {
-        if (close_steam)
+        if (m_app_settings.getCloseSteamBeforeSleep())
         {
-            closeSteam(std::nullopt);
-            restoreChangedResolution(true);
+            closeSteam();
         }
-        else
-        {
-            endStream();
-        }
+        endStream();
 
         emit signalShowTrayMessage(
-            "Suspend in progress",
-            m_app_settings.getAppMetadata().getAppName() + " is about to suspend you real hard :P",
-            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
-        return true;
-    }
-
-    return false;
-}
-
-bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
-{
-    if (m_pc_state_handler.hibernatePC(grace_period_in_sec))
-    {
-        if (close_steam)
-        {
-            closeSteam(std::nullopt);
-            restoreChangedResolution(true);
-        }
-        else
-        {
-            endStream();
-        }
-
-        emit signalShowTrayMessage(
-            "Hibernation in progress",
-            m_app_settings.getAppMetadata().getAppName() + " is about to put you into hard sleep :O",
-            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * SEC_TO_MS);
+            hibernation ? "Hibernation in progress" : "Suspend in progress",
+            m_app_settings.getAppMetadata().getAppName()
+                + (hibernation ? " is about to put you into hard sleep :O" : " is about to suspend you real hard :P"),
+            QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
         return true;
     }
 
@@ -155,21 +123,6 @@ bool PcControl::hibernatePC(uint grace_period_in_sec, bool close_steam)
 bool PcControl::endStream()
 {
     return m_stream_state_handler->endStream();
-}
-
-uint PcControl::getRunningApp() const
-{
-    return m_steam_handler.getRunningApp();
-}
-
-std::optional<uint> PcControl::getTrackedUpdatingApp() const
-{
-    return m_steam_handler.getTrackedUpdatingApp();
-}
-
-bool PcControl::isSteamRunning() const
-{
-    return m_steam_handler.isRunning();
 }
 
 enums::StreamState PcControl::getStreamState() const
@@ -192,34 +145,9 @@ bool PcControl::isAutoStartEnabled() const
     return m_auto_start_handler.isAutoStartEnabled();
 }
 
-bool PcControl::changeResolution(uint width, uint height)
+void PcControl::slotHandleSteamClosed()
 {
-    return m_resolution_handler.changeResolution(width, height);
-}
-
-void PcControl::restoreChangedResolution(bool force)
-{
-    const bool not_streaming{m_stream_state_handler->getCurrentState() == enums::StreamState::NotStreaming};
-    const bool tracked_app_is_dead{m_steam_handler.getTrackedActiveApp() == std::nullopt};
-
-    if ((not_streaming && tracked_app_is_dead) || force)
-    {
-        m_resolution_handler.restoreResolution();
-    }
-}
-
-void PcControl::slotHandleSteamProcessStateChange()
-{
-    if (m_steam_handler.isRunning())
-    {
-        qCDebug(lc::os) << "Handling Steam start.";
-    }
-    else
-    {
-        qCDebug(lc::os) << "Handling Steam exit.";
-        endStream();
-        restoreChangedResolution(false);
-    }
+    endStream();
 }
 
 void PcControl::slotHandleStreamStateChange()
@@ -228,25 +156,19 @@ void PcControl::slotHandleStreamStateChange()
     {
         case enums::StreamState::NotStreaming:
         {
-            qCDebug(lc::os) << "Stream has ended.";
-            restoreChangedResolution(false);
+            qCInfo(lc::os) << "Stream has ended.";
             break;
         }
         case enums::StreamState::Streaming:
         {
-            qCDebug(lc::os) << "Stream started.";
+            qCInfo(lc::os) << "Stream started.";
             break;
         }
         case enums::StreamState::StreamEnding:
         {
-            qCDebug(lc::os) << "Stream is ending.";
+            qCInfo(lc::os) << "Stream is ending.";
             break;
         }
     }
-}
-
-void PcControl::slotAppTrackingHasEnded()
-{
-    restoreChangedResolution(false);
 }
 }  // namespace os

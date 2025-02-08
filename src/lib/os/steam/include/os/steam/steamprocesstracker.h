@@ -29,7 +29,7 @@ public:
     explicit SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInterface> native_handler);
     ~SteamProcessTracker() override;
 
-    void close(const std::optional<uint>& auto_termination_timer);
+    void close();
     void terminate();
 
     bool               isRunning() const;
@@ -45,7 +45,6 @@ private slots:
 private:
     ProcessData m_data;
     QTimer      m_check_timer;
-    QTimer      m_kill_timer;
 
     std::unique_ptr<NativeProcessHandlerInterface> m_native_handler;
 };

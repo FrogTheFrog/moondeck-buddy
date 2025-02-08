@@ -21,13 +21,11 @@ public:
     const shared::AppMetadata& getAppMetadata() const;
     quint16                    getPort() const;
     const QString&             getLoggingRules() const;
-    const std::set<QString>&   getHandledDisplays() const;
     const QString&             getSunshineAppsFilepath() const;
     bool                       getPreferHibernation() const;
     QSsl::SslProtocol          getSslProtocol() const;
     bool                       getForceBigPicture() const;
     bool                       getCloseSteamBeforeSleep() const;
-    const QString&             getRegistryFileOverride() const;
     QString                    getSteamExecutablePath() const;
     const QString&             getMacAddressOverride() const;
 
@@ -38,13 +36,11 @@ private:
     const shared::AppMetadata& m_app_metadata;
     quint16                    m_port;
     QString                    m_logging_rules;
-    std::set<QString>          m_handled_displays;
     QString                    m_sunshine_apps_filepath;
     bool                       m_prefer_hibernation;
     QSsl::SslProtocol          m_ssl_protocol;
     bool                       m_force_big_picture;
     bool                       m_close_steam_before_sleep;
-    QString                    m_registry_file_override;
     QString                    m_steam_exec_override;
     QString                    m_mac_address_override;
 };

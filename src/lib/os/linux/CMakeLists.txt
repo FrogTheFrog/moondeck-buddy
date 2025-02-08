@@ -9,7 +9,6 @@ set(LIBNAME osspecificlib)
 #----------------------------------------------------------------------------------------------------------------------
 
 find_package(Qt6 COMPONENTS Core DBus REQUIRED)
-find_package(X11 REQUIRED)
 find_library(PROC2_LIBRARY NAMES proc2 REQUIRED)
 qt_standard_project_setup()
 
@@ -25,5 +24,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus X11::X11 X11::Xrandr ${PROC2_LIBRARY} ossharedlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus ${PROC2_LIBRARY} ossharedlib sharedlib)
 target_include_directories(${LIBNAME} PUBLIC include)

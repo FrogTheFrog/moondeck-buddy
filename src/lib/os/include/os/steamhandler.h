@@ -1,16 +1,18 @@
 #pragma once
 
 // local includes
-#include "os/shared/trackedappdata.h"
 #include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamprocesstracker.h"
 
 // forward declarations
+namespace utils
+{
+class AppSettings;
+}  // namespace utils
 namespace os
 {
 class SteamWebHelperLogTracker;
 class SteamContentLogTracker;
-class SteamRegistryObserverInterface;
 }  // namespace os
 
 namespace os
@@ -21,30 +23,20 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(std::function<QString()>                        m_steam_exec_path_getter,
-                          std::unique_ptr<SteamProcessTracker>            steam_process_tracker,
-                          std::unique_ptr<SteamRegistryObserverInterface> registry_observer);
+    explicit SteamHandler(const utils::AppSettings&            app_settings,
+                          std::unique_ptr<SteamProcessTracker> steam_process_tracker);
     ~SteamHandler() override;
 
-    bool isRunning() const;
-    bool isRunningNow();
-    bool close(std::optional<uint> grace_period_in_sec);
+    bool isSteamReady() const;
+    bool close();
 
-    bool                launchApp(uint app_id, bool force_big_picture);
-    uint                getRunningApp() const;
-    std::optional<uint> getTrackedActiveApp() const;
-    std::optional<uint> getTrackedUpdatingApp() const;
-    void                clearTrackedApp();
+    bool launchApp(uint app_id);
 
 signals:
-    void signalProcessStateChanged();
+    void signalSteamClosed();
 
 private slots:
     void slotSteamProcessStateChanged();
-    void slotGlobalAppId(uint app_id);
-    void slotTrackedAppIsRunning(bool state);
-    void slotTrackedAppIsUpdating(bool state);
-    void slotTerminateSteam();
 
 private:
     struct LogTrackers
@@ -53,13 +45,8 @@ private:
         std::unique_ptr<SteamContentLogTracker>   m_content_log;
     };
 
-    std::function<QString()>                        m_steam_exec_path_getter;
-    std::unique_ptr<SteamProcessTracker>            m_steam_process_tracker;
-    LogTrackers                                     m_log_trackers;
-    std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
-
-    uint                          m_global_app_id{0};
-    std::optional<TrackedAppData> m_tracked_app;
-    QTimer                        m_steam_close_timer;
+    const utils::AppSettings&            m_app_settings;
+    std::unique_ptr<SteamProcessTracker> m_steam_process_tracker;
+    LogTrackers                          m_log_trackers;
 };
 }  // namespace os

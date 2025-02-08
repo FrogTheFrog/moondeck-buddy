@@ -18,8 +18,5 @@ public:
     QDateTime         getStartTime(uint pid) const override;
     void              close(uint pid) const override;
     void              terminate(uint pid) const override;
-
-    std::vector<uint> getChildrenPids(uint pid) const;  // TODO: maybe remove
-    QString           getCmdline(uint pid) const;       // TODO: maybe remove
 };
 }  // namespace os

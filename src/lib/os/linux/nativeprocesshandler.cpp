@@ -78,29 +78,6 @@ uint getParentPid(const uint pid)
                       [](const auto& result) { return result.s_int >= 0 ? static_cast<uint>(result.s_int) : 0u; });
 }
 
-QString getCmdline(const uint pid)
-{
-    return getPidItem(pid, PIDS_CMDLINE_V, QString{},
-                      [](const auto& result)
-                      {
-                          auto* ptr_list{result.strv};
-                          if (ptr_list == nullptr)
-                          {
-                              return QString{};
-                          }
-
-                          QStringList cmdline;
-                          while (*ptr_list)
-                          {
-                              cmdline.append(*ptr_list);
-                              // NOLINTNEXTLINE(*-pointer-arithmetic)
-                              ++ptr_list;
-                          }
-
-                          return cmdline.join(' ');
-                      });
-}
-
 QDateTime getStartTime(const uint pid)
 {
     return getPidItem(pid, PIDS_TIME_START, QDateTime{},
@@ -234,62 +211,5 @@ void NativeProcessHandler::terminate(uint pid) const
             }
         }
     }
-}
-
-std::vector<uint> NativeProcessHandler::getChildrenPids(uint pid) const
-{
-    const std::vector<uint> all_pids{getPids()};
-    if (std::find(std::begin(all_pids), std::end(all_pids), pid) == std::end(all_pids))
-    {
-        // Process does not exist, early exit.
-        return {};
-    }
-
-    const std::vector<uint> parent_pids{getParentPids(all_pids)};
-    Q_ASSERT(all_pids.size() == parent_pids.size());
-
-    const auto search_pids = [&all_pids, &parent_pids](uint parent_needle_pid)
-    {
-        std::vector<uint> children_pids;
-        for (std::size_t i = 0; i < all_pids.size(); ++i)
-        {
-            const uint parent_pid{parent_pids[i]};
-            if (parent_pid != parent_needle_pid)
-            {
-                continue;
-            }
-
-            const uint process_pid{all_pids[i]};
-            if (process_pid == parent_needle_pid)
-            {
-                // Is this even possible? To be your own parent?
-                continue;
-            }
-
-            children_pids.push_back(process_pid);
-        }
-
-        return children_pids;
-    };
-
-    std::vector<uint> children_pids{search_pids(pid)};
-    std::vector<uint> nested_children_pids{children_pids};
-    for (const auto child_pid : children_pids)
-    {
-        std::vector<uint> nested_pids{search_pids(child_pid)};
-        std::copy(std::begin(nested_pids), std::end(nested_pids), std::back_inserter(nested_children_pids));
-    }
-
-    std::sort(std::begin(nested_children_pids), std::end(nested_children_pids));
-    auto last_unique = std::unique(std::begin(nested_children_pids), std::end(nested_children_pids));
-    nested_children_pids.erase(last_unique, std::end(nested_children_pids));
-
-    return nested_children_pids;
-}
-
-// NOLINTNEXTLINE(*-to-static)
-QString NativeProcessHandler::getCmdline(uint pid) const
-{
-    return ::getCmdline(pid);
 }
 }  // namespace os
