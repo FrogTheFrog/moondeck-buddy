@@ -7,6 +7,7 @@
 
 // local includes
 #include "os/shared/steamregistryobserverinterface.h"
+#include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamwebhelperlogtracker.h"
 #include "shared/loggingcategories.h"
 
@@ -195,7 +196,8 @@ void SteamHandler::slotSteamProcessStateChanged()
         qCInfo(lc::os) << "Steam is running! PID:" << data.m_pid << "START_TIME:" << data.m_start_time;
         m_registry_observer->startAppObservation();
 
-        m_log_trackers = {std::make_unique<SteamWebHelperLogTracker>(data.m_log_dir, data.m_start_time)};
+        m_log_trackers = {std::make_unique<SteamWebHelperLogTracker>(data.m_log_dir, data.m_start_time),
+                          std::make_unique<SteamContentLogTracker>(data.m_log_dir, data.m_start_time)};
     }
     else
     {

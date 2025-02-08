@@ -2,12 +2,14 @@
 
 // local includes
 #include "os/shared/trackedappdata.h"
+#include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamprocesstracker.h"
 
 // forward declarations
 namespace os
 {
 class SteamWebHelperLogTracker;
+class SteamContentLogTracker;
 class SteamRegistryObserverInterface;
 }  // namespace os
 
@@ -48,6 +50,7 @@ private:
     struct LogTrackers
     {
         std::unique_ptr<SteamWebHelperLogTracker> m_web_helper;
+        std::unique_ptr<SteamContentLogTracker>   m_content_log;
     };
 
     std::function<QString()>                        m_steam_exec_path_getter;
