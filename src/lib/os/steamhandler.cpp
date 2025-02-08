@@ -28,7 +28,17 @@ SteamHandler::~SteamHandler() = default;
 
 bool SteamHandler::isSteamReady() const
 {
-    return {};  // TODO m_steam_process_tracker->isRunning();
+    // TODO: if app is running, return true
+
+    if (m_log_trackers.m_web_helper)
+    {
+        const auto current_mode{m_log_trackers.m_web_helper->getUiMode()};
+        const auto required_mode{m_app_settings.getForceBigPicture() ? SteamWebHelperLogTracker::UiMode::BigPicture
+                                                                     : SteamWebHelperLogTracker::UiMode::Desktop};
+        return current_mode == required_mode;
+    }
+
+    return false;
 }
 
 bool SteamHandler::close()
