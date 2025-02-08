@@ -19,7 +19,12 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
     for (const QString& line : new_lines)
     {
-        qDebug() << line;
+        static const QRegularExpression mode_regex{R"(AppID\s(\d+)\sstate\schanged\s:\s(.+),)"};
+        const auto                      match{mode_regex.match(line)};
+        if (match.hasMatch())
+        {
+           // new_ui_mode = match.hasCaptured(1) ? UiMode::Desktop : UiMode::BigPicture;
+        }
     }
 }
 }  // namespace os
