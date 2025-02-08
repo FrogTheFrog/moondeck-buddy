@@ -23,8 +23,8 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(const utils::AppSettings&            app_settings,
-                          std::unique_ptr<SteamProcessTracker> steam_process_tracker);
+    explicit SteamHandler(const utils::AppSettings&                      app_settings,
+                          std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface);
     ~SteamHandler() override;
 
     bool isSteamReady() const;
@@ -45,8 +45,8 @@ private:
         std::unique_ptr<SteamContentLogTracker>   m_content_log;
     };
 
-    const utils::AppSettings&            m_app_settings;
-    std::unique_ptr<SteamProcessTracker> m_steam_process_tracker;
-    LogTrackers                          m_log_trackers;
+    const utils::AppSettings& m_app_settings;
+    SteamProcessTracker       m_steam_process_tracker;
+    LogTrackers               m_log_trackers;
 };
 }  // namespace os

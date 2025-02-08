@@ -31,7 +31,7 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
     : m_app_settings{app_settings}
     , m_auto_start_handler{m_app_settings.getAppMetadata()}
     , m_pc_state_handler{std::make_unique<NativePcStateHandler>()}
-    , m_steam_handler{m_app_settings, std::make_unique<SteamProcessTracker>(std::make_unique<NativeProcessHandler>())}
+    , m_steam_handler{m_app_settings, std::make_unique<NativeProcessHandler>()}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>(
           m_app_settings.getAppMetadata().getAppName(shared::AppMetadata::App::Stream))}
 {

@@ -6,6 +6,7 @@
 #include <QThread>
 
 // local includes
+#include "os/shared/nativeprocesshandlerinterface.h"
 #include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamwebhelperlogtracker.h"
 #include "shared/loggingcategories.h"
@@ -13,14 +14,12 @@
 
 namespace os
 {
-SteamHandler::SteamHandler(const utils::AppSettings&            app_settings,
-                           std::unique_ptr<SteamProcessTracker> steam_process_tracker)
+SteamHandler::SteamHandler(const utils::AppSettings&                      app_settings,
+                           std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface)
     : m_app_settings{app_settings}
-    , m_steam_process_tracker{std::move(steam_process_tracker)}
+    , m_steam_process_tracker{std::move(process_handler_interface)}
 {
-    Q_ASSERT(m_steam_process_tracker);
-
-    connect(m_steam_process_tracker.get(), &SteamProcessTracker::signalProcessStateChanged, this,
+    connect(&m_steam_process_tracker, &SteamProcessTracker::signalProcessStateChanged, this,
             &SteamHandler::slotSteamProcessStateChanged);
 }
 
@@ -43,7 +42,7 @@ bool SteamHandler::isSteamReady() const
 
 bool SteamHandler::close()
 {
-    if (!m_steam_process_tracker->isRunningNow())
+    if (!m_steam_process_tracker.isRunningNow())
     {
         return true;
     }
@@ -64,7 +63,7 @@ bool SteamHandler::close()
         qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
     }
 
-    m_steam_process_tracker->close();
+    m_steam_process_tracker.close();
     return true;
 }
 
@@ -129,9 +128,9 @@ bool SteamHandler::launchApp(uint app_id)
 
 void SteamHandler::slotSteamProcessStateChanged()
 {
-    if (m_steam_process_tracker->isRunning())
+    if (m_steam_process_tracker.isRunning())
     {
-        const auto& [m_pid, m_start_time, m_log_dir]{m_steam_process_tracker->getProcessData()};
+        const auto& [m_pid, m_start_time, m_log_dir]{m_steam_process_tracker.getProcessData()};
         qCInfo(lc::os) << "Steam is running! PID:" << m_pid << "START_TIME:" << m_start_time;
 
         m_log_trackers = {std::make_unique<SteamWebHelperLogTracker>(m_log_dir, m_start_time),

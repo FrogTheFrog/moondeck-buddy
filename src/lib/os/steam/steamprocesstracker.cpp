@@ -36,7 +36,7 @@ namespace os
 SteamProcessTracker::SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInterface> native_handler)
     : m_native_handler{std::move(native_handler)}
 {
-    Q_ASSERT(m_native_handler != nullptr);
+    Q_ASSERT(m_native_handler);
 
     connect(&m_check_timer, &QTimer::timeout, this, &SteamProcessTracker::slotCheckState);
 
