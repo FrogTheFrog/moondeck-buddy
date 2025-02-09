@@ -18,7 +18,13 @@ SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, con
     m_check_timer.setInterval(500);
     m_check_timer.setSingleShot(true);
 
+    qCInfo(lc::os) << "Started watching AppID:" << m_app_id;
     slotCheckState();
+}
+
+SteamAppWatcher::~SteamAppWatcher()
+{
+    qCInfo(lc::os) << "Stopped watching AppID:" << m_app_id;
 }
 
 enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker, const uint app_id)

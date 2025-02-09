@@ -20,7 +20,7 @@ class SteamAppWatcher : public QObject
 
 public:
     explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, uint app_id);
-    ~SteamAppWatcher() override = default;
+    ~SteamAppWatcher() override;
 
     static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id);
 
