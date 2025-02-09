@@ -22,6 +22,8 @@ public:
     explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, uint app_id);
     ~SteamAppWatcher() override = default;
 
+    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id);
+
 private slots:
     void slotCheckState();
 

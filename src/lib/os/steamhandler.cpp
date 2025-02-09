@@ -119,7 +119,8 @@ void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint
         return;
     }
 
-    if (!SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
+    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id) != enums::AppState::Stopped};
+    if (!is_app_running && !SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
     {
         qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
         return;
