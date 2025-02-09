@@ -24,6 +24,9 @@ public:
 
     static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id);
 
+    enums::AppState getAppState() const;
+    uint getAppId() const;
+
 private slots:
     void slotCheckState();
 

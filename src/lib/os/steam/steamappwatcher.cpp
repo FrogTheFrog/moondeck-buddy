@@ -50,6 +50,16 @@ enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_
     return new_state;
 }
 
+enums::AppState SteamAppWatcher::getAppState() const
+{
+    return m_current_state;
+}
+
+uint SteamAppWatcher::getAppId() const
+{
+    return m_app_id;
+}
+
 void SteamAppWatcher::slotCheckState()
 {
     const auto auto_start_timer{qScopeGuard([this]() { m_check_timer.start(); })};

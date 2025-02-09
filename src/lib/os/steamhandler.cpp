@@ -3,7 +3,6 @@
 
 // system/Qt includes
 #include <QProcess>
-#include <QThread>
 
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
@@ -59,6 +58,16 @@ bool SteamHandler::close()
 
     m_steam_process_tracker.close();
     return true;
+}
+
+std::optional<std::tuple<uint, enums::AppState>> SteamHandler::getAppData() const
+{
+    if (const auto* watcher{m_session_data.m_steam_app_watcher.get()})
+    {
+        return std::make_tuple(watcher->getAppId(), watcher->getAppState());
+    }
+
+    return std::nullopt;
 }
 
 bool SteamHandler::launchApp(const uint app_id)
@@ -119,8 +128,10 @@ void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint
         return;
     }
 
-    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id) != enums::AppState::Stopped};
-    if (!is_app_running && !SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
+    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)
+                              != enums::AppState::Stopped};
+    if (!is_app_running
+        && !SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
     {
         qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
         return;

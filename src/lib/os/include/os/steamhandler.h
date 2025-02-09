@@ -2,6 +2,7 @@
 
 // local includes
 #include "os/steam/steamprocesstracker.h"
+#include "shared/enums.h"
 
 // forward declarations
 namespace utils
@@ -29,8 +30,9 @@ public:
     bool isSteamReady() const;
     bool close();
 
-    bool launchApp(uint app_id);
-    void clearSessionData();
+    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
+    bool                                             launchApp(uint app_id);
+    void                                             clearSessionData();
 
 signals:
     void signalSteamClosed();

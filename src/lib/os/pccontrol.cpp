@@ -60,10 +60,9 @@ bool PcControl::launchSteamApp(uint app_id)
     return m_steam_handler.launchApp(app_id);
 }
 
-const std::optional<bool>& PcControl::getAppState() const
+std::optional<std::tuple<uint, enums::AppState>> PcControl::getAppData() const
 {
-    static const std::optional<bool> tmp;
-    return tmp;  // TODO
+    return m_steam_handler.getAppData();
 }
 
 bool PcControl::shutdownPC()
