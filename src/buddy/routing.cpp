@@ -76,7 +76,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                                               : pairing_manager.isPairing(id) ? PairingState::Pairing
                                                                               : PairingState::NotPaired};
 
-                     return QJsonObject{{"state", QVariant::fromValue(state).toString()}};
+                     return QJsonObject{{"state", lc::qEnumToString(state)}};
                  });
 
     server.route("/pair", QHttpServerRequest::Method::Post,
@@ -131,8 +131,7 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     return QHttpServerResponse{
-                         QJsonObject{{"state", QVariant::fromValue(pc_control.getPcState()).toString()}}};
+                     return QHttpServerResponse{QJsonObject{{"state", lc::qEnumToString(pc_control.getPcState())}}};
                  });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,
@@ -225,7 +224,7 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                      }
 
                      const bool result{pc_control.isSteamReady()};
-                     return QHttpServerResponse{QJsonObject{{"is_steam_ready", result}}};
+                     return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
     server.route("/launchSteamApp", QHttpServerRequest::Method::Post,
@@ -267,6 +266,18 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
 
 void setupStream(server::HttpServer& server, os::PcControl& pc_control)
 {
+    server.route("/streamState", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto state{pc_control.getStreamState()};
+                     return QHttpServerResponse{QJsonObject{{"state", lc::qEnumToString(state)}}};
+                 });
+
     server.route("/streamedAppData", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
