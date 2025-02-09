@@ -38,8 +38,6 @@ QJsonObject requestToJsonObject(const QHttpServerRequest& request)
     const auto json{requestToJson(request)};
     return json.isObject() ? json.object() : QJsonObject{};
 }
-
-const int MAX_GRACE_PERIOD_S{30};
 }  // namespace
 
 namespace routing_internal
@@ -174,33 +172,9 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupHostInfo(server::HttpServer& server, os::PcControl& pc_control)
+void setupHostInfo(server::HttpServer& server, const QString& mac_address_override)
 {
     server.route("/hostInfo", QHttpServerRequest::Method::Get,
-                 [&server, &pc_control](const QHttpServerRequest& request)
-                 {
-                     if (!server.isAuthorized(request))
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-                     }
-
-                     // TODO
-                     // auto optional_int = [](std::optional<uint> value)
-                     // { return value ? QJsonValue{static_cast<int>(*value)} : QJsonValue{QJsonValue::Null}; };
-
-                     return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-
-                     // return QHttpServerResponse{
-                     //     QJsonObject{{"steamIsRunning", pc_control.isSteamRunning()},
-                     //                 {"steamRunningAppId", static_cast<int>(pc_control.getRunningApp())},
-                     //                 {"steamTrackedUpdatingAppId", optional_int(pc_control.getTrackedUpdatingApp())},
-                     //                 {"streamState", QVariant::fromValue(pc_control.getStreamState()).toString()}}};
-                 });
-}
-
-void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_override)
-{
-    server.route("/hostPcInfo", QHttpServerRequest::Method::Get,
                  [&server, &mac_address_override](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
@@ -240,8 +214,20 @@ void setupHostPcInfo(server::HttpServer& server, const QString& mac_address_over
                  });
 }
 
-void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control)
+void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
 {
+    server.route("/isSteamReady", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const bool result{pc_control.isSteamReady()};
+                     return QHttpServerResponse{QJsonObject{{"is_steam_ready", result}}};
+                 });
+
     server.route("/launchSteamApp", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
@@ -279,8 +265,31 @@ void setupSteamControl(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupStreamControl(server::HttpServer& server, os::PcControl& pc_control)
+void setupStream(server::HttpServer& server, os::PcControl& pc_control)
 {
+    server.route("/streamedAppData", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto optional_data = [&pc_control]()
+                     {
+                         const auto data{pc_control.getAppData()};
+                         if (!data)
+                         {
+                             return QJsonObject{{"data", QJsonValue::Null}};
+                         }
+
+                         const auto& [app_id, app_state] = *data;
+                         return QJsonObject{{"data", QJsonObject{{{"app_id", static_cast<qint64>(app_id)},
+                                                                  {"app_state", lc::qEnumToString(app_state)}}}}};
+                     };
+                     return QHttpServerResponse{optional_data()};
+                 });
+
     server.route("/endStream", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
@@ -334,10 +343,9 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
     routing_internal::setupPcState(server, pc_control);
-    routing_internal::setupHostInfo(server, pc_control);
-    routing_internal::setupHostPcInfo(server, mac_address_override);
-    routing_internal::setupSteamControl(server, pc_control);
-    routing_internal::setupStreamControl(server, pc_control);
+    routing_internal::setupHostInfo(server, mac_address_override);
+    routing_internal::setupSteam(server, pc_control);
+    routing_internal::setupStream(server, pc_control);
     routing_internal::setupGamestreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
