@@ -80,9 +80,19 @@ bool SteamProcessTracker::isRunningNow()
     return isRunning();
 }
 
-const SteamProcessTracker::ProcessData& SteamProcessTracker::getProcessData() const
+uint SteamProcessTracker::getPid() const
 {
-    return m_data;
+    return m_data.m_pid;
+}
+
+QDateTime SteamProcessTracker::getStartTime() const
+{
+    return m_data.m_start_time;
+}
+
+const SteamProcessTracker::LogTrackers* SteamProcessTracker::getLogTrackers() const
+{
+    return m_data.m_log_trackers.get();
 }
 
 void SteamProcessTracker::slotCheckState()
@@ -141,7 +151,11 @@ void SteamProcessTracker::slotCheckState()
         }
 
         cleanup.dismiss();
+
         m_data.m_pid = pid;
+        m_data.m_log_trackers.reset(new LogTrackers{SteamWebHelperLogTracker{m_data.m_log_dir, m_data.m_start_time},
+                                                    SteamContentLogTracker{m_data.m_log_dir, m_data.m_start_time}});
+
         emit signalProcessStateChanged();
     }
 }

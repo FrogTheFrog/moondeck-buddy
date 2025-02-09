@@ -1,7 +1,6 @@
 #pragma once
 
 // local includes
-#include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamprocesstracker.h"
 
 // forward declarations
@@ -9,11 +8,6 @@ namespace utils
 {
 class AppSettings;
 }  // namespace utils
-namespace os
-{
-class SteamWebHelperLogTracker;
-class SteamContentLogTracker;
-}  // namespace os
 
 namespace os
 {
@@ -39,14 +33,7 @@ private slots:
     void slotSteamProcessStateChanged();
 
 private:
-    struct LogTrackers
-    {
-        std::unique_ptr<SteamWebHelperLogTracker> m_web_helper;
-        std::unique_ptr<SteamContentLogTracker>   m_content_log;
-    };
-
     const utils::AppSettings& m_app_settings;
     SteamProcessTracker       m_steam_process_tracker;
-    LogTrackers               m_log_trackers;
 };
 }  // namespace os

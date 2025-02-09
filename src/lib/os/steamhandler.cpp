@@ -29,13 +29,13 @@ bool SteamHandler::isSteamReady() const
 {
     // TODO: if app is running, return true
 
-    if (m_log_trackers.m_web_helper)
-    {
-        const auto current_mode{m_log_trackers.m_web_helper->getUiMode()};
-        const auto required_mode{m_app_settings.getForceBigPicture() ? SteamWebHelperLogTracker::UiMode::BigPicture
-                                                                     : SteamWebHelperLogTracker::UiMode::Desktop};
-        return current_mode == required_mode;
-    }
+    // if (m_log_trackers.m_web_helper)
+    // {
+    //     const auto current_mode{m_log_trackers.m_web_helper->getUiMode()};
+    //     const auto required_mode{m_app_settings.getForceBigPicture() ? SteamWebHelperLogTracker::UiMode::BigPicture
+    //                                                                  : SteamWebHelperLogTracker::UiMode::Desktop};
+    //     return current_mode == required_mode;
+    // }
 
     return false;
 }
@@ -130,16 +130,12 @@ void SteamHandler::slotSteamProcessStateChanged()
 {
     if (m_steam_process_tracker.isRunning())
     {
-        const auto& [m_pid, m_start_time, m_log_dir]{m_steam_process_tracker.getProcessData()};
-        qCInfo(lc::os) << "Steam is running! PID:" << m_pid << "START_TIME:" << m_start_time;
-
-        m_log_trackers = {std::make_unique<SteamWebHelperLogTracker>(m_log_dir, m_start_time),
-                          std::make_unique<SteamContentLogTracker>(m_log_dir, m_start_time)};
+        qCInfo(lc::os) << "Steam is running! PID:" << m_steam_process_tracker.getPid()
+                       << "START_TIME:" << m_steam_process_tracker.getStartTime();
     }
     else
     {
         qCInfo(lc::os) << "Steam is no longer running!";
-        m_log_trackers = {};
         emit signalSteamClosed();
     }
 }
