@@ -7,6 +7,7 @@
 
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
+#include "os/steam/steamappwatcher.h"
 #include "os/steam/steamlauncher.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
@@ -78,8 +79,9 @@ bool SteamHandler::launchApp(const uint app_id)
     if (!m_session_data.m_steam_launcher)
     {
         m_steam_process_tracker.slotCheckState();
-        m_session_data = {.m_steam_launcher{
-            std::make_unique<SteamLauncher>(m_steam_process_tracker, exec_path, m_app_settings.getForceBigPicture())}};
+        m_session_data = {.m_steam_launcher{std::make_unique<SteamLauncher>(m_steam_process_tracker, exec_path,
+                                                                            m_app_settings.getForceBigPicture())},
+                          .m_steam_app_watcher{}};
 
         connect(m_session_data.m_steam_launcher.get(), &SteamLauncher::signalFinished, this,
                 &SteamHandler::slotSteamLaunchFinished);
@@ -122,5 +124,8 @@ void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint
         qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
         return;
     }
+
+    m_session_data = {.m_steam_launcher{},
+                      .m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};
 }
 }  // namespace os

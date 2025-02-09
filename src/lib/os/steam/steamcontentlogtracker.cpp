@@ -52,7 +52,7 @@ std::map<uint, SteamContentLogTracker::AppState>
             if (state != AppState::Stopped)
             {
                 new_state = state;
-                if (new_state == AppState::Updating)
+                if (new_state == AppState::Running)
                 {
                     break;
                 }

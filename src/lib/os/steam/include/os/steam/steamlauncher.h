@@ -7,7 +7,6 @@
 namespace os
 {
 class SteamProcessTracker;
-class SteamWebHelperLogTracker;
 }  // namespace os
 
 namespace os

@@ -11,7 +11,8 @@ class AppSettings;
 namespace os
 {
 class SteamLauncher;
-}
+class SteamAppWatcher;
+}  // namespace os
 
 namespace os
 {
@@ -41,7 +42,8 @@ private slots:
 private:
     struct SessionData
     {
-        std::unique_ptr<SteamLauncher> m_steam_launcher;
+        std::unique_ptr<SteamLauncher>   m_steam_launcher;
+        std::unique_ptr<SteamAppWatcher> m_steam_app_watcher;
     };
 
     const utils::AppSettings& m_app_settings;
