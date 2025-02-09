@@ -51,7 +51,8 @@ SteamProcessTracker::~SteamProcessTracker() = default;
 
 void SteamProcessTracker::close()
 {
-    if (isRunningNow())
+    slotCheckState();
+    if (isRunning())
     {
         m_native_handler->close(m_data.m_pid);
     }
@@ -59,7 +60,8 @@ void SteamProcessTracker::close()
 
 void SteamProcessTracker::terminate()
 {
-    if (isRunningNow())
+    slotCheckState();
+    if (isRunning())
     {
         m_native_handler->terminate(m_data.m_pid);
     }
@@ -68,16 +70,6 @@ void SteamProcessTracker::terminate()
 bool SteamProcessTracker::isRunning() const
 {
     return m_data.m_pid != 0;
-}
-
-bool SteamProcessTracker::isRunningNow()
-{
-    if (isRunning())
-    {
-        slotCheckState();
-    }
-
-    return isRunning();
 }
 
 uint SteamProcessTracker::getPid() const

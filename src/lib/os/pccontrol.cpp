@@ -47,7 +47,7 @@ PcControl::~PcControl() = default;
 
 bool PcControl::isSteamReady() const
 {
-    return {};  // TODO
+    return m_steam_handler.isSteamReady();
 }
 
 bool PcControl::closeSteam()
@@ -167,6 +167,7 @@ void PcControl::slotHandleStreamStateChange()
         case enums::StreamState::StreamEnding:
         {
             qCInfo(lc::os) << "Stream is ending.";
+            m_steam_handler.clearSessionData();
             break;
         }
     }

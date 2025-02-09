@@ -7,8 +7,7 @@
 
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
-#include "os/steam/steamcontentlogtracker.h"
-#include "os/steam/steamwebhelperlogtracker.h"
+#include "os/steam/steamlauncher.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
 
@@ -27,25 +26,19 @@ SteamHandler::~SteamHandler() = default;
 
 bool SteamHandler::isSteamReady() const
 {
-    // TODO: if app is running, return true
-
-    // if (m_log_trackers.m_web_helper)
-    // {
-    //     const auto current_mode{m_log_trackers.m_web_helper->getUiMode()};
-    //     const auto required_mode{m_app_settings.getForceBigPicture() ? SteamWebHelperLogTracker::UiMode::BigPicture
-    //                                                                  : SteamWebHelperLogTracker::UiMode::Desktop};
-    //     return current_mode == required_mode;
-    // }
-
-    return false;
+    return SteamLauncher::isSteamReady(m_steam_process_tracker, m_app_settings.getForceBigPicture());
 }
 
 bool SteamHandler::close()
 {
-    if (!m_steam_process_tracker.isRunningNow())
+    m_steam_process_tracker.slotCheckState();
+    if (!m_steam_process_tracker.isRunning())
     {
         return true;
     }
+
+    // Clear the session data as we are no longer interested in it
+    clearSessionData();
 
     // Try to shut down steam gracefully first
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
@@ -67,7 +60,7 @@ bool SteamHandler::close()
     return true;
 }
 
-bool SteamHandler::launchApp(uint app_id)
+bool SteamHandler::launchApp(const uint app_id)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -82,48 +75,23 @@ bool SteamHandler::launchApp(uint app_id)
         return false;
     }
 
-    // if (getRunningApp() != app_id)
-    // {
-    //     const bool force_big_picture{m_app_settings.getForceBigPicture()};
-    //     const bool is_steam_running{m_steam_process_tracker->isRunningNow()};
-    //     if (force_big_picture && is_steam_running)
-    //     {
-    //         QProcess steam_process;
-    //         steam_process.setStandardOutputFile(QProcess::nullDevice());
-    //         steam_process.setStandardErrorFile(QProcess::nullDevice());
-    //         steam_process.setProgram(exec_path);
-    //         steam_process.setArguments({"steam://open/bigpicture"});
-    //
-    //         if (!steam_process.startDetached())
-    //         {
-    //             qCWarning(lc::os) << "Failed to open Steam in big picture mode!";
-    //             return false;
-    //         }
-    //
-    //         // Need to wait a little until Steam actually goes into bigpicture mode...
-    //         const uint time_it_takes_steam_to_open_big_picture{1000};
-    //         QThread::msleep(time_it_takes_steam_to_open_big_picture);
-    //     }
-    //
-    //     QProcess steam_process;
-    //     steam_process.setStandardOutputFile(QProcess::nullDevice());
-    //     steam_process.setStandardErrorFile(QProcess::nullDevice());
-    //     steam_process.setProgram(exec_path);
-    //     steam_process.setArguments((force_big_picture && !is_steam_running ? QStringList{"-bigpicture"} :
-    //     QStringList{})
-    //                                + QStringList{"-applaunch", QString::number(app_id)});
-    //
-    //     if (!steam_process.startDetached())
-    //     {
-    //         qCWarning(lc::os) << "Failed to start Steam app launch sequence!";
-    //         return false;
-    //     }
-    //
-    //     // m_tracked_app = TrackedAppData{app_id, false, false};
-    //     // m_registry_observer->startTrackingApp(app_id);
-    // }
+    if (!m_session_data.m_steam_launcher)
+    {
+        m_steam_process_tracker.slotCheckState();
+        m_session_data = {.m_steam_launcher{
+            std::make_unique<SteamLauncher>(m_steam_process_tracker, exec_path, m_app_settings.getForceBigPicture())}};
 
+        connect(m_session_data.m_steam_launcher.get(), &SteamLauncher::signalFinished, this,
+                &SteamHandler::slotSteamLaunchFinished);
+    }
+
+    m_session_data.m_steam_launcher->setAppId(app_id);
     return true;
+}
+
+void SteamHandler::clearSessionData()
+{
+    m_session_data = {};
 }
 
 void SteamHandler::slotSteamProcessStateChanged()
@@ -136,7 +104,23 @@ void SteamHandler::slotSteamProcessStateChanged()
     else
     {
         qCInfo(lc::os) << "Steam is no longer running!";
+        m_session_data = {};
         emit signalSteamClosed();
+    }
+}
+
+void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint app_id, const bool success)
+{
+    if (!success)
+    {
+        m_session_data = {};
+        return;
+    }
+
+    if (!QProcess::startDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
+    {
+        qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
+        return;
     }
 }
 }  // namespace os

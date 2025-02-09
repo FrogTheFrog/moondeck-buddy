@@ -8,6 +8,10 @@ namespace utils
 {
 class AppSettings;
 }  // namespace utils
+namespace os
+{
+class SteamLauncher;
+}
 
 namespace os
 {
@@ -25,15 +29,23 @@ public:
     bool close();
 
     bool launchApp(uint app_id);
+    void clearSessionData();
 
 signals:
     void signalSteamClosed();
 
 private slots:
     void slotSteamProcessStateChanged();
+    void slotSteamLaunchFinished(const QString& steam_exec, uint app_id, bool success);
 
 private:
+    struct SessionData
+    {
+        std::unique_ptr<SteamLauncher> m_steam_launcher;
+    };
+
     const utils::AppSettings& m_app_settings;
     SteamProcessTracker       m_steam_process_tracker;
+    SessionData               m_session_data;
 };
 }  // namespace os

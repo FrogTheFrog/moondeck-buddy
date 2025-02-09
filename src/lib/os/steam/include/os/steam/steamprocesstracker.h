@@ -35,9 +35,7 @@ public:
     void close();
     void terminate();
 
-    bool isRunning() const;
-    bool isRunningNow();
-
+    bool               isRunning() const;
     uint               getPid() const;
     QDateTime          getStartTime() const;
     const LogTrackers* getLogTrackers() const;
@@ -45,7 +43,7 @@ public:
 signals:
     void signalProcessStateChanged();
 
-private slots:
+public slots:
     void slotCheckState();
 
 private:
