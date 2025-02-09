@@ -13,6 +13,8 @@ SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, con
     : m_process_tracker{process_tracker}
     , m_app_id{app_id}
 {
+    connect(&m_check_timer, &QTimer::timeout, this, &SteamAppWatcher::slotCheckState);
+
     m_check_timer.setInterval(500);
     m_check_timer.setSingleShot(true);
 
