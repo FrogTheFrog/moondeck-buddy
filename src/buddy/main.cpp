@@ -197,8 +197,6 @@ int main(int argc, char* argv[])
         qFatal("Failed to start server!");
     }
 
-    pc_control.launchSteamApp(736260);
-
     QGuiApplication::setQuitOnLastWindowClosed(false);
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
     qCInfo(lc::buddyMain) << "startup finished.";

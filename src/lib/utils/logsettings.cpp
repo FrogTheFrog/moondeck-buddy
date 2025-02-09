@@ -3,19 +3,46 @@
 
 // system/Qt includes
 #include <QDateTime>
-#include <QFile>
+#include <QDir>
 
 // local includes
 #include "shared/loggingcategories.h"
 
 namespace
 {
-void removeLogFile(const QString& filepath)
+void swapFilesIfNeeded(const QString& filepath)
 {
-    QFile file(filepath);
-    if (file.exists())
+    constexpr int max_size{10 * 1024 * 1024};
+    if (const QFileInfo file_info(filepath); file_info.size() > max_size)
     {
-        file.remove();
+        const auto filename{file_info.fileName()};
+        const auto old_filename{filename + ".old"};
+
+        auto file_dir{file_info.absoluteDir()};
+        if (file_dir.exists(old_filename) && !file_dir.remove(old_filename))
+        {
+            qFatal("File could not be removed: \"%s\".", qUtf8Printable(old_filename));
+        }
+
+        if (!file_dir.rename(filename, old_filename))
+        {
+            qFatal("File could not be renamed: \"%s\" -> \"%s\".", qUtf8Printable(filename),
+                   qUtf8Printable(old_filename));
+        }
+    }
+}
+
+void appendEmptyLine(const QString& filepath)
+{
+    if (const QFileInfo file_info(filepath); file_info.size() > 0)
+    {
+        QFile file(filepath);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+        {
+            qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(filepath));
+        }
+
+        file.write("\n\n");
     }
 }
 
@@ -28,7 +55,9 @@ void messageHandler(QtMsgType type, const QMessageLogContext& context, const QSt
     }
 
     const auto& filepath{utils::LogSettings::getInstance().getFilepath()};
-    QFile       file(filepath);
+    swapFilesIfNeeded(filepath);
+
+    QFile file(filepath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
         qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(filepath));
@@ -63,7 +92,8 @@ void LogSettings::init(const QString& filepath)
     }
 
     m_filepath = filepath;
-    removeLogFile(filepath);
+    swapFilesIfNeeded(filepath);
+    appendEmptyLine(filepath);
     qInstallMessageHandler(messageHandler);
 
     qCInfo(lc::utils) << "Log location:" << m_filepath;
