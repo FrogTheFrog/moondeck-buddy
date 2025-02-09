@@ -119,7 +119,7 @@ void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint
         return;
     }
 
-    if (!QProcess::startDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
+    if (!SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
     {
         qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
         return;

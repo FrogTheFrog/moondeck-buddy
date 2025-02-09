@@ -32,6 +32,17 @@ SteamLauncher::SteamLauncher(const SteamProcessTracker& process_tracker, QString
     QTimer::singleShot(0, this, &SteamLauncher::slotExecuteLaunch);
 }
 
+bool SteamLauncher::executeDetached(const QString& steam_exec, const QStringList& args)
+{
+    QProcess steam_process;
+    steam_process.setStandardOutputFile(QProcess::nullDevice());
+    steam_process.setStandardErrorFile(QProcess::nullDevice());
+    steam_process.setProgram(steam_exec);
+    steam_process.setArguments(args);
+
+    return steam_process.startDetached();
+}
+
 bool SteamLauncher::isSteamReady(const SteamProcessTracker& process_tracker, const bool force_big_picture)
 {
     const auto ui_mode{getCurrentUiMode(process_tracker)};
@@ -52,8 +63,8 @@ void SteamLauncher::slotExecuteLaunch()
             || (m_force_big_picture
                 && getCurrentUiMode(m_process_tracker) != SteamWebHelperLogTracker::UiMode::BigPicture))
         {
-            if (!QProcess::startDetached(m_steam_exec,
-                                         m_force_big_picture ? QStringList{"steam://open/bigpicture"} : QStringList{}))
+            if (!executeDetached(m_steam_exec,
+                                 m_force_big_picture ? QStringList{"steam://open/bigpicture"} : QStringList{}))
             {
                 qCWarning(lc::os) << "Failed to launch Steam!";
                 emit signalFinished(m_steam_exec, m_app_id, false);

@@ -52,6 +52,7 @@ void SteamAppWatcher::slotCheckState()
         qCInfo(lc::os) << "New watched app state for AppID" << m_app_id
                        << "detected:" << lc::qEnumToString(m_current_state) << "->" << lc::qEnumToString(new_state);
         m_current_state = new_state;
+        m_delay_counter = 0;
     }
 }
 }  // namespace os

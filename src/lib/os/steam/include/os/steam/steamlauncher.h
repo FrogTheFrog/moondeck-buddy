@@ -19,6 +19,7 @@ public:
     explicit SteamLauncher(const SteamProcessTracker& process_tracker, QString steam_exec, bool force_big_picture);
     ~SteamLauncher() override = default;
 
+    static bool executeDetached(const QString& steam_exec, const QStringList& args);
     static bool isSteamReady(const SteamProcessTracker& process_tracker, bool force_big_picture);
     void        setAppId(uint app_id);
 
