@@ -24,6 +24,7 @@ public:
         UpdateQueued,
         UpdateRunning,
         UpdateStarted,
+        UpdateOptional,
         FullyInstalled,
         AppRunning,
         FilesMissing,

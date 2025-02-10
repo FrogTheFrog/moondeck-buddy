@@ -21,13 +21,14 @@ std::map<uint, SteamContentLogTracker::AppState>
                          {
                              switch (state_change)
                              {
-                                 case AppStateChange::UpdateRequired:
-                                 case AppStateChange::UpdateQueued:
                                  case AppStateChange::UpdateRunning:
                                  case AppStateChange::UpdateStarted:
                                      return AppState::Updating;
                                  case AppStateChange::AppRunning:
                                      return AppState::Running;
+                                 case AppStateChange::UpdateRequired:
+                                 case AppStateChange::UpdateQueued:
+                                 case AppStateChange::UpdateOptional:
                                  case AppStateChange::FullyInstalled:
                                  case AppStateChange::FilesMissing:
                                  case AppStateChange::Uninstalling:
