@@ -55,11 +55,22 @@ jobs:
           if-no-files-found: error
 
   Linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Stay on 22.04 for now as the next release increments GLIBC
     needs: [Formatting, Filename]
     steps:
       - name: Install packages
-        run: sudo apt-get install ninja-build libproc2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
+        run: sudo apt-get install ninja-build libxrandr-dev libfuse2 libxcb-cursor-dev
+
+      - name: Build libproc2
+        run: |
+          sudo apt-get install autopoint autoconf automake libtool-bin gettext libncursesw5-dev dejagnu libnuma-dev libsystemd-dev
+          wget https://github.com/warmchang/procps/archive/refs/tags/v4.0.5.zip -O procps.zip
+          unzip procps.zip
+          cd procps-4.0.5
+          ./autogen.sh
+          ./configure
+          make
+          sudo make install
 
       - name: Checkout
         uses: actions/checkout@v4
