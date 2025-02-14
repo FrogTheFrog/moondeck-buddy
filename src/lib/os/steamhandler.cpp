@@ -110,7 +110,7 @@ void SteamHandler::slotSteamProcessStateChanged()
     if (m_steam_process_tracker.isRunning())
     {
         qCInfo(lc::os) << "Steam is running! PID:" << m_steam_process_tracker.getPid()
-                       << "START_TIME:" << m_steam_process_tracker.getStartTime();
+                       << "| START_TIME:" << m_steam_process_tracker.getStartTime();
     }
     else
     {
