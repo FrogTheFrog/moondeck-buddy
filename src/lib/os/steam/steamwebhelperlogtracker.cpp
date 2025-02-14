@@ -26,8 +26,9 @@ void SteamWebHelperLogTracker::onLogChanged(const std::vector<QString>& new_line
     UiMode new_ui_mode{m_ui_mode};
     for (const QString& line : new_lines)
     {
-        static const QRegularExpression mode_regex{R"(SP\s(?:(Desktop)|(BPM))_.+?WasHidden\s0)"};
-        const auto                      match{mode_regex.match(line)};
+        static const QRegularExpression initial_regex{R"(SP\s(?:(Desktop)|(BPM))_)"};
+        static const QRegularExpression default_regex{R"(SP\s(?:(Desktop)|(BPM))_.+?WasHidden\s0)"};
+        const auto match{(new_ui_mode == UiMode::Unknown ? initial_regex : default_regex).match(line)};
         if (match.hasMatch())
         {
             new_ui_mode = match.hasCaptured(1) ? UiMode::Desktop : UiMode::BigPicture;

@@ -13,7 +13,6 @@ public:
     enum class UiMode
     {
         Unknown,
-        FinishedLoading, // TODO
         Desktop,
         BigPicture
     };
