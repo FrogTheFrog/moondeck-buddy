@@ -83,13 +83,14 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
     static const auto known_states{
         []()
         {
+            static const QRegularExpression   capital_letter_regex{R"(([A-Z]))"};
             const auto                        enum_size{QMetaEnum::fromType<AppStateChange>().keyCount()};
             std::map<QString, AppStateChange> states;
             for (int i = 0; i < enum_size; ++i)
             {
                 const auto value{static_cast<AppStateChange>(QMetaEnum::fromType<AppStateChange>().value(i))};
                 QString    key{QMetaEnum::fromType<AppStateChange>().key(i)};
-                key = key.replace(QRegularExpression{R"(([A-Z]))"}, R"( \1)").trimmed();
+                key = key.replace(capital_letter_regex, R"( \1)").trimmed();
 
                 states[key] = value;
             }
