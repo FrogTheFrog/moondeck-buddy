@@ -286,19 +286,19 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const auto optional_data = [&pc_control]()
-                     {
-                         const auto data{pc_control.getAppData()};
-                         if (!data)
+                     return QHttpServerResponse{
+                         [&pc_control]()
                          {
-                             return QJsonObject{{"data", QJsonValue::Null}};
-                         }
+                             const auto data{pc_control.getAppData()};
+                             if (!data)
+                             {
+                                 return QJsonObject{{"data", QJsonValue::Null}};
+                             }
 
-                         const auto& [app_id, app_state] = *data;
-                         return QJsonObject{{"data", QJsonObject{{{"app_id", static_cast<qint64>(app_id)},
-                                                                  {"app_state", lc::qEnumToString(app_state)}}}}};
-                     };
-                     return QHttpServerResponse{optional_data()};
+                             const auto& [app_id, app_state] = *data;
+                             return QJsonObject{{"data", QJsonObject{{{"app_id", static_cast<qint64>(app_id)},
+                                                                      {"app_state", lc::qEnumToString(app_state)}}}}};
+                         }()};
                  });
 
     server.route("/endStream", QHttpServerRequest::Method::Post,

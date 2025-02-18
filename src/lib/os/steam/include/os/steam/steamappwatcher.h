@@ -34,7 +34,7 @@ private:
     const SteamProcessTracker& m_process_tracker;
     uint                       m_app_id;
 
-    enums::AppState m_current_state;
+    enums::AppState m_current_state{enums::AppState::Stopped};
     QTimer          m_check_timer;
     uint            m_delay_counter{0};
 };

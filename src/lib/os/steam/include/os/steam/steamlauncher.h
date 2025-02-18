@@ -33,7 +33,7 @@ private:
     enum class Stage
     {
         Initial,
-        WaitingForSteam,
+        WaitingForSteam
     };
 
     const SteamProcessTracker& m_process_tracker;
