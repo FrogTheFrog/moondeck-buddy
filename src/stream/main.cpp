@@ -3,7 +3,6 @@
 
 // local includes
 #include "os/sleepinhibitor.h"
-#include "os/steam/steamcontentlogtracker.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
 #include "utils/heartbeat.h"
@@ -38,8 +37,6 @@ int main(int argc, char* argv[])
 
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
     qCInfo(lc::streamMain) << "startup finished.";
-
-    os::SteamContentLogTracker tracker{"/home/frog/Desktop/"};
 
     return QCoreApplication::exec();
 }
