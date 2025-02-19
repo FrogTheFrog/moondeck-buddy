@@ -11,8 +11,7 @@ enum class AppState
 {
     Stopped,
     Running,
-    Updating,
-    CompilingShaders
+    Updating
 };
 Q_ENUM_NS(AppState)
 
