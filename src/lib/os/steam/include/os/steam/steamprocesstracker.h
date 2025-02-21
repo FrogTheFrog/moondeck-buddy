@@ -1,12 +1,11 @@
 #pragma once
 
 // system/Qt includes
-#include <QDateTime>
-#include <QTimer>
 #include <filesystem>
 
 // local includes
 #include "os/steam/steamcontentlogtracker.h"
+#include "os/steam/steamgameprocesslogtracker.h"
 #include "os/steam/steamwebhelperlogtracker.h"
 
 // forward declarations
@@ -25,8 +24,9 @@ class SteamProcessTracker : public QObject
 public:
     struct LogTrackers
     {
-        SteamWebHelperLogTracker m_web_helper;
-        SteamContentLogTracker   m_content_log;
+        SteamWebHelperLogTracker   m_web_helper;
+        SteamContentLogTracker     m_content_log;
+        SteamGameProcessLogTracker m_gameprocess_log;
     };
 
     explicit SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInterface> native_handler);

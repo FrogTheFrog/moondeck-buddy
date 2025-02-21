@@ -22,10 +22,11 @@ public:
     explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, uint app_id);
     ~SteamAppWatcher() override;
 
-    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id);
+    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id,
+                                       enums::AppState prev_state = enums::AppState::Stopped);
 
     enums::AppState getAppState() const;
-    uint getAppId() const;
+    uint            getAppId() const;
 
 private slots:
     void slotCheckState();
