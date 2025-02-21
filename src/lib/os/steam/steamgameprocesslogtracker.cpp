@@ -45,9 +45,19 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
                 continue;
             }
 
-            m_app_id_to_process_ids[app_id].insert(pid);
-            added_app_ids.insert(app_id);
-            removed_app_ids.erase(app_id);
+            auto data_it = m_app_id_to_process_ids.find(app_id);
+            if (data_it == std::end(m_app_id_to_process_ids))
+            {
+                data_it = m_app_id_to_process_ids.emplace(app_id, std::set<uint>{}).first;
+
+                if (!removed_app_ids.contains(app_id))
+                {
+                    added_app_ids.insert(app_id);
+                }
+                removed_app_ids.erase(app_id);
+            }
+
+            data_it->second.insert(pid);
             continue;
         }
 
@@ -79,7 +89,12 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             data_it->second.erase(pid);
             if (data_it->second.empty())
             {
-                removed_app_ids.insert(app_id);
+                m_app_id_to_process_ids.erase(data_it);
+
+                if (!added_app_ids.contains(app_id))
+                {
+                    removed_app_ids.insert(app_id);
+                }
                 added_app_ids.erase(app_id);
             }
         }

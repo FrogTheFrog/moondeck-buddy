@@ -24,8 +24,8 @@ public:
                              TimeFormat time_format = TimeFormat::YYYY_MM_DD_hh_mm_ss);
     ~SteamLogTracker() override = default;
 
-private slots:
-    void slotOnTimeout();
+public slots:
+    void slotCheckLog();
 
 protected:
     static QDateTime getDateTimeFromLogLine(const QString& line, TimeFormat time_format);
@@ -36,7 +36,6 @@ private:
     static qint64 readRemainingLines(std::vector<QString>& lines, QFile& file, QDateTime& first_entry_time_filter,
                                      TimeFormat time_format, qint64 start_offset);
 
-    QTimer                m_watch_timer;
     std::filesystem::path m_main_filename;
     std::filesystem::path m_backup_filename;
     QDateTime             m_first_entry_time_filter;

@@ -145,9 +145,22 @@ void SteamProcessTracker::slotCheckState()
         cleanup.dismiss();
 
         m_data.m_pid = pid;
-        m_data.m_log_trackers.reset(new LogTrackers{SteamWebHelperLogTracker{m_data.m_log_dir, m_data.m_start_time},
+        m_data.m_log_trackers.reset(new LogTrackers{QTimer{},
+                                                    SteamWebHelperLogTracker{m_data.m_log_dir, m_data.m_start_time},
                                                     SteamContentLogTracker{m_data.m_log_dir, m_data.m_start_time},
                                                     SteamGameProcessLogTracker{m_data.m_log_dir, m_data.m_start_time}});
+
+        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_web_helper,
+                &SteamLogTracker::slotCheckLog);
+        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_content_log,
+                &SteamLogTracker::slotCheckLog);
+        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_gameprocess_log,
+                &SteamLogTracker::slotCheckLog);
+        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, this,
+                [this]() { m_data.m_log_trackers->m_read_timer.start(1000); });
+
+        m_data.m_log_trackers->m_read_timer.setSingleShot(true);
+        m_data.m_log_trackers->m_read_timer.start(0);
 
         emit signalProcessStateChanged();
     }

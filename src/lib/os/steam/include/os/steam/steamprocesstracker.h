@@ -24,6 +24,7 @@ class SteamProcessTracker : public QObject
 public:
     struct LogTrackers
     {
+        QTimer                     m_read_timer;
         SteamWebHelperLogTracker   m_web_helper;
         SteamContentLogTracker     m_content_log;
         SteamGameProcessLogTracker m_gameprocess_log;

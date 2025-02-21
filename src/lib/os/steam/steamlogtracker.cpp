@@ -37,17 +37,10 @@ SteamLogTracker::SteamLogTracker(std::filesystem::path main_filename, std::files
     , m_first_entry_time_filter{std::move(first_entry_time_filter)}
     , m_time_format{time_format}
 {
-    connect(&m_watch_timer, &QTimer::timeout, this, &SteamLogTracker::slotOnTimeout);
-    m_watch_timer.setInterval(1000);
-    m_watch_timer.setSingleShot(true);
-
-    QTimer::singleShot(0, this, &SteamLogTracker::slotOnTimeout);
 }
 
-void SteamLogTracker::slotOnTimeout()
+void SteamLogTracker::slotCheckLog()
 {
-    const auto start_timer_on_exit{qScopeGuard([this]() { m_watch_timer.start(); })};
-
     QFile main_file{m_main_filename};
     if (!openForReading(main_file))
     {
@@ -147,7 +140,7 @@ QDateTime SteamLogTracker::getDateTimeFromLogLine(const QString& line, TimeForma
 bool SteamLogTracker::isLineAtOrAfterDatetime(const QString& line, const QDateTime& datetime,
                                               const TimeFormat time_format)
 {
-    QDateTime logtime{getDateTimeFromLogLine(line, time_format)};
+    const QDateTime logtime{getDateTimeFromLogLine(line, time_format)};
     if (!logtime.isValid())
     {
         return false;
