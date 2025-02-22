@@ -49,7 +49,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             if (data_it == std::end(m_apps_with_compiling_shaders))
             {
                 m_apps_with_compiling_shaders.insert(app_id);
-                qCWarning(lc::os) << "Compiling shaders for AppID:" << app_id;
+                qCInfo(lc::os) << "Compiling shaders for AppID:" << app_id;
             }
         }
         else
@@ -57,7 +57,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             if (data_it != std::end(m_apps_with_compiling_shaders))
             {
                 m_apps_with_compiling_shaders.erase(data_it);
-                qCWarning(lc::os) << "Stopped compiling shaders for AppID:" << app_id;
+                qCInfo(lc::os) << "Stopped compiling shaders for AppID:" << app_id;
             }
         }
     }

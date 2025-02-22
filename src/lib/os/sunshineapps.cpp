@@ -47,9 +47,8 @@ std::optional<std::set<QString>> SunshineApps::load()
     if (filepath.isEmpty())  // Fallback to places where we could expect the file to exist
     {
 #if defined(Q_OS_WIN)
-        // TODO: test
         const QSettings settings(R"(HKEY_LOCAL_MACHINE\Software\LizardByte\Sunshine)", QSettings::NativeFormat);
-        filepath = settings.value("(Default)").toString();
+        filepath = settings.value("Default").toString();
         if (!filepath.isEmpty())
         {
             filepath = QDir::cleanPath(filepath + "/config/apps.json");
