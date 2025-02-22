@@ -1,17 +1,19 @@
 #pragma once
 
-// system/Qt includes
-#include <QTimer>
-
 // local includes
-#include "os/processhandler.h"
-#include "os/shared/trackedappdata.h"
+#include "os/steam/steamprocesstracker.h"
+#include "shared/enums.h"
 
 // forward declarations
+namespace utils
+{
+class AppSettings;
+}  // namespace utils
 namespace os
 {
-class SteamRegistryObserverInterface;
-}
+class SteamLauncher;
+class SteamAppWatcher;
+}  // namespace os
 
 namespace os
 {
@@ -21,39 +23,33 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(std::unique_ptr<ProcessHandler>                 process_handler,
-                          std::unique_ptr<SteamRegistryObserverInterface> registry_observer);
+    explicit SteamHandler(const utils::AppSettings&                      app_settings,
+                          std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface);
     ~SteamHandler() override;
 
-    bool isRunning() const;
-    bool isRunningNow();
-    bool close(std::optional<uint> grace_period_in_sec);
+    bool isSteamReady() const;
+    bool close();
 
-    bool                launchApp(uint app_id, bool force_big_picture);
-    uint                getRunningApp() const;
-    std::optional<uint> getTrackedActiveApp() const;
-    std::optional<uint> getTrackedUpdatingApp() const;
-    void                clearTrackedApp();
+    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
+    bool                                             launchApp(uint app_id);
+    void                                             clearSessionData();
 
 signals:
-    void signalProcessStateChanged();
+    void signalSteamClosed();
 
 private slots:
-    void slotSteamProcessDied();
-    void slotSteamExecPath(const QString& path);
-    void slotSteamPID(uint pid);
-    void slotGlobalAppId(uint app_id);
-    void slotTrackedAppIsRunning(bool state);
-    void slotTrackedAppIsUpdating(bool state);
-    void slotTerminateSteam();
+    void slotSteamProcessStateChanged();
+    void slotSteamLaunchFinished(const QString& steam_exec, uint app_id, bool success);
 
 private:
-    std::unique_ptr<ProcessHandler>                 m_process_handler;
-    std::unique_ptr<SteamRegistryObserverInterface> m_registry_observer;
+    struct SessionData
+    {
+        std::unique_ptr<SteamLauncher>   m_steam_launcher;
+        std::unique_ptr<SteamAppWatcher> m_steam_app_watcher;
+    };
 
-    QString                       m_steam_exec_path;
-    uint                          m_global_app_id{0};
-    std::optional<TrackedAppData> m_tracked_app;
-    QTimer                        m_steam_close_timer;
+    const utils::AppSettings& m_app_settings;
+    SteamProcessTracker       m_steam_process_tracker;
+    SessionData               m_session_data;
 };
 }  // namespace os

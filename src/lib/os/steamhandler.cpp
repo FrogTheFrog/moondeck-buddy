@@ -3,105 +3,79 @@
 
 // system/Qt includes
 #include <QProcess>
-#include <QThread>
 
 // local includes
-#include "os/shared/steamregistryobserverinterface.h"
+#include "os/shared/nativeprocesshandlerinterface.h"
+#include "os/steam/steamappwatcher.h"
+#include "os/steam/steamlauncher.h"
 #include "shared/loggingcategories.h"
-
-namespace
-{
-const QRegularExpression STEAM_EXEC_PATTERN{R"([\\\/]steam(?:\.exe$|$))", QRegularExpression::CaseInsensitiveOption};
-const int                MS_TO_SEC{1000};
-}  // namespace
+#include "utils/appsettings.h"
 
 namespace os
 {
-SteamHandler::SteamHandler(std::unique_ptr<ProcessHandler>                 process_handler,
-                           std::unique_ptr<SteamRegistryObserverInterface> registry_observer)
-    : m_process_handler{std::move(process_handler)}
-    , m_registry_observer{std::move(registry_observer)}
+SteamHandler::SteamHandler(const utils::AppSettings&                      app_settings,
+                           std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface)
+    : m_app_settings{app_settings}
+    , m_steam_process_tracker{std::move(process_handler_interface)}
 {
-    Q_ASSERT(m_process_handler != nullptr);
-    Q_ASSERT(m_registry_observer != nullptr);
-
-    connect(m_process_handler.get(), &ProcessHandler::signalProcessDied, this, &SteamHandler::slotSteamProcessDied);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalSteamExecPath, this,
-            &SteamHandler::slotSteamExecPath);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalSteamPID, this,
-            &SteamHandler::slotSteamPID);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalGlobalAppId, this,
-            &SteamHandler::slotGlobalAppId);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalTrackedAppIsRunning, this,
-            &SteamHandler::slotTrackedAppIsRunning);
-    connect(m_registry_observer.get(), &SteamRegistryObserverInterface::signalTrackedAppIsUpdating, this,
-            &SteamHandler::slotTrackedAppIsUpdating);
-    connect(&m_steam_close_timer, &QTimer::timeout, this, &SteamHandler::slotTerminateSteam);
-
-    m_steam_close_timer.setSingleShot(true);
+    connect(&m_steam_process_tracker, &SteamProcessTracker::signalProcessStateChanged, this,
+            &SteamHandler::slotSteamProcessStateChanged);
 }
 
 SteamHandler::~SteamHandler() = default;
 
-bool SteamHandler::isRunning() const
+bool SteamHandler::isSteamReady() const
 {
-    return m_process_handler->isRunning();
+    return SteamLauncher::isSteamReady(m_steam_process_tracker, m_app_settings.getForceBigPicture());
 }
 
-bool SteamHandler::isRunningNow()
+bool SteamHandler::close()
 {
-    return m_process_handler->isRunningNow();
-}
-
-bool SteamHandler::close(std::optional<uint> grace_period_in_sec)
-{
-    if (!m_process_handler->isRunningNow())
+    m_steam_process_tracker.slotCheckState();
+    if (!m_steam_process_tracker.isRunning())
     {
-        m_steam_close_timer.stop();
         return true;
     }
 
-    // Try to shutdown steam gracefully first
-    if (!m_steam_exec_path.isEmpty())
+    // Clear the session data as we are no longer interested in it
+    clearSessionData();
+
+    // Try to shut down steam gracefully first
+    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
+    if (!exec_path.isEmpty())
     {
-        const auto result = QProcess::startDetached(m_steam_exec_path, {"-shutdown"});
-        if (!result)
+        if (QProcess::startDetached(exec_path, {"-shutdown"}))
         {
-            qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
-            m_process_handler->close(std::nullopt);
+            return true;
         }
+
+        qCWarning(lc::os) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
     }
     else
     {
         qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
-        m_process_handler->close(std::nullopt);
     }
 
-    if (grace_period_in_sec)
-    {
-        // Restart timer only it is not already running or the grace period has changed
-        const auto time_in_msec = grace_period_in_sec.value() * MS_TO_SEC;
-        if (!m_steam_close_timer.isActive() || static_cast<uint>(m_steam_close_timer.interval()) != time_in_msec)
-        {
-            m_steam_close_timer.start(static_cast<int>(time_in_msec));
-        }
-    }
-
+    m_steam_process_tracker.close();
     return true;
 }
 
-// NOLINTNEXTLINE(*-cognitive-complexity)
-bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
+std::optional<std::tuple<uint, enums::AppState>> SteamHandler::getAppData() const
 {
-    if (m_steam_exec_path.isEmpty())
+    if (const auto* watcher{m_session_data.m_steam_app_watcher.get()})
     {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
-        return false;
+        return std::make_tuple(watcher->getAppId(), watcher->getAppState());
     }
 
-    if (m_steam_close_timer.isActive())
+    return std::nullopt;
+}
+
+bool SteamHandler::launchApp(const uint app_id)
+{
+    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
+    if (exec_path.isEmpty())
     {
-        qCWarning(lc::os) << "Already closing Steam, will not launch new app!";
+        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
         return false;
     }
 
@@ -111,176 +85,59 @@ bool SteamHandler::launchApp(uint app_id, bool force_big_picture)
         return false;
     }
 
-    if (getRunningApp() != app_id)
+    if (!m_session_data.m_steam_launcher)
     {
-        const bool is_steam_running{m_process_handler->isRunningNow()};
-        if (force_big_picture && is_steam_running)
-        {
-            QProcess steam_process;
-            steam_process.setStandardOutputFile(QProcess::nullDevice());
-            steam_process.setStandardErrorFile(QProcess::nullDevice());
-            steam_process.setProgram(m_steam_exec_path);
-            steam_process.setArguments({"steam://open/bigpicture"});
+        m_steam_process_tracker.slotCheckState();
+        m_session_data = {.m_steam_launcher{std::make_unique<SteamLauncher>(m_steam_process_tracker, exec_path,
+                                                                            m_app_settings.getForceBigPicture())},
+                          .m_steam_app_watcher{}};
 
-            if (!steam_process.startDetached())
-            {
-                qCWarning(lc::os) << "Failed to open Steam in big picture mode!";
-                return false;
-            }
-
-            // Need to wait a little until Steam actually goes into bigpicture mode...
-            const uint time_it_takes_steam_to_open_big_picture{1000};
-            QThread::msleep(time_it_takes_steam_to_open_big_picture);
-        }
-
-        QProcess steam_process;
-        steam_process.setStandardOutputFile(QProcess::nullDevice());
-        steam_process.setStandardErrorFile(QProcess::nullDevice());
-        steam_process.setProgram(m_steam_exec_path);
-        steam_process.setArguments((force_big_picture && !is_steam_running ? QStringList{"-bigpicture"} : QStringList{})
-                                   + QStringList{"-applaunch", QString::number(app_id)});
-
-        if (!steam_process.startDetached())
-        {
-            qCWarning(lc::os) << "Failed to start Steam app launch sequence!";
-            return false;
-        }
-
-        m_tracked_app = TrackedAppData{app_id, false, false};
-        m_registry_observer->startTrackingApp(app_id);
+        connect(m_session_data.m_steam_launcher.get(), &SteamLauncher::signalFinished, this,
+                &SteamHandler::slotSteamLaunchFinished);
     }
 
+    m_session_data.m_steam_launcher->setAppId(app_id);
     return true;
 }
 
-uint SteamHandler::getRunningApp() const
+void SteamHandler::clearSessionData()
 {
-    return m_process_handler->isRunning()
-               ? m_tracked_app && m_tracked_app->m_is_running ? m_tracked_app->m_app_id : m_global_app_id
-               : 0;
+    m_session_data = {};
 }
 
-std::optional<uint> SteamHandler::getTrackedActiveApp() const
+void SteamHandler::slotSteamProcessStateChanged()
 {
-    return m_process_handler->isRunning() && m_tracked_app
-                   && (m_tracked_app->m_is_running || m_tracked_app->m_is_updating)
-               ? std::make_optional(m_tracked_app->m_app_id)
-               : std::nullopt;
-}
-
-std::optional<uint> SteamHandler::getTrackedUpdatingApp() const
-{
-    return m_process_handler->isRunning() && m_tracked_app && m_tracked_app->m_is_updating
-               ? std::make_optional(m_tracked_app->m_app_id)
-               : std::nullopt;
-}
-
-void SteamHandler::clearTrackedApp()
-{
-    m_registry_observer->stopTrackingApp();
-    if (m_tracked_app)
+    if (m_steam_process_tracker.isRunning())
     {
-        m_tracked_app = std::nullopt;
+        qCInfo(lc::os) << "Steam is running! PID:" << m_steam_process_tracker.getPid()
+                       << "| START_TIME:" << m_steam_process_tracker.getStartTime();
+    }
+    else
+    {
+        qCInfo(lc::os) << "Steam is no longer running!";
+        m_session_data = {};
+        emit signalSteamClosed();
     }
 }
 
-void SteamHandler::slotSteamProcessDied()
+void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint app_id, const bool success)
 {
-    qCDebug(lc::os) << "Steam is no longer running!";
-
-    m_registry_observer->stopAppObservation();
-    clearTrackedApp();
-
-    m_steam_close_timer.stop();
-    m_global_app_id = 0;
-
-#if defined(Q_OS_LINUX)
-    // On linux there is a race condition where the crashed Steam process may leave the reaper process (game) running...
-    // Let's kill it for fun!
-    const uint forced_termination_ms{5000};
-    m_process_handler->closeDetached(QRegularExpression(".*?Steam.+?reaper", QRegularExpression::CaseInsensitiveOption),
-                                     forced_termination_ms);
-#endif
-
-    emit signalProcessStateChanged();
-}
-
-void SteamHandler::slotSteamExecPath(const QString& path)
-{
-    m_steam_exec_path = path;
-    qCInfo(lc::os) << "Steam exec path:" << m_steam_exec_path;
-}
-
-void SteamHandler::slotSteamPID(uint pid)
-{
-    const bool currently_running{m_process_handler->isRunning()};
-    if (pid == 0)
+    if (!success)
     {
-        if (currently_running)
-        {
-            qCDebug(lc::os) << "Steam is no longer running according to registry. Waiting for actual shutdown.";
-        }
+        m_session_data = {};
         return;
     }
 
-    if (!m_process_handler->startMonitoring(pid, STEAM_EXEC_PATTERN))
+    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)
+                              != enums::AppState::Stopped};
+    if (!is_app_running
+        && !SteamLauncher::executeDetached(steam_exec, QStringList{"-applaunch", QString::number(app_id)}))
     {
-        qCDebug(lc::os) << "Failed to start monitoring Steam process" << pid << "(probably outdated)...";
-        if (currently_running)
-        {
-            Q_ASSERT(m_process_handler->isRunning() == false);
-            emit signalProcessStateChanged();
-        }
+        qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
         return;
     }
 
-    if (!currently_running)
-    {
-        qCDebug(lc::os) << "Steam is running!";
-        Q_ASSERT(m_process_handler->isRunning() == true);
-        m_registry_observer->startAppObservation();
-        emit signalProcessStateChanged();
-    }
-}
-
-void SteamHandler::slotGlobalAppId(uint app_id)
-{
-    if (app_id != m_global_app_id)
-    {
-        m_global_app_id = app_id;
-        qCDebug(lc::os) << "Running appID change detected (via global key):" << m_global_app_id;
-    }
-}
-
-void SteamHandler::slotTrackedAppIsRunning(bool state)
-{
-    if (!m_tracked_app)
-    {
-        qCDebug(lc::os) << "Received update for tracked app that is no longer tracked";
-        return;
-    }
-
-    qCDebug(lc::os).nospace() << "App " << m_tracked_app->m_app_id << " \"running\" value change detected: " << state;
-    m_tracked_app->m_is_running = state;
-}
-
-void SteamHandler::slotTrackedAppIsUpdating(bool state)
-{
-    if (!m_tracked_app)
-    {
-        qCDebug(lc::os) << "Received update for tracked app that is no longer tracked";
-        return;
-    }
-
-    qCDebug(lc::os).nospace() << "App " << m_tracked_app->m_app_id << " \"updating\" value change detected: " << state;
-    m_tracked_app->m_is_updating = state;
-}
-
-void SteamHandler::slotTerminateSteam()
-{
-    qCWarning(lc::os) << "Forcefully killing Steam...";
-
-    const uint time_to_kill{10000};
-    m_process_handler->close(time_to_kill);
+    m_session_data = {.m_steam_launcher{},
+                      .m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};
 }
 }  // namespace os

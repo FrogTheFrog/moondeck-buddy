@@ -2,21 +2,20 @@
 # Lib config
 #----------------------------------------------------------------------------------------------------------------------
 
-set(LIBNAME osspecificlib)
+set(LIBNAME ossteamlib)
 
 #----------------------------------------------------------------------------------------------------------------------
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core DBus REQUIRED)
-find_library(PROC2_LIBRARY NAMES proc2 REQUIRED)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header/Source files
 #----------------------------------------------------------------------------------------------------------------------
 
-file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/linux/*.h")
+file(GLOB HEADERS CONFIGURE_DEPENDS "include/os/steam/*.h")
 file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -24,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::DBus ${PROC2_LIBRARY} ossharedlib sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core sharedlib ossharedlib)
 target_include_directories(${LIBNAME} PUBLIC include)

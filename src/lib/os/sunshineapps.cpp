@@ -8,14 +8,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
 
 // local includes
 #include "shared/loggingcategories.h"
-
-// os-specific includes
-#if defined(Q_OS_WIN)
-    #include "os/win/regkey.h"
-#endif
 
 namespace
 {
@@ -51,12 +47,11 @@ std::optional<std::set<QString>> SunshineApps::load()
     if (filepath.isEmpty())  // Fallback to places where we could expect the file to exist
     {
 #if defined(Q_OS_WIN)
-        RegKey reg_key;
-        reg_key.open(R"(HKEY_LOCAL_MACHINE\Software\LizardByte\Sunshine)");
-        const auto reg_value{reg_key.getValue(/* Default key */)};
-        if (!reg_value.isNull())
+        const QSettings settings(R"(HKEY_LOCAL_MACHINE\Software\LizardByte\Sunshine)", QSettings::NativeFormat);
+        filepath = settings.value("Default").toString();
+        if (!filepath.isEmpty())
         {
-            filepath = QDir::cleanPath(reg_value.toString() + "/config/apps.json");
+            filepath = QDir::cleanPath(filepath + "/config/apps.json");
         }
 #elif defined(Q_OS_LINUX)
         filepath = QDir::cleanPath(getConfigDir() + "/sunshine/apps.json");

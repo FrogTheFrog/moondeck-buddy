@@ -7,14 +7,13 @@
 // local includes
 #include "os/autostarthandler.h"
 #include "os/pcstatehandler.h"
-#include "os/resolutionhandler.h"
 #include "os/steamhandler.h"
 
 // forward declarations
-namespace shared
+namespace utils
 {
-class AppMetadata;
-}  // namespace shared
+class AppSettings;
+}  // namespace utils
 namespace os
 {
 class AutoStartHandlerInterface;
@@ -29,23 +28,19 @@ class PcControl : public QObject
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(const shared::AppMetadata& app_meta, const std::set<QString>& handled_displays,
-                       QString registry_file_override, QString steam_binary_override);
+    explicit PcControl(const utils::AppSettings& app_settings);
     ~PcControl() override;
 
-    bool launchSteamApp(uint app_id, bool force_big_picture);
-    bool closeSteam(std::optional<uint> grace_period_in_sec);
+    bool isSteamReady() const;
+    bool closeSteam();
 
-    bool shutdownPC(uint grace_period_in_sec);
-    bool restartPC(uint grace_period_in_sec);
-    bool suspendPC(uint grace_period_in_sec, bool close_steam);
-    bool hibernatePC(uint grace_period_in_sec, bool close_steam);
+    bool                                             launchSteamApp(uint app_id);
+    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
 
+    bool shutdownPC();
+    bool restartPC();
+    bool suspendOrHibernatePC();
     bool endStream();
-
-    uint                getRunningApp() const;
-    std::optional<uint> getTrackedUpdatingApp() const;
-    bool                isSteamRunning() const;
 
     enums::StreamState getStreamState() const;
     enums::PcState     getPcState() const;
@@ -53,23 +48,18 @@ public:
     void setAutoStart(bool enable);
     bool isAutoStartEnabled() const;
 
-    bool changeResolution(uint width, uint height);
-    void restoreChangedResolution(bool force);
-
 signals:
     void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
-                               int millisecondsTimeoutHint);
+                               int milliseconds_timeout_hint);
 
 private slots:
-    void slotHandleSteamProcessStateChange();
+    void slotHandleSteamClosed();
     void slotHandleStreamStateChange();
-    void slotAppTrackingHasEnded();
 
 private:
-    const shared::AppMetadata&                   m_app_meta;
+    const utils::AppSettings&                    m_app_settings;
     AutoStartHandler                             m_auto_start_handler;
     PcStateHandler                               m_pc_state_handler;
-    ResolutionHandler                            m_resolution_handler;
     SteamHandler                                 m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
 };

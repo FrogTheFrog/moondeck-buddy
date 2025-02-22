@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QCoreApplication>
 #include <QDir>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
 
@@ -167,6 +168,18 @@ QString AppMetadata::getAutoStartExec() const
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();
+#else
+    #error OS is not supported!
+#endif
+}
+
+QString AppMetadata::getDefaultSteamExecutable() const
+{
+#if defined(Q_OS_WIN)
+    const QSettings settings(R"(HKEY_CURRENT_USER\Software\Valve\Steam)", QSettings::NativeFormat);
+    return settings.value("SteamExe").toString();
+#elif defined(Q_OS_LINUX)
+    return "/usr/bin/steam";
 #else
     #error OS is not supported!
 #endif

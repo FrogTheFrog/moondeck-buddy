@@ -129,7 +129,7 @@ std::optional<int> parseArguments(QCommandLineParser& parser, const shared::AppM
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    constexpr int              api_version{4};
+    constexpr int              api_version{5};
     const shared::AppMetadata  app_meta{shared::AppMetadata::App::Buddy};
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
 
@@ -157,15 +157,14 @@ int main(int argc, char* argv[])
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
-    const utils::AppSettings app_settings{app_meta.getSettingsPath()};
+    const utils::AppSettings app_settings{app_meta};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
 
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
 
-    os::PcControl    pc_control{app_meta, app_settings.getHandledDisplays(), app_settings.getRegistryFileOverride(),
-                             app_settings.getSteamBinaryOverride()};
+    os::PcControl    pc_control{app_settings};
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     const QIcon               icon{":/icons/app.ico"};
@@ -189,9 +188,7 @@ int main(int argc, char* argv[])
                      &server::PairingManager::slotPairingRejected);
 
     // HERE WE GO!!! (a.k.a. starting point)
-    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getPreferHibernation(),
-                app_settings.getForceBigPicture(), app_settings.getCloseSteamBeforeSleep(),
-                app_settings.getMacAddressOverride());
+    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getMacAddressOverride());
 
     client_ids.load();
     if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",

@@ -7,6 +7,14 @@ namespace enums
 {
 Q_NAMESPACE
 
+enum class AppState
+{
+    Stopped,
+    Running,
+    Updating
+};
+Q_ENUM_NS(AppState)
+
 enum class PcState
 {
     Normal,

@@ -37,5 +37,6 @@ int main(int argc, char* argv[])
 
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
     qCInfo(lc::streamMain) << "startup finished.";
+
     return QCoreApplication::exec();
 }
