@@ -6,6 +6,7 @@
 // local includes
 #include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamgameprocesslogtracker.h"
+#include "os/steam/steamshaderlogtracker.h"
 #include "os/steam/steamwebhelperlogtracker.h"
 
 // forward declarations
@@ -28,6 +29,7 @@ public:
         SteamWebHelperLogTracker   m_web_helper;
         SteamContentLogTracker     m_content_log;
         SteamGameProcessLogTracker m_gameprocess_log;
+        SteamShaderLogTracker      m_shader_log;
     };
 
     explicit SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInterface> native_handler);

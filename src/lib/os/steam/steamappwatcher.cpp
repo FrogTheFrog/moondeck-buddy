@@ -39,13 +39,14 @@ enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_
     auto       new_state{enums::AppState::Stopped};
     const auto content_state{log_trackers->m_content_log.getAppState(app_id)};
 
-    if (content_state == SteamContentLogTracker::AppState::Running)
-    {
-        new_state = enums::AppState::Running;
-    }
-    else if (content_state == SteamContentLogTracker::AppState::Updating)
+    if (content_state == SteamContentLogTracker::AppState::Updating
+        || log_trackers->m_shader_log.isAppCompilingShaders(app_id))
     {
         new_state = enums::AppState::Updating;
+    }
+    else if (content_state == SteamContentLogTracker::AppState::Running)
+    {
+        new_state = enums::AppState::Running;
     }
     else if (log_trackers->m_gameprocess_log.isAnyProcessRunning(app_id))
     {
