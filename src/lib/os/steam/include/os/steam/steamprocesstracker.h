@@ -54,7 +54,6 @@ private:
     {
         uint                         m_pid{0};
         QDateTime                    m_start_time;
-        std::filesystem::path        m_log_dir;
         std::unique_ptr<LogTrackers> m_log_trackers;
     };
 

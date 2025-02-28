@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QDir>
 #include <QRegularExpression>
+#include <algorithm>
 
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
@@ -11,14 +12,15 @@
 
 namespace
 {
-std::filesystem::path getLogsDir(const QString& exec_path)
+std::filesystem::path getSteamDir(const QString& exec_path)
 {
     QDir dir{exec_path};
     for (int i = 0; i < 3; ++i)  // Go up only 3 levels
     {
-        if (dir.exists("steamapps") && dir.exists("userdata"))
+        static const QStringList required_dirs{"logs", "userdata", "steamui"};
+        if (std::ranges::all_of(required_dirs, [&dir](const auto& path) { return dir.exists(path); }))
         {
-            return QDir{dir.path() + "/logs"}.filesystemCanonicalPath();
+            return dir.filesystemCanonicalPath();
         }
 
         if (!dir.cdUp())
@@ -126,19 +128,26 @@ void SteamProcessTracker::slotCheckState()
             continue;
         }
 
-        auto cleanup{qScopeGuard([this]() { m_data = {}; })};
-
-        m_data.m_log_dir = getLogsDir(exec_path);
-        if (m_data.m_log_dir.empty())
+        const auto steam_dir{getSteamDir(exec_path)};
+        if (steam_dir.empty())
         {
-            qWarning(lc::os) << "Could not resolve log directory for running Steam process! PID:" << pid;
-            break;
+            qCInfo(lc::os) << "Could not resolve steam directory for running Steam process, PID:" << pid;
+            continue;
         }
+
+        const auto steam_log_dir{steam_dir / "logs"};
+        if (!std::filesystem::exists(steam_log_dir))
+        {
+            qCInfo(lc::os) << "Could not resolve steam logs directory for running Steam process, PID:" << pid;
+            continue;
+        }
+
+        auto cleanup{qScopeGuard([this]() { m_data = {}; })};
 
         m_data.m_start_time = m_native_handler->getStartTime(pid);
         if (!m_data.m_start_time.isValid())
         {
-            qWarning(lc::os) << "Could not resolve start time for running Steam process! PID:" << pid;
+            qCWarning(lc::os) << "Could not resolve start time for running Steam process! PID:" << pid;
             break;
         }
 
@@ -146,10 +155,10 @@ void SteamProcessTracker::slotCheckState()
 
         m_data.m_pid = pid;
         m_data.m_log_trackers.reset(new LogTrackers{QTimer{},
-                                                    SteamWebHelperLogTracker{m_data.m_log_dir, m_data.m_start_time},
-                                                    SteamContentLogTracker{m_data.m_log_dir, m_data.m_start_time},
-                                                    SteamGameProcessLogTracker{m_data.m_log_dir, m_data.m_start_time},
-                                                    SteamShaderLogTracker{m_data.m_log_dir, m_data.m_start_time}});
+                                                    SteamWebHelperLogTracker{steam_log_dir, m_data.m_start_time},
+                                                    SteamContentLogTracker{steam_log_dir, m_data.m_start_time},
+                                                    SteamGameProcessLogTracker{steam_log_dir, m_data.m_start_time},
+                                                    SteamShaderLogTracker{steam_log_dir, m_data.m_start_time}});
 
         connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_web_helper,
                 &SteamLogTracker::slotCheckLog);
