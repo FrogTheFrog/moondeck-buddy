@@ -12,7 +12,7 @@ namespace
 {
 void swapFilesIfNeeded(const QString& filepath)
 {
-    constexpr int max_size{10 * 1024 * 1024};
+    constexpr int max_size{2 * 1024 * 1024};
     if (const QFileInfo file_info(filepath); file_info.size() > max_size)
     {
         const auto filename{file_info.fileName()};
