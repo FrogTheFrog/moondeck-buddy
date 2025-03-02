@@ -176,6 +176,7 @@ void SteamProcessTracker::slotCheckState()
         m_data.m_log_trackers->m_read_timer.start(0);
 
         emit signalProcessStateChanged();
+        break;
     }
 }
 }  // namespace os
