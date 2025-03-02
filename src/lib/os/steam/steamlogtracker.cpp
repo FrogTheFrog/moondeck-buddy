@@ -134,7 +134,7 @@ QDateTime SteamLogTracker::getDateTimeFromLogLine(const QString& line, TimeForma
         }
     }
 
-    Q_UNREACHABLE();
+    return QDateTime{};
 }
 
 bool SteamLogTracker::isLineAtOrAfterDatetime(const QString& line, const QDateTime& datetime,
