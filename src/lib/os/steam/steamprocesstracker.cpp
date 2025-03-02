@@ -127,6 +127,7 @@ void SteamProcessTracker::slotCheckState()
         {
             continue;
         }
+        qCInfo(lc::os) << "Found a matching Steam process. PATH: " << exec_path << "| PID:" << pid;
 
         const auto steam_dir{getSteamDir(exec_path)};
         if (steam_dir.empty())
