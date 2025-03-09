@@ -31,7 +31,8 @@ public:
         Uninstalling,
         Uninstalled,
         ComponentInUse,
-        Terminating
+        Terminating,
+        PrefetchingInfo
     };
     Q_ENUM(AppStateChange)
 

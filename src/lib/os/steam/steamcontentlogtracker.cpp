@@ -35,6 +35,7 @@ std::map<uint, SteamContentLogTracker::AppState>
                                  case AppStateChange::Uninstalled:
                                  case AppStateChange::ComponentInUse:
                                  case AppStateChange::Terminating:
+                                 case AppStateChange::PrefetchingInfo:
                                      return AppState::Stopped;
                              }
 
