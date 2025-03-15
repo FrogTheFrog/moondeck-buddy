@@ -49,6 +49,9 @@ signals:
 public slots:
     void slotCheckState();
 
+private slots:
+    void slotCheckLogs();
+
 private:
     struct ProcessData
     {

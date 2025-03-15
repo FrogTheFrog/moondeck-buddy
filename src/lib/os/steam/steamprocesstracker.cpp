@@ -127,7 +127,7 @@ void SteamProcessTracker::slotCheckState()
         {
             continue;
         }
-        qCInfo(lc::os) << "Found a matching Steam process. PATH: " << exec_path << "| PID:" << pid;
+        qCInfo(lc::os) << "Found a matching Steam process. PATH:" << exec_path << "| PID:" << pid;
 
         const auto steam_dir{getSteamDir(exec_path)};
         if (steam_dir.empty())
@@ -161,22 +161,27 @@ void SteamProcessTracker::slotCheckState()
                                                     SteamGameProcessLogTracker{steam_log_dir, m_data.m_start_time},
                                                     SteamShaderLogTracker{steam_log_dir, m_data.m_start_time}});
 
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_web_helper,
-                &SteamLogTracker::slotCheckLog);
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_content_log,
-                &SteamLogTracker::slotCheckLog);
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_gameprocess_log,
-                &SteamLogTracker::slotCheckLog);
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, &m_data.m_log_trackers->m_shader_log,
-                &SteamLogTracker::slotCheckLog);
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, this,
-                [this]() { m_data.m_log_trackers->m_read_timer.start(1000); });
-
+        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, this, &SteamProcessTracker::slotCheckLogs);
         m_data.m_log_trackers->m_read_timer.setSingleShot(true);
-        m_data.m_log_trackers->m_read_timer.start(0);
+        m_data.m_log_trackers->m_read_timer.setInterval(1000);
+        slotCheckLogs();
 
         emit signalProcessStateChanged();
         break;
+    }
+}
+
+void SteamProcessTracker::slotCheckLogs()
+{
+    if (m_data.m_log_trackers)
+    {
+        m_data.m_log_trackers->m_read_timer.stop();
+        const auto auto_start_timer{qScopeGuard([this]() { m_data.m_log_trackers->m_read_timer.start(); })};
+
+        m_data.m_log_trackers->m_web_helper.slotCheckLog();
+        m_data.m_log_trackers->m_content_log.slotCheckLog();
+        m_data.m_log_trackers->m_gameprocess_log.slotCheckLog();
+        m_data.m_log_trackers->m_shader_log.slotCheckLog();
     }
 }
 }  // namespace os
