@@ -125,11 +125,12 @@ QDateTime SteamLogTracker::getDateTimeFromLogLine(const QString& line, TimeForma
     {
         case TimeFormat::YYYY_MM_DD_hh_mm_ss:
         {
-            static const QRegularExpression time_regex{R"(^\[(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\])"};
-            const auto                      match{time_regex.match(line)};
-            if (match.hasMatch())
+            static const QRegularExpression time_regex{R"(^\[(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})\])"};
+            if (const auto match{time_regex.match(line)}; match.hasMatch())
             {
-                return QDateTime::fromString(match.captured(1), "yyyy-MM-dd hh:mm:ss");
+                const QDate date{match.captured(1).toInt(), match.captured(2).toInt(), match.captured(3).toInt()};
+                const QTime time{match.captured(4).toInt(), match.captured(5).toInt(), match.captured(6).toInt()};
+                return QDateTime{date, time};
             }
         }
     }
