@@ -50,7 +50,8 @@ enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_
     }
     else if (log_trackers->m_gameprocess_log.isAnyProcessRunning(app_id))
     {
-        new_state = prev_state;
+        // Try to preserve the latest state from other logs, unless this is the only data available
+        new_state = prev_state == enums::AppState::Stopped ? enums::AppState::Running : prev_state;
     }
 
     return new_state;
@@ -78,7 +79,7 @@ void SteamAppWatcher::slotCheckState()
             return;
         }
 
-        qCInfo(lc::os) << "[TRACKED] New app state for AppID" << m_app_id
+        qCInfo(lc::os) << "[TRACKING] New app state for AppID" << m_app_id
                        << "detected:" << lc::qEnumToString(m_current_state) << "->" << lc::qEnumToString(new_state);
         m_current_state = new_state;
         m_delay_counter = 0;
