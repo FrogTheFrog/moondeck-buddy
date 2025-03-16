@@ -21,10 +21,10 @@ public:
 
     static bool executeDetached(const QString& steam_exec, const QStringList& args);
     static bool isSteamReady(const SteamProcessTracker& process_tracker, bool force_big_picture);
-    void        setAppId(uint app_id);
+    void        setAppId(std::uint64_t app_id);
 
 signals:
-    void signalFinished(const QString& steam_exec, uint app_id, bool success);
+    void signalFinished(const QString& steam_exec, std::uint64_t app_id, bool success);
 
 private slots:
     void slotExecuteLaunch();
@@ -39,7 +39,7 @@ private:
     const SteamProcessTracker& m_process_tracker;
     QString                    m_steam_exec;
     bool                       m_force_big_picture;
-    uint                       m_app_id{0};
+    std::uint64_t              m_app_id{0};
     uint                       m_wait_counter{0};
     Stage                      m_stage{Stage::Initial};
 };

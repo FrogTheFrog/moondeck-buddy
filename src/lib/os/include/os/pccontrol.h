@@ -34,8 +34,8 @@ public:
     bool isSteamReady() const;
     bool closeSteam();
 
-    bool                                             launchSteamApp(uint app_id);
-    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
+    bool                                             launchSteamApp(std::uint64_t app_id);
+    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
 
     bool shutdownPC();
     bool restartPC();

@@ -30,8 +30,8 @@ public:
     bool isSteamReady() const;
     bool close();
 
-    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
-    bool                                             launchApp(uint app_id);
+    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
+    bool                                             launchApp(std::uint64_t app_id);
     void                                             clearSessionData();
 
 signals:
@@ -39,7 +39,7 @@ signals:
 
 private slots:
     void slotSteamProcessStateChanged();
-    void slotSteamLaunchFinished(const QString& steam_exec, uint app_id, bool success);
+    void slotSteamLaunchFinished(const QString& steam_exec, std::uint64_t app_id, bool success);
 
 private:
     struct SessionData

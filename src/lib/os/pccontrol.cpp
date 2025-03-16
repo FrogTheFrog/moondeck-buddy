@@ -55,12 +55,12 @@ bool PcControl::closeSteam()
     return m_steam_handler.close();
 }
 
-bool PcControl::launchSteamApp(uint app_id)
+bool PcControl::launchSteamApp(std::uint64_t app_id)
 {
     return m_steam_handler.launchApp(app_id);
 }
 
-std::optional<std::tuple<uint, enums::AppState>> PcControl::getAppData() const
+std::optional<std::tuple<std::uint64_t, enums::AppState>> PcControl::getAppData() const
 {
     return m_steam_handler.getAppData();
 }

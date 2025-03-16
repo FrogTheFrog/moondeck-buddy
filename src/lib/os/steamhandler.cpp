@@ -60,7 +60,7 @@ bool SteamHandler::close()
     return true;
 }
 
-std::optional<std::tuple<uint, enums::AppState>> SteamHandler::getAppData() const
+std::optional<std::tuple<std::uint64_t, enums::AppState>> SteamHandler::getAppData() const
 {
     if (const auto* watcher{m_session_data.m_steam_app_watcher.get()})
     {
@@ -70,7 +70,7 @@ std::optional<std::tuple<uint, enums::AppState>> SteamHandler::getAppData() cons
     return std::nullopt;
 }
 
-bool SteamHandler::launchApp(const uint app_id)
+bool SteamHandler::launchApp(const std::uint64_t app_id)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -120,7 +120,7 @@ void SteamHandler::slotSteamProcessStateChanged()
     }
 }
 
-void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const uint app_id, const bool success)
+void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const std::uint64_t app_id, const bool success)
 {
     if (!success)
     {

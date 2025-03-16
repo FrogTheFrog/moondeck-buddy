@@ -19,21 +19,21 @@ class SteamAppWatcher : public QObject
     Q_OBJECT
 
 public:
-    explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, uint app_id);
+    explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, std::uint64_t app_id);
     ~SteamAppWatcher() override;
 
-    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, uint app_id,
+    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, std::uint64_t app_id,
                                        enums::AppState prev_state = enums::AppState::Stopped);
 
     enums::AppState getAppState() const;
-    uint            getAppId() const;
+    std::uint64_t   getAppId() const;
 
 private slots:
     void slotCheckState();
 
 private:
     const SteamProcessTracker& m_process_tracker;
-    uint                       m_app_id;
+    std::uint64_t              m_app_id;
 
     enums::AppState m_current_state{enums::AppState::Stopped};
     QTimer          m_check_timer;

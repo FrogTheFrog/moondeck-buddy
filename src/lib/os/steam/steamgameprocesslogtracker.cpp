@@ -16,22 +16,22 @@ SteamGameProcessLogTracker::SteamGameProcessLogTracker(const std::filesystem::pa
 {
 }
 
-bool SteamGameProcessLogTracker::isAnyProcessRunning(const uint app_id) const
+bool SteamGameProcessLogTracker::isAnyProcessRunning(const std::uint64_t app_id) const
 {
     return m_app_id_to_process_ids.contains(app_id);
 }
 
 void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
-    std::set<uint> added_app_ids;
-    std::set<uint> removed_app_ids;
+    std::set<std::uint64_t> added_app_ids;
+    std::set<std::uint64_t> removed_app_ids;
 
     for (const QString& line : new_lines)
     {
         static const QRegularExpression add_regex{R"(AppID (\d+) adding PID (\d+))"};
         if (const auto match{add_regex.match(line)}; match.hasMatch())
         {
-            const auto app_id{match.captured(1).toUInt()};
+            const auto app_id{appIdFromString(match.captured(1))};
             if (app_id == 0)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
@@ -65,7 +65,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             R"((?:Game (\d+) going away.* PID (\d+))|(?:AppID (\d+) no longer.* PID (\d+)))"};
         if (const auto match{remove_regex.match(line)}; match.hasMatch())
         {
-            const auto app_id{(match.hasCaptured(1) ? match.captured(1) : match.captured(3)).toUInt()};
+            const auto app_id{appIdFromString(match.hasCaptured(1) ? match.captured(1) : match.captured(3))};
             if (app_id == 0)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;

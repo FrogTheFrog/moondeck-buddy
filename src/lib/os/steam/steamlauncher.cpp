@@ -50,7 +50,7 @@ bool SteamLauncher::isSteamReady(const SteamProcessTracker& process_tracker, con
                              : ui_mode == SteamWebHelperLogTracker::UiMode::Desktop;
 }
 
-void SteamLauncher::setAppId(const uint app_id)
+void SteamLauncher::setAppId(const std::uint64_t app_id)
 {
     m_app_id = app_id;
 }

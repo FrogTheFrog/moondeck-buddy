@@ -9,7 +9,7 @@
 
 namespace os
 {
-SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, const uint app_id)
+SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, const std::uint64_t app_id)
     : m_process_tracker{process_tracker}
     , m_app_id{app_id}
 {
@@ -27,7 +27,7 @@ SteamAppWatcher::~SteamAppWatcher()
     qCInfo(lc::os) << "Stopped watching AppID:" << m_app_id;
 }
 
-enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker, const uint app_id,
+enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker, const std::uint64_t app_id,
                                              const enums::AppState prev_state)
 {
     const auto* log_trackers{process_tracker.getLogTrackers()};
@@ -61,7 +61,7 @@ enums::AppState SteamAppWatcher::getAppState() const
     return m_current_state;
 }
 
-uint SteamAppWatcher::getAppId() const
+std::uint64_t SteamAppWatcher::getAppId() const
 {
     return m_app_id;
 }
