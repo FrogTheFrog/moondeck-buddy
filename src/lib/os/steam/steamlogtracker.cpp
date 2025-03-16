@@ -2,6 +2,7 @@
 #include "os/steam/steamlogtracker.h"
 
 // system/Qt includes
+#include <QFile>
 #include <QRegularExpression>
 #include <utility>
 
@@ -25,6 +26,123 @@ bool openForReading(QFile& file)
     }
 
     return true;
+}
+
+QDateTime getDateTimeFromLogLine(const QString& line, const os::SteamLogTracker::TimeFormat time_format)
+{
+    using enum os::SteamLogTracker::TimeFormat;
+
+    switch (time_format)
+    {
+        case YYYY_MM_DD_hh_mm_ss:
+        {
+            static const QRegularExpression time_regex{R"(^\[(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})\])"};
+            if (const auto match{time_regex.match(line)}; match.hasMatch())
+            {
+                const QDate date{match.captured(1).toInt(), match.captured(2).toInt(), match.captured(3).toInt()};
+                const QTime time{match.captured(4).toInt(), match.captured(5).toInt(), match.captured(6).toInt()};
+                return QDateTime{date, time};
+            }
+        }
+    }
+
+    return QDateTime{};
+}
+
+qint64 readAllLines(std::vector<QString>& lines, QFile& file)
+{
+    QTextStream stream{&file};
+    QString     line;
+
+    stream.seek(0);
+
+    while (stream.readLineInto(&line))
+    {
+        if (!line.isEmpty())
+        {
+            lines.push_back(line);
+        }
+    }
+
+    return stream.pos();
+}
+
+bool isLineBeforeDatetime(const QString& line, const QDateTime& datetime,
+                          const os::SteamLogTracker::TimeFormat time_format)
+{
+    const QDateTime logtime{getDateTimeFromLogLine(line, time_format)};
+    if (!logtime.isValid())
+    {
+        return false;
+    }
+
+    return logtime < datetime;
+}
+
+bool isLineAtOrAfterDatetime(const QString& line, const QDateTime& datetime,
+                             const os::SteamLogTracker::TimeFormat time_format)
+{
+    const QDateTime logtime{getDateTimeFromLogLine(line, time_format)};
+    if (!logtime.isValid())
+    {
+        return false;
+    }
+
+    return logtime >= datetime;
+}
+
+void filterLines(std::vector<QString>& lines, QDateTime& datetime, const os::SteamLogTracker::TimeFormat time_format)
+{
+    auto line_rit = std::rbegin(lines);
+    for (; line_rit != std::rend(lines); ++line_rit)
+    {
+        if (isLineBeforeDatetime(*line_rit, datetime, time_format))
+        {
+            break;
+        }
+    }
+
+    auto line_it = line_rit == std::rend(lines) ? std::begin(lines) : line_rit.base() /* next element */;
+    for (; line_it != std::end(lines); ++line_it)
+    {
+        if (isLineAtOrAfterDatetime(*line_it, datetime, time_format))
+        {
+            datetime = {};
+            break;
+        }
+    }
+
+    lines.erase(std::begin(lines), line_it);
+}
+
+qint64 readRemainingLines(std::vector<QString>& lines, QFile& file, QDateTime& first_entry_time_filter,
+                          const os::SteamLogTracker::TimeFormat time_format, const qint64 start_offset)
+{
+    QTextStream stream{&file};
+    QString     line;
+
+    // Start reading from the last position we've read.
+    stream.seek(start_offset);
+
+    while (stream.readLineInto(&line))
+    {
+        if (!line.isEmpty())
+        {
+            if (first_entry_time_filter.isValid())
+            {
+                if (!isLineAtOrAfterDatetime(line, first_entry_time_filter, time_format))
+                {
+                    continue;
+                }
+
+                first_entry_time_filter = {};
+            }
+
+            lines.push_back(line);
+        }
+    }
+
+    return stream.pos();
 }
 }  // namespace
 
@@ -72,14 +190,15 @@ void SteamLogTracker::slotCheckLog()
         std::vector<QString> lines;
         if (backup_file.isOpen())
         {
-            readRemainingLines(lines, backup_file, m_first_entry_time_filter, m_time_format, 0);
+            readAllLines(lines, backup_file);
         }
 
-        m_last_read_pos  = readRemainingLines(lines, main_file, m_first_entry_time_filter, m_time_format, 0);
+        m_last_read_pos  = readAllLines(lines, main_file);
         m_last_prev_size = current_main_file_size;
-        m_initialized    = true;
 
+        filterLines(lines, m_first_entry_time_filter, m_time_format);
         onLogChanged(lines);
+        m_initialized = true;
         return;
     }
 
@@ -117,66 +236,5 @@ void SteamLogTracker::slotCheckLog()
     }
 
     qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "did not change.";
-}
-
-QDateTime SteamLogTracker::getDateTimeFromLogLine(const QString& line, TimeFormat time_format)
-{
-    switch (time_format)
-    {
-        case TimeFormat::YYYY_MM_DD_hh_mm_ss:
-        {
-            static const QRegularExpression time_regex{R"(^\[(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})\])"};
-            if (const auto match{time_regex.match(line)}; match.hasMatch())
-            {
-                const QDate date{match.captured(1).toInt(), match.captured(2).toInt(), match.captured(3).toInt()};
-                const QTime time{match.captured(4).toInt(), match.captured(5).toInt(), match.captured(6).toInt()};
-                return QDateTime{date, time};
-            }
-        }
-    }
-
-    return QDateTime{};
-}
-
-bool SteamLogTracker::isLineAtOrAfterDatetime(const QString& line, const QDateTime& datetime,
-                                              const TimeFormat time_format)
-{
-    const QDateTime logtime{getDateTimeFromLogLine(line, time_format)};
-    if (!logtime.isValid())
-    {
-        return false;
-    }
-
-    return logtime >= datetime;
-}
-
-qint64 SteamLogTracker::readRemainingLines(std::vector<QString>& lines, QFile& file, QDateTime& first_entry_time_filter,
-                                           const TimeFormat time_format, const qint64 start_offset)
-{
-    QTextStream stream{&file};
-    QString     line;
-
-    // Start reading from the last position we've read.
-    stream.seek(start_offset);
-
-    while (stream.readLineInto(&line))
-    {
-        if (!line.isEmpty())
-        {
-            if (first_entry_time_filter.isValid())
-            {
-                if (!isLineAtOrAfterDatetime(line, first_entry_time_filter, time_format))
-                {
-                    continue;
-                }
-
-                first_entry_time_filter = {};
-            }
-
-            lines.push_back(line);
-        }
-    }
-
-    return stream.pos();
 }
 }  // namespace os
