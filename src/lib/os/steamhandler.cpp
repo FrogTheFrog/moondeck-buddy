@@ -7,9 +7,22 @@
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
 #include "os/steam/steamappwatcher.h"
-#include "os/steam/steamlauncher.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
+
+namespace
+{
+bool executeDetached(const QString& steam_exec, const QStringList& args)
+{
+    QProcess steam_process;
+    steam_process.setStandardOutputFile(QProcess::nullDevice());
+    steam_process.setStandardErrorFile(QProcess::nullDevice());
+    steam_process.setProgram(steam_exec);
+    steam_process.setArguments(args);
+
+    return steam_process.startDetached();
+}
+}  // namespace
 
 namespace os
 {
@@ -24,9 +37,37 @@ SteamHandler::SteamHandler(const utils::AppSettings&                      app_se
 
 SteamHandler::~SteamHandler() = default;
 
-bool SteamHandler::isSteamReady() const
+bool SteamHandler::launchSteam(const bool big_picture_mode)
 {
-    return SteamLauncher::isSteamReady(m_steam_process_tracker, m_app_settings.getForceBigPicture());
+    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
+    if (exec_path.isEmpty())
+    {
+        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
+        return false;
+    }
+
+    m_steam_process_tracker.slotCheckState();
+    if (!m_steam_process_tracker.isRunning()
+        || (big_picture_mode && getSteamUiMode() != enums::SteamUiMode::BigPicture))
+    {
+        if (!executeDetached(exec_path, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{}))
+        {
+            qCWarning(lc::os) << "Failed to launch Steam!";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+enums::SteamUiMode SteamHandler::getSteamUiMode() const
+{
+    if (const auto* log_trackers{m_steam_process_tracker.getLogTrackers()})
+    {
+        return log_trackers->m_web_helper.getSteamUiMode();
+    }
+
+    return enums::SteamUiMode::Unknown;
 }
 
 bool SteamHandler::close()
@@ -85,24 +126,34 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
         return false;
     }
 
-    if (!m_session_data.m_steam_launcher)
+    m_steam_process_tracker.slotCheckState();
+    if (getSteamUiMode() == enums::SteamUiMode::Unknown)
     {
-        m_steam_process_tracker.slotCheckState();
-        m_session_data = {.m_steam_launcher{std::make_unique<SteamLauncher>(m_steam_process_tracker, exec_path,
-                                                                            m_app_settings.getForceBigPicture())},
-                          .m_steam_app_watcher{}};
-
-        connect(m_session_data.m_steam_launcher.get(), &SteamLauncher::signalFinished, this,
-                &SteamHandler::slotSteamLaunchFinished);
+        qCWarning(lc::os) << "Steam is not running or has not reached a stable state yet!";
+        return false;
     }
 
-    m_session_data.m_steam_launcher->setAppId(app_id);
+    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)
+                              != enums::AppState::Stopped};
+    if (!is_app_running && !executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}))
+    {
+        qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
+        return false;
+    }
+
+    m_session_data = {.m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};
     return true;
 }
 
 void SteamHandler::clearSessionData()
 {
     m_session_data = {};
+}
+
+std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData(const std::uint64_t user_id) const
+{
+    qDebug() << "SteamHandler::getNonSteamAppData" << user_id;
+    return std::nullopt;
 }
 
 void SteamHandler::slotSteamProcessStateChanged()
@@ -118,26 +169,5 @@ void SteamHandler::slotSteamProcessStateChanged()
         m_session_data = {};
         emit signalSteamClosed();
     }
-}
-
-void SteamHandler::slotSteamLaunchFinished(const QString& steam_exec, const std::uint64_t app_id, const bool success)
-{
-    if (!success)
-    {
-        m_session_data = {};
-        return;
-    }
-
-    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)
-                              != enums::AppState::Stopped};
-    if (!is_app_running
-        && !SteamLauncher::executeDetached(steam_exec, QStringList{"steam://rungameid/" + QString::number(app_id)}))
-    {
-        qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
-        return;
-    }
-
-    m_session_data = {.m_steam_launcher{},
-                      .m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};
 }
 }  // namespace os

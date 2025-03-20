@@ -7,6 +7,14 @@ namespace enums
 {
 Q_NAMESPACE
 
+enum class SteamUiMode
+{
+    Unknown,
+    Desktop,
+    BigPicture
+};
+Q_ENUM_NS(SteamUiMode)
+
 enum class AppState
 {
     Stopped,

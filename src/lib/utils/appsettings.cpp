@@ -50,7 +50,6 @@ AppSettings::AppSettings(const shared::AppMetadata& app_metadata)
     , m_port{DEFAULT_PORT}
     , m_prefer_hibernation{false}
     , m_ssl_protocol{QSsl::SecureProtocols}
-    , m_force_big_picture{true}
     , m_close_steam_before_sleep{true}
 {
     auto settings_path{m_app_metadata.getSettingsPath()};
@@ -93,11 +92,6 @@ bool AppSettings::getPreferHibernation() const
 QSsl::SslProtocol AppSettings::getSslProtocol() const
 {
     return m_ssl_protocol;
-}
-
-bool AppSettings::getForceBigPicture() const
-{
-    return m_force_big_picture;
 }
 
 bool AppSettings::getCloseSteamBeforeSleep() const
@@ -150,12 +144,11 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto sunshine_apps_filepath_v   = obj_v.value(QLatin1String("sunshine_apps_filepath"));
             const auto prefer_hibernation_v       = obj_v.value(QLatin1String("prefer_hibernation"));
             const auto ssl_protocol_v             = obj_v.value(QLatin1String("ssl_protocol"));
-            const auto force_big_picture_v        = obj_v.value(QLatin1String("force_big_picture"));
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
             const auto steam_exec_override_v      = obj_v.value(QLatin1String("steam_exec_override"));
 
-            constexpr int current_entries{9};
+            constexpr int current_entries{8};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -200,12 +193,6 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 }
             }
 
-            if (force_big_picture_v.isBool())
-            {
-                m_force_big_picture = force_big_picture_v.toBool();
-                valid_entries++;
-            }
-
             if (close_steam_before_sleep_v.isBool())
             {
                 m_close_steam_before_sleep = close_steam_before_sleep_v.toBool();
@@ -240,7 +227,6 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["sunshine_apps_filepath"]   = m_sunshine_apps_filepath;
     obj["prefer_hibernation"]       = m_prefer_hibernation;
     obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
-    obj["force_big_picture"]        = m_force_big_picture;
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
     obj["mac_address_override"]     = m_mac_address_override;
     obj["steam_exec_override"]      = m_steam_exec_override;

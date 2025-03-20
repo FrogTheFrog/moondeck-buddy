@@ -31,11 +31,14 @@ public:
     explicit PcControl(const utils::AppSettings& app_settings);
     ~PcControl() override;
 
-    bool isSteamReady() const;
-    bool closeSteam();
+    bool               launchSteam(bool big_picture_mode);
+    enums::SteamUiMode getSteamUiMode() const;
+    bool               closeSteam();
 
-    bool                                             launchSteamApp(std::uint64_t app_id);
+    bool                                                      launchSteamApp(std::uint64_t app_id);
     std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
+
+    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
 
     bool shutdownPC();
     bool restartPC();

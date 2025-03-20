@@ -89,6 +89,11 @@ const SteamProcessTracker::LogTrackers* SteamProcessTracker::getLogTrackers() co
     return m_data.m_log_trackers.get();
 }
 
+std::filesystem::path SteamProcessTracker::getSteamDir() const
+{
+    return m_data.m_steam_dir;
+}
+
 void SteamProcessTracker::slotCheckState()
 {
     m_check_timer.stop();
@@ -129,21 +134,21 @@ void SteamProcessTracker::slotCheckState()
         }
         qCInfo(lc::os) << "Found a matching Steam process. PATH:" << exec_path << "| PID:" << pid;
 
-        const auto steam_dir{getSteamDir(exec_path)};
-        if (steam_dir.empty())
+        auto cleanup{qScopeGuard([this]() { m_data = {}; })};
+
+        m_data.m_steam_dir = ::getSteamDir(exec_path);
+        if ( m_data.m_steam_dir.empty())
         {
             qCInfo(lc::os) << "Could not resolve steam directory for running Steam process, PID:" << pid;
             continue;
         }
 
-        const auto steam_log_dir{steam_dir / "logs"};
+        const auto steam_log_dir{ m_data.m_steam_dir / "logs"};
         if (!std::filesystem::exists(steam_log_dir))
         {
             qCInfo(lc::os) << "Could not resolve steam logs directory for running Steam process, PID:" << pid;
             continue;
         }
-
-        auto cleanup{qScopeGuard([this]() { m_data = {}; })};
 
         m_data.m_start_time = m_native_handler->getStartTime(pid);
         if (!m_data.m_start_time.isValid())
