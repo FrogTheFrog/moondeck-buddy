@@ -137,7 +137,7 @@ void SteamProcessTracker::slotCheckState()
         auto cleanup{qScopeGuard([this]() { m_data = {}; })};
 
         m_data.m_steam_dir = ::getSteamDir(exec_path);
-        if ( m_data.m_steam_dir.empty())
+        if (m_data.m_steam_dir.empty())
         {
             qCInfo(lc::os) << "Could not resolve steam directory for running Steam process, PID:" << pid;
             continue;

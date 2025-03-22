@@ -2,6 +2,7 @@
 #include "os/steamhandler.h"
 
 // system/Qt includes
+#include <QFile>
 #include <QProcess>
 
 // local includes
@@ -21,6 +22,103 @@ bool executeDetached(const QString& steam_exec, const QStringList& args)
     steam_process.setArguments(args);
 
     return steam_process.startDetached();
+}
+
+// This is a very "son, we have a parser at home" kind of parser, very basic, but gets the job done...
+std::optional<std::map<std::uint64_t, QString>> scrapeShortcutsVdf(const QByteArray& contents)
+{
+    const auto index_of_insensitive{
+        [](const QByteArray& data, const QByteArrayView view, qsizetype from) -> qsizetype
+        {
+            const auto needle{view.at(0)};
+            while (true)
+            {
+                from = data.indexOf(needle, from);
+                if (from == -1)
+                {
+                    break;
+                }
+
+                if (const char* needle_ptr{data.data() + from};
+                    qstrnicmp(needle_ptr, view.data(), qMin(data.size() - from, view.size())) == 0)
+                {
+                    break;
+                }
+                ++from;
+            }
+
+            return from;
+        }};
+
+    std::vector<std::uint32_t> app_ids;
+    {
+        constexpr QByteArrayView app_id_view("\x02"
+                                             "appid"
+                                             "\x00");
+        qsizetype                from{0};
+        while (true)
+        {
+            from = index_of_insensitive(contents, app_id_view, from);
+            if (from == -1)
+            {
+                break;
+            }
+            from += app_id_view.size() + 1;
+
+            if (from + 4 > contents.size())
+            {
+                qCWarning(lc::os) << "Out of range error while scraping shortcuts.vdf for appid!";
+                return std::nullopt;
+            }
+
+            const std::uint32_t app_id{static_cast<std::uint32_t>(contents.at(from))
+                                       | static_cast<std::uint32_t>(contents.at(from + 1)) << 8U
+                                       | static_cast<std::uint32_t>(contents.at(from + 2)) << 16U
+                                       | static_cast<std::uint32_t>(contents.at(from + 3)) << 24U};
+            app_ids.emplace_back(app_id);
+        }
+    }
+
+    std::vector<QString> app_names;
+    {
+        constexpr QByteArrayView app_name_view("\x01"
+                                               "appname"
+                                               "\x00");
+        qsizetype                from{0};
+        while (true)
+        {
+            from = index_of_insensitive(contents, app_name_view, from);
+            if (from == -1)
+            {
+                break;
+            }
+            from += app_name_view.size() + 1;
+
+            const auto to = contents.indexOf('\0', from);
+            if (to == -1)
+            {
+                qCWarning(lc::os) << "Out of range error while scraping shortcuts.vdf for appname!";
+                return std::nullopt;
+            }
+
+            app_names.emplace_back(QString::fromUtf8(contents.data() + from, to - from));
+        }
+    }
+
+    if (app_names.size() != app_ids.size())
+    {
+        qCWarning(lc::os) << "Failed to scrape shortcuts.vdf - app name and id list size mismatch!";
+        return std::nullopt;
+    }
+
+    std::map<std::uint64_t, QString> data;
+    for (std::size_t i{0}; i < app_ids.size(); ++i)
+    {
+        const auto shifted_id{static_cast<std::uint64_t>(app_ids[i]) << 32U | 0x02000000U};
+        data[shifted_id] = app_names[i];
+    }
+
+    return data;
 }
 }  // namespace
 
@@ -152,8 +250,37 @@ void SteamHandler::clearSessionData()
 
 std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData(const std::uint64_t user_id) const
 {
-    qDebug() << "SteamHandler::getNonSteamAppData" << user_id;
-    return std::nullopt;
+    const auto& steam_dir{m_steam_process_tracker.getSteamDir()};
+    if (steam_dir.empty())
+    {
+        qCWarning(lc::os) << "Steam directory is not available yet!";
+        return std::nullopt;
+    }
+
+    const auto user_dir_id{[user_id]() -> QString
+                           {
+                               // See https://developer.valvesoftware.com/wiki/SteamID for how to get SteamID3
+                               const uint64_t id_number{user_id & 0x1U};
+                               const uint64_t account_number{(user_id & 0xFFFFFFFE) >> 1U};
+                               return QString::number((account_number * 2) + id_number);
+                           }()};
+    const auto shortcuts_file{steam_dir / "userdata" / user_dir_id.toStdString() / "config" / "shortcuts.vdf"};
+    qInfo(lc::os) << "Mapped user id to shortcuts file:" << user_id << "->" << shortcuts_file.generic_string();
+
+    QFile file{shortcuts_file};
+    if (!file.exists())
+    {
+        qCWarning(lc::os) << "file" << shortcuts_file.generic_string() << "does not exist!";
+        return std::nullopt;
+    }
+
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qCWarning(lc::os) << "file" << shortcuts_file.generic_string() << "could not be opened!";
+        return std::nullopt;
+    }
+
+    return scrapeShortcutsVdf(file.readAll());
 }
 
 void SteamHandler::slotSteamProcessStateChanged()
