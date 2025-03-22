@@ -387,10 +387,10 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
+void setupGameStreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
 {
     server.route(
-        "/gamestreamAppNames", QHttpServerRequest::Method::Get,
+        "/gameStreamAppNames", QHttpServerRequest::Method::Get,
         [&server, &sunshine_apps](const QHttpServerRequest& request)
         {
             if (!server.isAuthorized(request))
@@ -430,7 +430,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupHostInfo(server, mac_address_override);
     routing_internal::setupSteam(server, pc_control);
     routing_internal::setupStream(server, pc_control);
-    routing_internal::setupGamestreamApps(server, sunshine_apps);
+    routing_internal::setupGameStreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
 
