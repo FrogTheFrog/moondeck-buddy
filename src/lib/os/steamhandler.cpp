@@ -280,7 +280,28 @@ std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData
         return std::nullopt;
     }
 
-    return scrapeShortcutsVdf(file.readAll());
+    const auto shortcuts{scrapeShortcutsVdf(file.readAll())};
+    if (shortcuts)
+    {
+        QString     buffer;
+        QTextStream stream(&buffer);
+        if (!shortcuts->empty())
+        {
+            stream << "Found " << shortcuts->size() << " non-Steam shortcut(-s):";
+            for (const auto& [app_id, app_name] : *shortcuts)
+            {
+                stream << Qt::endl << "  " << app_id << " -> " << app_name;
+            }
+        }
+        else
+        {
+            stream << "Found no non-Steam shortcuts.";
+        }
+
+        qCInfo(lc::os).noquote() << buffer;
+    }
+
+    return shortcuts;
 }
 
 void SteamHandler::slotSteamProcessStateChanged()
