@@ -71,10 +71,11 @@ std::optional<std::map<std::uint64_t, QString>> scrapeShortcutsVdf(const QByteAr
                 return std::nullopt;
             }
 
-            const std::uint32_t app_id{static_cast<std::uint32_t>(contents.at(from))
-                                       | static_cast<std::uint32_t>(contents.at(from + 1)) << 8U
-                                       | static_cast<std::uint32_t>(contents.at(from + 2)) << 16U
-                                       | static_cast<std::uint32_t>(contents.at(from + 3)) << 24U};
+            const std::uint32_t app_id{
+                static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from)))
+                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 1))) << 8U
+                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 2))) << 16U
+                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 3))) << 24U};
             app_ids.emplace_back(app_id);
         }
     }
@@ -114,8 +115,8 @@ std::optional<std::map<std::uint64_t, QString>> scrapeShortcutsVdf(const QByteAr
     std::map<std::uint64_t, QString> data;
     for (std::size_t i{0}; i < app_ids.size(); ++i)
     {
-        const auto shifted_id{static_cast<std::uint64_t>(app_ids[i]) << 32U | 0x02000000U};
-        data[shifted_id] = app_names[i];
+        const auto game_id{static_cast<std::uint64_t>(app_ids[i]) << 32U | 0x02000000U};
+        data[game_id] = app_names[i];
     }
 
     return data;
