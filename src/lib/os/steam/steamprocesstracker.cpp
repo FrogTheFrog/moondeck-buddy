@@ -143,7 +143,7 @@ void SteamProcessTracker::slotCheckState()
             continue;
         }
 
-        const auto steam_log_dir{ m_data.m_steam_dir / "logs"};
+        const auto steam_log_dir{m_data.m_steam_dir / "logs"};
         if (!std::filesystem::exists(steam_log_dir))
         {
             qCInfo(lc::os) << "Could not resolve steam logs directory for running Steam process, PID:" << pid;
