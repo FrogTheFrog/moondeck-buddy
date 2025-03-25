@@ -4,8 +4,7 @@ A server-side part of the [MoonDeck](https://github.com/FrogTheFrog/moondeck) pl
 
 The main goal is to have reliable information about Steam state:
  * is Steam running or not;
- * what Steam game is running and whether the game we want is updating or not;
-   * **note:** Non-Steam games are not supported.
+ * what Steam game is running and whether the game we want is updating or not.
 
 Additionally, it allows to:
  * launch a Steam game;
