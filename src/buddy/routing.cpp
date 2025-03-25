@@ -215,7 +215,7 @@ void setupHostInfo(server::HttpServer& server, const QString& mac_address_overri
 
 void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
 {
-    server.route("/isSteamReady", QHttpServerRequest::Method::Get,
+    server.route("/steamUiMode", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
@@ -223,7 +223,75 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const bool result{pc_control.isSteamReady()};
+                     const auto mode{pc_control.getSteamUiMode()};
+                     return QHttpServerResponse{QJsonObject{{"mode", lc::qEnumToString(mode)}}};
+                 });
+
+    server.route("/nonSteamAppData", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto json = requestToJsonObject(request);
+                     if (json.isEmpty())
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const auto user_id_opt{utils::getJsonValue<QString>(json, "user_id")};
+                     bool       user_id_ok{false};
+
+                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
+                     const std::uint64_t user_id{user_id_opt ? user_id_opt->toULongLong(&user_id_ok) : 0};
+
+                     if (!user_id_ok)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     return QHttpServerResponse{
+                         [&pc_control, user_id]()
+                         {
+                             const auto data{pc_control.getNonSteamAppData(user_id)};
+                             if (!data)
+                             {
+                                 return QJsonObject{{"data", QJsonValue::Null}};
+                             }
+
+                             QJsonArray json_array;
+                             for (const auto& [app_id, app_name] : *data)
+                             {
+                                 json_array.push_back({{{"app_id", QString::number(app_id)}, {"app_name", app_name}}});
+                             }
+
+                             return QJsonObject{{"data", json_array}};
+                         }()};
+                 });
+
+    server.route("/launchSteam", QHttpServerRequest::Method::Post,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto json = requestToJsonObject(request);
+                     if (json.isEmpty())
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const auto big_picture_mode{utils::getJsonValue<bool>(json, "big_picture_mode")};
+                     if (!big_picture_mode)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const bool result{pc_control.launchSteam(*big_picture_mode)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -241,13 +309,18 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto app_id{utils::getJsonValue<uint>(json, "app_id")};
-                     if (!app_id)
+                     const auto app_id_opt{utils::getJsonValue<QString>(json, "app_id")};
+                     bool       app_id_ok{false};
+
+                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
+                     const std::uint64_t app_id{app_id_opt ? app_id_opt->toULongLong(&app_id_ok) : 0};
+
+                     if (!app_id_ok)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteamApp(*app_id)};
+                     const bool result{pc_control.launchSteamApp(app_id)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -296,7 +369,7 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                              }
 
                              const auto& [app_id, app_state] = *data;
-                             return QJsonObject{{"data", QJsonObject{{{"app_id", static_cast<qint64>(app_id)},
+                             return QJsonObject{{"data", QJsonObject{{{"app_id", QString::number(app_id)},
                                                                       {"app_state", lc::qEnumToString(app_state)}}}}};
                          }()};
                  });
@@ -314,10 +387,10 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupGamestreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
+void setupGameStreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
 {
     server.route(
-        "/gamestreamAppNames", QHttpServerRequest::Method::Get,
+        "/gameStreamAppNames", QHttpServerRequest::Method::Get,
         [&server, &sunshine_apps](const QHttpServerRequest& request)
         {
             if (!server.isAuthorized(request))
@@ -357,7 +430,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupHostInfo(server, mac_address_override);
     routing_internal::setupSteam(server, pc_control);
     routing_internal::setupStream(server, pc_control);
-    routing_internal::setupGamestreamApps(server, sunshine_apps);
+    routing_internal::setupGameStreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
 

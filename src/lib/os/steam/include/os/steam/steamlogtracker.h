@@ -27,7 +27,8 @@ public slots:
     void slotCheckLog();
 
 protected:
-    virtual void onLogChanged(const std::vector<QString>& new_lines) = 0;
+    virtual void         onLogChanged(const std::vector<QString>& new_lines) = 0;
+    static std::uint64_t appIdFromString(const QString& app_id);
 
 private:
     std::filesystem::path m_main_filename;

@@ -45,9 +45,14 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
 // For forward declarations
 PcControl::~PcControl() = default;
 
-bool PcControl::isSteamReady() const
+bool PcControl::launchSteam(const bool big_picture_mode)
 {
-    return m_steam_handler.isSteamReady();
+    return m_steam_handler.launchSteam(big_picture_mode);
+}
+
+enums::SteamUiMode PcControl::getSteamUiMode() const
+{
+    return m_steam_handler.getSteamUiMode();
 }
 
 bool PcControl::closeSteam()
@@ -55,14 +60,19 @@ bool PcControl::closeSteam()
     return m_steam_handler.close();
 }
 
-bool PcControl::launchSteamApp(uint app_id)
+bool PcControl::launchSteamApp(std::uint64_t app_id)
 {
     return m_steam_handler.launchApp(app_id);
 }
 
-std::optional<std::tuple<uint, enums::AppState>> PcControl::getAppData() const
+std::optional<std::tuple<std::uint64_t, enums::AppState>> PcControl::getAppData() const
 {
     return m_steam_handler.getAppData();
+}
+
+std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(const std::uint64_t user_id) const
+{
+    return m_steam_handler.getNonSteamAppData(user_id);
 }
 
 bool PcControl::shutdownPC()

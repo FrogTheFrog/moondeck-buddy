@@ -24,7 +24,6 @@ public:
     const QString&             getSunshineAppsFilepath() const;
     bool                       getPreferHibernation() const;
     QSsl::SslProtocol          getSslProtocol() const;
-    bool                       getForceBigPicture() const;
     bool                       getCloseSteamBeforeSleep() const;
     QString                    getSteamExecutablePath() const;
     const QString&             getMacAddressOverride() const;
@@ -39,7 +38,6 @@ private:
     QString                    m_sunshine_apps_filepath;
     bool                       m_prefer_hibernation;
     QSsl::SslProtocol          m_ssl_protocol;
-    bool                       m_force_big_picture;
     bool                       m_close_steam_before_sleep;
     QString                    m_steam_exec_override;
     QString                    m_mac_address_override;

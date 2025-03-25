@@ -11,8 +11,8 @@ namespace os
 {
 namespace
 {
-std::map<uint, SteamContentLogTracker::AppState>
-    remapStateChanges(const std::map<uint, QVector<SteamContentLogTracker::AppStateChange>>& input)
+std::map<std::uint64_t, SteamContentLogTracker::AppState>
+    remapStateChanges(const std::map<std::uint64_t, QVector<SteamContentLogTracker::AppStateChange>>& input)
 {
     using AppStateChange = SteamContentLogTracker::AppStateChange;
     using AppState       = SteamContentLogTracker::AppState;
@@ -42,7 +42,7 @@ std::map<uint, SteamContentLogTracker::AppState>
                              Q_UNREACHABLE();
                          }};
 
-    std::map<uint, AppState> new_app_states;
+    std::map<std::uint64_t, AppState> new_app_states;
     for (const auto& [app_id, state_changes] : input)
     {
         qCDebug(lc::os) << "New state changes for AppID" << app_id << "detected:" << state_changes;
@@ -73,7 +73,7 @@ SteamContentLogTracker::SteamContentLogTracker(const std::filesystem::path& logs
 {
 }
 
-SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const uint app_id) const
+SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const std::uint64_t app_id) const
 {
     const auto it = m_app_states.find(app_id);
     return it != std::end(m_app_states) ? it->second : AppState::Stopped;
@@ -99,14 +99,14 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             return states;
         }()};
 
-    std::map<uint, QVector<AppStateChange>> new_change_states;
+    std::map<std::uint64_t, QVector<AppStateChange>> new_change_states;
     for (const QString& line : new_lines)
     {
         static const QRegularExpression mode_regex{R"(AppID\s(\d+)\sstate\schanged\s:\s(.*),)"};
         const auto                      match{mode_regex.match(line)};
         if (match.hasMatch())
         {
-            const auto app_id{match.captured(1).toUInt()};
+            const auto app_id{appIdFromString(match.captured(1))};
             if (app_id == 0)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;

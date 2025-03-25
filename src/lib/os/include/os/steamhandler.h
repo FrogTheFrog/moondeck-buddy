@@ -11,7 +11,6 @@ class AppSettings;
 }  // namespace utils
 namespace os
 {
-class SteamLauncher;
 class SteamAppWatcher;
 }  // namespace os
 
@@ -27,24 +26,25 @@ public:
                           std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface);
     ~SteamHandler() override;
 
-    bool isSteamReady() const;
-    bool close();
+    bool               launchSteam(bool big_picture_mode);
+    enums::SteamUiMode getSteamUiMode() const;
+    bool               close();
 
-    std::optional<std::tuple<uint, enums::AppState>> getAppData() const;
-    bool                                             launchApp(uint app_id);
-    void                                             clearSessionData();
+    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
+    bool                                                      launchApp(std::uint64_t app_id);
+    void                                                      clearSessionData();
+
+    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
 
 signals:
     void signalSteamClosed();
 
 private slots:
     void slotSteamProcessStateChanged();
-    void slotSteamLaunchFinished(const QString& steam_exec, uint app_id, bool success);
 
 private:
     struct SessionData
     {
-        std::unique_ptr<SteamLauncher>   m_steam_launcher;
         std::unique_ptr<SteamAppWatcher> m_steam_app_watcher;
     };
 

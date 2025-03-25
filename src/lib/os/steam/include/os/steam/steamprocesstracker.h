@@ -38,10 +38,11 @@ public:
     void close();
     void terminate();
 
-    bool               isRunning() const;
-    uint               getPid() const;
-    QDateTime          getStartTime() const;
-    const LogTrackers* getLogTrackers() const;
+    bool                  isRunning() const;
+    uint                  getPid() const;
+    QDateTime             getStartTime() const;
+    const LogTrackers*    getLogTrackers() const;
+    std::filesystem::path getSteamDir() const;
 
 signals:
     void signalProcessStateChanged();
@@ -58,6 +59,7 @@ private:
         uint                         m_pid{0};
         QDateTime                    m_start_time;
         std::unique_ptr<LogTrackers> m_log_trackers;
+        std::filesystem::path        m_steam_dir;
     };
 
     ProcessData m_data;

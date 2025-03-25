@@ -15,14 +15,14 @@ SteamShaderLogTracker::SteamShaderLogTracker(const std::filesystem::path& logs_d
 {
 }
 
-bool SteamShaderLogTracker::isAppCompilingShaders(const uint app_id) const
+bool SteamShaderLogTracker::isAppCompilingShaders(const std::uint64_t app_id) const
 {
     return m_apps_with_compiling_shaders.contains(app_id);
 }
 
 void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
-    std::map<uint, bool> new_shader_states;
+    std::map<std::uint64_t, bool> new_shader_states;
     for (const QString& line : new_lines)
     {
         static const QRegularExpression regex{
@@ -30,7 +30,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
         if (const auto match{regex.match(line)}; match.hasMatch())
         {
             const bool started{match.hasCaptured(1)};
-            const auto app_id{(started ? match.captured(1) : match.captured(2)).toUInt()};
+            const auto app_id{appIdFromString(started ? match.captured(1) : match.captured(2))};
             if (app_id == 0)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
