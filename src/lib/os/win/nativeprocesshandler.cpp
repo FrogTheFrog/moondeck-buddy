@@ -70,41 +70,50 @@ std::vector<uint> NativeProcessHandler::getPids() const
 
 QString NativeProcessHandler::getExecPath(uint pid) const
 {
-    return useProcHandle(pid,
-                         [](HANDLE handle)
-                         {
-                             static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
+    return useProcHandle(
+        pid,
+        [pid](HANDLE handle)
+        {
+            static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
 
-                             if (!handle)
-                             {
-                                 return QString{};
-                             }
+            if (!handle)
+            {
+                return QString{};
+            }
 
-                             DWORD                          data_written{MAX_PATH};
-                             std::array<char16_t, MAX_PATH> buffer{};
+            DWORD                          data_written{MAX_PATH};
+            std::array<char16_t, MAX_PATH> buffer{};
 
-                             const BOOL result =
-                                 QueryFullProcessImageNameW(handle, 0,
-                                                            // NOLINTNEXTLINE(*-reinterpret-cast)
-                                                            reinterpret_cast<wchar_t*>(buffer.data()), &data_written);
-                             if (result == TRUE)
-                             {
-                                 if (data_written > 0)
-                                 {
-                                     return QString::fromUtf16(buffer.data(), data_written);
-                                 }
-                             }
+            const BOOL result = QueryFullProcessImageNameW(handle, 0,
+                                                           // NOLINTNEXTLINE(*-reinterpret-cast)
+                                                           reinterpret_cast<wchar_t*>(buffer.data()), &data_written);
+            if (result == TRUE)
+            {
+                if (data_written > 0)
+                {
+                    auto path{QString::fromUtf16(buffer.data(), data_written)};
+                    qDebug(lc::osVerbose) << "QueryFullProcessImageNameW - PID:" << pid << "| Path:" << path;
+                    return path;
+                }
+                else
+                {
+                    qDebug(lc::osVerbose) << "QueryFullProcessImageNameW failed to write data - PID:" << pid;
+                }
+            }
+            else
+            {
+                qDebug(lc::osVerbose) << "QueryFullProcessImageNameW failed - PID:" << pid
+                                      << "| ERROR:" << lc::getErrorString(GetLastError());
+            }
 
-                             qDebug(lc::os)
-                                 << "QueryFullProcessImageNameW failed: " << lc::getErrorString(GetLastError());
-                             return QString{};
-                         });
+            return QString{};
+        });
 }
 
 QDateTime NativeProcessHandler::getStartTime(uint pid) const
 {
     return useProcHandle(pid,
-                         [](HANDLE handle)
+                         [pid](HANDLE handle)
                          {
                              static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
 
@@ -125,19 +134,23 @@ QDateTime NativeProcessHandler::getStartTime(uint pid) const
                                  result = FileTimeToSystemTime(&start_time, &time_utc);
                                  if (result == TRUE)
                                  {
-                                     const QDateTime datetime{QDate{time_utc.wYear, time_utc.wMonth, time_utc.wDay},
-                                                              QTime{time_utc.wHour, time_utc.wMinute, time_utc.wSecond,
-                                                                    time_utc.wMilliseconds},
-                                                              QTimeZone::UTC};
-                                     return datetime.toLocalTime();
+                                     QDateTime datetime{QDate{time_utc.wYear, time_utc.wMonth, time_utc.wDay},
+                                                        QTime{time_utc.wHour, time_utc.wMinute, time_utc.wSecond,
+                                                              time_utc.wMilliseconds},
+                                                        QTimeZone::UTC};
+                                     datetime = datetime.toLocalTime();
+                                     qDebug(lc::osVerbose)
+                                         << "FileTimeToSystemTime PID:" << pid << "| Time:" << datetime;
+                                     return datetime;
                                  }
 
-                                 qDebug(lc::os)
-                                     << "FileTimeToSystemTime failed: " << lc::getErrorString(GetLastError());
+                                 qDebug(lc::osVerbose) << "FileTimeToSystemTime failed - PID:" << pid
+                                                       << "| ERROR:" << lc::getErrorString(GetLastError());
                              }
                              else
                              {
-                                 qDebug(lc::os) << "GetProcessTimes failed: " << lc::getErrorString(GetLastError());
+                                 qDebug(lc::osVerbose) << "GetProcessTimes failed - PID:" << pid
+                                                       << "| ERROR:" << lc::getErrorString(GetLastError());
                              }
 
                              return QDateTime{};
