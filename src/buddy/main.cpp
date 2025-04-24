@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
     os::PcControl    pc_control{app_settings};
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
-    const QIcon               icon{":/icons/app.ico"};
+    const QIcon icon{QIcon::fromTheme("moondeckbuddy", QIcon{":/icons/moondeckbuddy.ico"})};
     const os::SystemTray      tray{icon, app_meta.getAppName(), pc_control};
     const utils::PairingInput pairing_input;
 
