@@ -140,6 +140,7 @@ ELSEIF(UNIX)
         install(
             FILES resources/icons/moondeckbuddy-${size}.png
             DESTINATION share/icons/hicolor/${size}x${size}/apps/
+            RENAME moondeckbuddy.png
         )
     endforeach()
 ELSE()
