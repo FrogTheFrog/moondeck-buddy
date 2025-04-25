@@ -70,7 +70,7 @@ IF (WIN32)
     set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest")
     set(CPACK_INNOSETUP_SETUP_RestartApplications OFF)
     set(CPACK_INNOSETUP_SETUP_CloseApplications "Force")
-    set(CPACK_INNOSETUP_SETUP_SetupIconFile "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app.ico")
+    set(CPACK_INNOSETUP_SETUP_SetupIconFile "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/moondeckbuddy.ico")
     set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}/bin/${EXEC_NAME_BUDDY}.exe")
     set(CPACK_INNOSETUP_CODE_FILES "${BUDDY_RESOURCES}/windows/innocode.iss")
     set(CPACK_INNOSETUP_EXTRA_SCRIPTS "${BUDDY_RESOURCES}/windows/innoextra.iss")
@@ -138,9 +138,9 @@ ELSEIF(UNIX)
 
     foreach(size 16;32;64;128;256)
         install(
-            FILES resources/icons/app-${size}.png
+            FILES resources/icons/moondeckbuddy-${size}.png
             DESTINATION share/icons/hicolor/${size}x${size}/apps/
-            RENAME app.png
+            RENAME moondeckbuddy.png
         )
     endforeach()
 ELSE()
