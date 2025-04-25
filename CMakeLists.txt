@@ -138,9 +138,8 @@ ELSEIF(UNIX)
 
     foreach(size 16;32;64;128;256)
         install(
-            FILES resources/icons/app-${size}.png
+            FILES resources/icons/moondeckbuddy-${size}.png
             DESTINATION share/icons/hicolor/${size}x${size}/apps/
-            RENAME moondeckbuddy.png
         )
     endforeach()
 ELSE()
