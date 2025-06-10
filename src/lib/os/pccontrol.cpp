@@ -19,12 +19,6 @@
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
 
-namespace
-{
-constexpr int DEFAULT_TIMEOUT_S{10};
-constexpr int DEFAULT_TIMEOUT_MS{DEFAULT_TIMEOUT_S * 1000};
-}  // namespace
-
 namespace os
 {
 PcControl::PcControl(const utils::AppSettings& app_settings)
@@ -65,9 +59,15 @@ bool PcControl::launchSteamApp(std::uint64_t app_id)
     return m_steam_handler.launchApp(app_id);
 }
 
-std::optional<std::tuple<std::uint64_t, enums::AppState>> PcControl::getAppData() const
+std::optional<std::tuple<std::uint64_t, enums::AppState>> PcControl::getAppData(const std::optional<std::uint64_t>& app_id) const
 {
-    return m_steam_handler.getAppData();
+    return m_steam_handler.getAppData(app_id);
+}
+
+bool PcControl::clearAppData()
+{
+    m_steam_handler.clearSessionData();
+    return true;
 }
 
 std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(const std::uint64_t user_id) const
@@ -75,41 +75,41 @@ std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(co
     return m_steam_handler.getNonSteamAppData(user_id);
 }
 
-bool PcControl::shutdownPC()
+bool PcControl::shutdownPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.shutdownPC(DEFAULT_TIMEOUT_S))
+    if (m_pc_state_handler.shutdownPC(delay_in_seconds))
     {
         closeSteam();
         endStream();
         emit signalShowTrayMessage("Shutdown in progress",
                                    m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
-                                   QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
+                                   QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
 
     return false;
 }
 
-bool PcControl::restartPC()
+bool PcControl::restartPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.restartPC(DEFAULT_TIMEOUT_S))
+    if (m_pc_state_handler.restartPC(delay_in_seconds))
     {
         closeSteam();
         endStream();
         emit signalShowTrayMessage("Restart in progress",
                                    m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
-                                   QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
+                                   QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
 
     return false;
 }
 
-bool PcControl::suspendOrHibernatePC()
+bool PcControl::suspendOrHibernatePC(const uint delay_in_seconds)
 {
     const bool hibernation{m_app_settings.getPreferHibernation()};
-    const bool result{hibernation ? m_pc_state_handler.hibernatePC(DEFAULT_TIMEOUT_S)
-                                  : m_pc_state_handler.suspendPC(DEFAULT_TIMEOUT_S)};
+    const bool result{hibernation ? m_pc_state_handler.hibernatePC(delay_in_seconds)
+                                  : m_pc_state_handler.suspendPC(delay_in_seconds)};
     if (result)
     {
         if (m_app_settings.getCloseSteamBeforeSleep())
@@ -122,7 +122,7 @@ bool PcControl::suspendOrHibernatePC()
             hibernation ? "Hibernation in progress" : "Suspend in progress",
             m_app_settings.getAppMetadata().getAppName()
                 + (hibernation ? " is about to put you into hard sleep :O" : " is about to suspend you real hard :P"),
-            QSystemTrayIcon::MessageIcon::Information, DEFAULT_TIMEOUT_MS);
+            QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
 

@@ -27,13 +27,14 @@ SteamAppWatcher::~SteamAppWatcher()
     qCInfo(lc::os) << "Stopped watching AppID:" << m_app_id;
 }
 
-enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker, const std::uint64_t app_id,
-                                             const enums::AppState prev_state)
+std::optional<enums::AppState> SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker,
+                                                            const std::uint64_t        app_id,
+                                                            const enums::AppState      prev_state)
 {
     const auto* log_trackers{process_tracker.getLogTrackers()};
     if (log_trackers == nullptr)
     {
-        return enums::AppState::Stopped;
+        return std::nullopt;
     }
 
     auto       new_state{enums::AppState::Stopped};
@@ -71,7 +72,9 @@ void SteamAppWatcher::slotCheckState()
 {
     const auto auto_start_timer{qScopeGuard([this]() { m_check_timer.start(); })};
 
-    if (const auto new_state{getAppState(m_process_tracker, m_app_id, m_current_state)}; new_state != m_current_state)
+    if (const auto new_state{
+            getAppState(m_process_tracker, m_app_id, m_current_state).value_or(enums::AppState::Stopped)};
+        new_state != m_current_state)
     {
         if (new_state == enums::AppState::Stopped && m_delay_counter < 5)
         {

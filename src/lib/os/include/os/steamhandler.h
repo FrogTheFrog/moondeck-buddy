@@ -30,7 +30,7 @@ public:
     enums::SteamUiMode getSteamUiMode() const;
     bool               close();
 
-    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
+    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData(const std::optional<std::uint64_t>& app_id) const;
     bool                                                      launchApp(std::uint64_t app_id);
     void                                                      clearSessionData();
 

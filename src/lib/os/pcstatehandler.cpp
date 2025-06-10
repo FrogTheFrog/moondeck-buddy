@@ -77,12 +77,21 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
     QTimer::singleShot(getTimeoutTime(grace_period_in_sec), this,
                        [this, failed_to_do_entry, do_method]()
                        {
-                           qCInfo(lc::os) << "Resetting PC state back to normal.";
-                           m_state = enums::PcState::Normal;
+                           qCInfo(lc::os) << "Setting PC state to transient.";
+                           m_state = enums::PcState::Transient;
+
+                           constexpr int state_reset_time{5};
+                           QTimer::singleShot(getTimeoutTime(state_reset_time), this,
+                                              [this, failed_to_do_entry, do_method]()
+                                              {
+                                                  qCInfo(lc::os) << "Resetting PC state back to normal.";
+                                                  m_state = enums::PcState::Normal;
+                                              });
 
                            if (!(m_native_handler.get()->*do_method)())
                            {
                                qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
+                               m_state = enums::PcState::Normal;
                            }
                        });
 

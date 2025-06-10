@@ -36,13 +36,14 @@ public:
     bool               closeSteam();
 
     bool                                                      launchSteamApp(std::uint64_t app_id);
-    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData() const;
+    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData(const std::optional<std::uint64_t>& app_id) const;
+    bool                                                      clearAppData();
 
     std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
 
-    bool shutdownPC();
-    bool restartPC();
-    bool suspendOrHibernatePC();
+    bool shutdownPC(uint delay_in_seconds);
+    bool restartPC(uint delay_in_seconds);
+    bool suspendOrHibernatePC(uint delay_in_seconds);
     bool endStream();
 
     enums::StreamState getStreamState() const;

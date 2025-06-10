@@ -21,7 +21,6 @@ public:
     const shared::AppMetadata& getAppMetadata() const;
     quint16                    getPort() const;
     const QString&             getLoggingRules() const;
-    const QString&             getSunshineAppsFilepath() const;
     bool                       getPreferHibernation() const;
     QSsl::SslProtocol          getSslProtocol() const;
     bool                       getCloseSteamBeforeSleep() const;
@@ -35,7 +34,6 @@ private:
     const shared::AppMetadata& m_app_metadata;
     quint16                    m_port;
     QString                    m_logging_rules;
-    QString                    m_sunshine_apps_filepath;
     bool                       m_prefer_hibernation;
     QSsl::SslProtocol          m_ssl_protocol;
     bool                       m_close_steam_before_sleep;

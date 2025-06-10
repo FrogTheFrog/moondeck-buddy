@@ -52,7 +52,7 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
 void SystemTray::slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
                                      int millisecondsTimeoutHint)
 {
-    if (!m_tray_icon)
+    if (!m_tray_icon || millisecondsTimeoutHint <= 0)
     {
         return;
     }

@@ -200,9 +200,18 @@ bool SteamHandler::close()
     return true;
 }
 
-std::optional<std::tuple<std::uint64_t, enums::AppState>> SteamHandler::getAppData() const
+std::optional<std::tuple<std::uint64_t, enums::AppState>>
+    SteamHandler::getAppData(const std::optional<std::uint64_t>& app_id) const
 {
-    if (const auto* watcher{m_session_data.m_steam_app_watcher.get()})
+    if (app_id)
+    {
+        const auto app_state{SteamAppWatcher::getAppState(m_steam_process_tracker, *app_id)};
+        if (app_state)
+        {
+            return std::make_tuple(*app_id, *app_state);
+        }
+    }
+    else if (const auto* watcher{m_session_data.m_steam_app_watcher.get()})
     {
         return std::make_tuple(watcher->getAppId(), watcher->getAppState());
     }
@@ -225,6 +234,12 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
         return false;
     }
 
+    if (const auto app_data{getAppData(std::nullopt)}; app_data && std::get<std::uint64_t>(*app_data) != app_id)
+    {
+        qCWarning(lc::os) << "Buddy is already tracking app id: " << std::get<std::uint64_t>(*app_data);
+        return false;
+    }
+
     m_steam_process_tracker.slotCheckState();
     if (getSteamUiMode() == enums::SteamUiMode::Unknown)
     {
@@ -232,8 +247,9 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
         return false;
     }
 
-    const bool is_app_running{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)
-                              != enums::AppState::Stopped};
+    const bool is_app_running{
+        SteamAppWatcher::getAppState(m_steam_process_tracker, app_id).value_or(enums::AppState::Stopped)
+        != enums::AppState::Stopped};
     if (!is_app_running && !executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}))
     {
         qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
@@ -246,6 +262,7 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
 
 void SteamHandler::clearSessionData()
 {
+    qCInfo(lc::os) << "Clearing session data...";
     m_session_data = {};
 }
 
@@ -315,7 +332,7 @@ void SteamHandler::slotSteamProcessStateChanged()
     else
     {
         qCInfo(lc::os) << "Steam is no longer running!";
-        m_session_data = {};
+        clearSessionData();
         emit signalSteamClosed();
     }
 }
