@@ -22,8 +22,8 @@ public:
     explicit SteamAppWatcher(const SteamProcessTracker& process_tracker, std::uint64_t app_id);
     ~SteamAppWatcher() override;
 
-    static enums::AppState getAppState(const SteamProcessTracker& process_tracker, std::uint64_t app_id,
-                                       enums::AppState prev_state = enums::AppState::Stopped);
+    static std::optional<enums::AppState> getAppState(const SteamProcessTracker& process_tracker, std::uint64_t app_id,
+                                                      enums::AppState prev_state = enums::AppState::Stopped);
 
     enums::AppState getAppState() const;
     std::uint64_t   getAppId() const;

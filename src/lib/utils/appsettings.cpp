@@ -79,11 +79,6 @@ const QString& AppSettings::getLoggingRules() const
     return m_logging_rules;
 }
 
-const QString& AppSettings::getSunshineAppsFilepath() const
-{
-    return m_sunshine_apps_filepath;
-}
-
 bool AppSettings::getPreferHibernation() const
 {
     return m_prefer_hibernation;
@@ -141,14 +136,13 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto obj_v                      = json_data.object();
             const auto port_v                     = obj_v.value(QLatin1String("port"));
             const auto logging_rules_v            = obj_v.value(QLatin1String("logging_rules"));
-            const auto sunshine_apps_filepath_v   = obj_v.value(QLatin1String("sunshine_apps_filepath"));
             const auto prefer_hibernation_v       = obj_v.value(QLatin1String("prefer_hibernation"));
             const auto ssl_protocol_v             = obj_v.value(QLatin1String("ssl_protocol"));
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
             const auto steam_exec_override_v      = obj_v.value(QLatin1String("steam_exec_override"));
 
-            constexpr int current_entries{8};
+            constexpr int current_entries{7};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -169,12 +163,6 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             if (logging_rules_v.isString())
             {
                 m_logging_rules = logging_rules_v.toString();
-                valid_entries++;
-            }
-
-            if (sunshine_apps_filepath_v.isString())
-            {
-                m_sunshine_apps_filepath = sunshine_apps_filepath_v.toString();
                 valid_entries++;
             }
 
@@ -224,7 +212,6 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
 
     obj["port"]                     = m_port;
     obj["logging_rules"]            = m_logging_rules;
-    obj["sunshine_apps_filepath"]   = m_sunshine_apps_filepath;
     obj["prefer_hibernation"]       = m_prefer_hibernation;
     obj["ssl_protocol"]             = QStringLiteral("SecureProtocols");
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
