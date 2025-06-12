@@ -35,9 +35,10 @@ public:
     enums::SteamUiMode getSteamUiMode() const;
     bool               closeSteam();
 
-    bool                                                      launchSteamApp(std::uint64_t app_id);
-    std::optional<std::tuple<std::uint64_t, enums::AppState>> getAppData(const std::optional<std::uint64_t>& app_id) const;
-    bool                                                      clearAppData();
+    bool launchSteamApp(std::uint64_t app_id);
+    std::optional<std::tuple<std::uint64_t, enums::AppState>>
+         getAppData(const std::optional<std::uint64_t>& app_id) const;
+    bool clearAppData();
 
     std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
 

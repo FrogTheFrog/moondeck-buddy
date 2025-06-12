@@ -59,7 +59,8 @@ bool PcControl::launchSteamApp(std::uint64_t app_id)
     return m_steam_handler.launchApp(app_id);
 }
 
-std::optional<std::tuple<std::uint64_t, enums::AppState>> PcControl::getAppData(const std::optional<std::uint64_t>& app_id) const
+std::optional<std::tuple<std::uint64_t, enums::AppState>>
+    PcControl::getAppData(const std::optional<std::uint64_t>& app_id) const
 {
     return m_steam_handler.getAppData(app_id);
 }

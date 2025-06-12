@@ -332,7 +332,7 @@ void SteamHandler::slotSteamProcessStateChanged()
     else
     {
         qCInfo(lc::os) << "Steam is no longer running!";
-        clearSessionData();
+        m_session_data = {};
         emit signalSteamClosed();
     }
 }
