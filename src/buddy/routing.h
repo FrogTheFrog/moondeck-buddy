@@ -2,8 +2,9 @@
 
 // local includes
 #include "os/pccontrol.h"
+#include "os/sunshineapps.h"
 #include "server/httpserver.h"
 #include "server/pairingmanager.h"
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 const QString& mac_address_override);
+                 os::SunshineApps& sunshine_apps, const QString& mac_address_override);

@@ -352,46 +352,6 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                      return QHttpServerResponse{QJsonObject{{"state", lc::qEnumToString(state)}}};
                  });
 
-    server.route("/appData", QHttpServerRequest::Method::Get,
-                 [&server, &pc_control](const QHttpServerRequest& request)
-                 {
-                     if (!server.isAuthorized(request))
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-                     }
-
-                     const auto json = requestToJsonObject(request);
-                     if (json.isEmpty())
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
-                     }
-
-                     const auto app_id_opt{utils::getJsonValue<QString>(json, "app_id")};
-                     bool       app_id_ok{false};
-
-                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-                     const std::uint64_t received_app_id{app_id_opt ? app_id_opt->toULongLong(&app_id_ok) : 0};
-
-                     if (!app_id_ok)
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
-                     }
-
-                     return QHttpServerResponse{
-                         [&pc_control, &received_app_id]()
-                         {
-                             const auto data{pc_control.getAppData(received_app_id)};
-                             if (!data)
-                             {
-                                 return QJsonObject{{"data", QJsonValue::Null}};
-                             }
-
-                             const auto& [app_id, app_state] = *data;
-                             return QJsonObject{{"data", QJsonObject{{{"app_id", QString::number(app_id)},
-                                                                      {"app_state", lc::qEnumToString(app_state)}}}}};
-                         }()};
-                 });
-
     server.route("/streamedAppData", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
@@ -440,6 +400,28 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
+void setupGameStreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
+{
+    server.route(
+        "/gameStreamAppNames", QHttpServerRequest::Method::Get,
+        [&server, &sunshine_apps](const QHttpServerRequest& request)
+        {
+            if (!server.isAuthorized(request))
+            {
+                return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+            }
+
+            const auto app_names{sunshine_apps.load()};
+            if (!app_names)
+            {
+                return QHttpServerResponse{QJsonObject{{"appNames", QJsonValue()}}};
+            }
+
+            return QHttpServerResponse{QJsonObject{
+                {"appNames", QJsonArray::fromStringList(QStringList{std::begin(*app_names), std::end(*app_names)})}}};
+        });
+}
+
 void setupRouteLogging(server::HttpServer& server)
 {
     server.afterRequest(
@@ -453,7 +435,7 @@ void setupRouteLogging(server::HttpServer& server)
 }  // namespace routing_internal
 
 void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 const QString& mac_address_override)
+                 os::SunshineApps& sunshine_apps, const QString& mac_address_override)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);
@@ -461,6 +443,7 @@ void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_man
     routing_internal::setupHostInfo(server, mac_address_override);
     routing_internal::setupSteam(server, pc_control);
     routing_internal::setupStream(server, pc_control);
+    routing_internal::setupGameStreamApps(server, sunshine_apps);
     routing_internal::setupRouteLogging(server);
 }
 
