@@ -1,12 +1,12 @@
 #pragma once
 
 // system/Qt includes
-#include <QObject>
-#include <QSharedMemory>
-#include <QStringList>
 #include <QMap>
 #include <QMutex>
+#include <QObject>
 #include <QProcessEnvironment>
+#include <QSharedMemory>
+#include <QStringList>
 
 namespace utils
 {
@@ -59,22 +59,22 @@ public:
 private:
     struct EnvData
     {
-        quint32 version;        // Data format version for compatibility
-        quint32 size;          // Size of serialized environment data
-        quint32 checksum;      // Simple checksum for data validation
+        quint32 version;   // Data format version for compatibility
+        quint32 size;      // Size of serialized environment data
+        quint32 checksum;  // Simple checksum for data validation
         // Variable length data follows...
     };
 
-    static constexpr quint32 CURRENT_VERSION = 1;
-    static constexpr quint32 MAX_DATA_SIZE = 64 * 1024; // 64KB max for env vars
-    static constexpr char SHARED_MEMORY_KEY[] = "MoonDeckBuddy_EnvVars";
+    static constexpr quint32 CURRENT_VERSION     = 1;
+    static constexpr quint32 MAX_DATA_SIZE       = 64 * 1024;  // 64KB max for env vars
+    static constexpr char    SHARED_MEMORY_KEY[] = "MoonDeckBuddy_EnvVars";
 
-    bool serializeAndStore(const QMap<QString, QString>& envVars);
+    bool                   serializeAndStore(const QMap<QString, QString>& envVars);
     QMap<QString, QString> deserializeData(const QByteArray& data);
-    quint32 calculateChecksum(const QByteArray& data);
-    
-    QSharedMemory m_sharedMemory;
+    quint32                calculateChecksum(const QByteArray& data);
+
+    QSharedMemory  m_sharedMemory;
     mutable QMutex m_mutex;
 };
 
-} // namespace utils
+}  // namespace utils

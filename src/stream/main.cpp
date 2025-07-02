@@ -5,11 +5,11 @@
 #include "os/sleepinhibitor.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
+#include "utils/envsharedmemory.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
-#include "utils/envsharedmemory.h"
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
@@ -41,13 +41,15 @@ int main(int argc, char* argv[])
     const os::SleepInhibitor sleep_inhibitor{app_meta.getAppName()};
     utils::Heartbeat         heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
-    
+
     // Clear environment variables when the application exits
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, [&envMemory]() { 
-        envMemory.clearEnvironment();
-        qCInfo(lc::streamMain) << "shutdown."; 
-    });
-    
+    QObject::connect(&app, &QCoreApplication::aboutToQuit,
+                     [&envMemory]()
+                     {
+                         envMemory.clearEnvironment();
+                         qCInfo(lc::streamMain) << "shutdown.";
+                     });
+
     heartbeat.startBeating();
 
     qCInfo(lc::streamMain) << "startup finished.";
