@@ -110,9 +110,17 @@ QMap<QString, QString> EnvSharedMemory::retrieveEnvironment()
         return {};
     }
 
-    if (envData->size > MAX_DATA_SIZE)
+    if (envData->size > MAX_DATA_SIZE || envData->size == 0)
     {
-        qCWarning(lc::utils) << "Environment data size too large:" << envData->size;
+        qCWarning(lc::utils) << "Environment data size invalid:" << envData->size;
+        m_sharedMemory.unlock();
+        return {};
+    }
+
+    // Additional sanity check: ensure we don't read beyond shared memory bounds
+    if (static_cast<int>(sizeof(EnvData) + envData->size) > m_sharedMemory.size())
+    {
+        qCWarning(lc::utils) << "Environment data size exceeds shared memory bounds";
         m_sharedMemory.unlock();
         return {};
     }
@@ -155,9 +163,16 @@ bool EnvSharedMemory::hasValidData()
         return false;
     }
 
-    m_sharedMemory.lock();
+    if (!m_sharedMemory.lock())
+    {
+        qCWarning(lc::utils) << "Failed to lock shared memory for validation";
+        return false;
+    }
+
     const auto* envData = static_cast<const EnvData*>(m_sharedMemory.constData());
-    bool        valid   = (envData->version == CURRENT_VERSION && envData->size <= MAX_DATA_SIZE);
+    bool        valid   = (envData->version == CURRENT_VERSION && 
+                          envData->size <= MAX_DATA_SIZE &&
+                          envData->size > 0);
     m_sharedMemory.unlock();
 
     return valid;
@@ -209,17 +224,29 @@ bool EnvSharedMemory::serializeAndStore(const QMap<QString, QString>& envVars)
     {
         if (m_sharedMemory.error() == QSharedMemory::AlreadyExists)
         {
-            if (!m_sharedMemory.attach())
+            // Try to attach to existing segment first
+            if (m_sharedMemory.attach())
+            {
+                // Check if existing segment is large enough
+                if (m_sharedMemory.size() >= totalSize)
+                {
+                    qCDebug(lc::utils) << "Reusing existing shared memory segment of size" << m_sharedMemory.size();
+                }
+                else
+                {
+                    // Existing segment too small, need to recreate
+                    m_sharedMemory.detach();
+                    if (!m_sharedMemory.create(totalSize))
+                    {
+                        qCWarning(lc::utils) << "Failed to recreate shared memory with required size:" 
+                                             << m_sharedMemory.errorString();
+                        return false;
+                    }
+                }
+            }
+            else
             {
                 qCWarning(lc::utils) << "Failed to attach to existing shared memory:" << m_sharedMemory.errorString();
-                return false;
-            }
-
-            // Detach and recreate with correct size
-            m_sharedMemory.detach();
-            if (!m_sharedMemory.create(totalSize))
-            {
-                qCWarning(lc::utils) << "Failed to recreate shared memory:" << m_sharedMemory.errorString();
                 return false;
             }
         }
@@ -230,8 +257,20 @@ bool EnvSharedMemory::serializeAndStore(const QMap<QString, QString>& envVars)
         }
     }
 
+    // Verify we have the correct size
+    if (m_sharedMemory.size() < totalSize)
+    {
+        qCWarning(lc::utils) << "Shared memory size insufficient. Required:" << totalSize 
+                             << "Available:" << m_sharedMemory.size();
+        return false;
+    }
+
     // Lock and write data
-    m_sharedMemory.lock();
+    if (!m_sharedMemory.lock())
+    {
+        qCWarning(lc::utils) << "Failed to lock shared memory for writing";
+        return false;
+    }
 
     auto* envData     = static_cast<EnvData*>(m_sharedMemory.data());
     envData->version  = CURRENT_VERSION;
@@ -271,6 +310,14 @@ QMap<QString, QString> EnvSharedMemory::deserializeData(const QByteArray& data)
         return {};
     }
 
+    // Additional check: ensure we have enough data for the expected variables
+    // Each variable needs at least 8 bytes (4 for key length + 4 for value length)
+    if (data.size() < static_cast<int>(sizeof(quint32) + count * 8))
+    {
+        qCWarning(lc::utils) << "Data size too small for expected variable count:" << count;
+        return {};
+    }
+
     for (quint32 i = 0; i < count && !stream.atEnd(); ++i)
     {
         QString key, value;
@@ -293,6 +340,11 @@ QMap<QString, QString> EnvSharedMemory::deserializeData(const QByteArray& data)
 
 quint32 EnvSharedMemory::calculateChecksum(const QByteArray& data)
 {
+    if (data.isEmpty())
+    {
+        return 0;  // Return 0 for empty data
+    }
+
     // Simple checksum calculation
     quint32 checksum = 0;
     for (int i = 0; i < data.size(); ++i)
