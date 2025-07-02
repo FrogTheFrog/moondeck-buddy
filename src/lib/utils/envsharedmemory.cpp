@@ -170,9 +170,7 @@ bool EnvSharedMemory::hasValidData()
     }
 
     const auto* envData = static_cast<const EnvData*>(m_sharedMemory.constData());
-    bool        valid   = (envData->version == CURRENT_VERSION && 
-                          envData->size <= MAX_DATA_SIZE &&
-                          envData->size > 0);
+    bool        valid   = (envData->version == CURRENT_VERSION && envData->size <= MAX_DATA_SIZE && envData->size > 0);
     m_sharedMemory.unlock();
 
     return valid;
@@ -238,8 +236,8 @@ bool EnvSharedMemory::serializeAndStore(const QMap<QString, QString>& envVars)
                     m_sharedMemory.detach();
                     if (!m_sharedMemory.create(totalSize))
                     {
-                        qCWarning(lc::utils) << "Failed to recreate shared memory with required size:" 
-                                             << m_sharedMemory.errorString();
+                        qCWarning(lc::utils)
+                            << "Failed to recreate shared memory with required size:" << m_sharedMemory.errorString();
                         return false;
                     }
                 }
@@ -260,7 +258,7 @@ bool EnvSharedMemory::serializeAndStore(const QMap<QString, QString>& envVars)
     // Verify we have the correct size
     if (m_sharedMemory.size() < totalSize)
     {
-        qCWarning(lc::utils) << "Shared memory size insufficient. Required:" << totalSize 
+        qCWarning(lc::utils) << "Shared memory size insufficient. Required:" << totalSize
                              << "Available:" << m_sharedMemory.size();
         return false;
     }
