@@ -212,7 +212,7 @@ bool EnvSharedMemory::serializeAndStore(const QMap<QString, QString>& envVars)
     }
 
     // Calculate total size needed
-    int totalSize = sizeof(EnvData) + serializedData.size();
+    int totalSize = static_cast<int>(sizeof(EnvData)) + static_cast<int>(serializedData.size());
 
     // Create or attach to shared memory
     if (m_sharedMemory.isAttached())
