@@ -35,6 +35,9 @@ public:
 
     QString getDefaultSteamExecutable() const;
 
+    QString getSharedEnvRegexKey() const;
+    QString getSharedEnvMapKey() const;
+
 private:
     App m_current_app;
 };

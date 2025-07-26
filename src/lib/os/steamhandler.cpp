@@ -10,11 +10,11 @@
 #include "os/steam/steamappwatcher.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
-#include "utils/envsharedmemory.h"
 
 namespace
 {
-bool executeDetached(const QString& steam_exec, const QStringList& args, const QMap<QString, QString>& envVars = {})
+bool executeDetached(const QString& steam_exec, const QStringList& args,
+                     const QMap<QString, QString>& env_overrides = {})
 {
     QProcess steam_process;
     steam_process.setStandardOutputFile(QProcess::nullDevice());
@@ -22,19 +22,19 @@ bool executeDetached(const QString& steam_exec, const QStringList& args, const Q
     steam_process.setProgram(steam_exec);
     steam_process.setArguments(args);
 
-    // Apply environment variables if provided
-    if (!envVars.isEmpty())
+    if (!env_overrides.empty())
     {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        for (auto it = envVars.constBegin(); it != envVars.constEnd(); ++it)
+        auto env{QProcessEnvironment::systemEnvironment()};
+        for (const auto& [key, value] : env_overrides.asKeyValueRange())
         {
-            env.insert(it.key(), it.value());
-            qCDebug(lc::os) << "Setting environment variable for game launch:" << it.key() << "=" << it.value();
+            env.insert(key, value);
         }
+
         steam_process.setProcessEnvironment(env);
-        qCInfo(lc::os) << "Applied" << envVars.size() << "environment variables to Steam process";
     }
 
+    qCInfo(lc::os).nospace() << (env_overrides.empty() ? "" : "[WITH ENV OVERRIDES] ") << "Executing: " << steam_exec
+                             << " " << args.join(" ");
     return steam_process.startDetached();
 }
 
@@ -150,7 +150,7 @@ SteamHandler::SteamHandler(const utils::AppSettings&                      app_se
 
 SteamHandler::~SteamHandler() = default;
 
-bool SteamHandler::launchSteam(const bool big_picture_mode)
+bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, QString>& env_overrides)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -163,23 +163,8 @@ bool SteamHandler::launchSteam(const bool big_picture_mode)
     if (!m_steam_process_tracker.isRunning()
         || (big_picture_mode && getSteamUiMode() != enums::SteamUiMode::BigPicture))
     {
-        // Retrieve environment variables from shared memory set by Stream application
-        utils::EnvSharedMemory envMemory;
-        QMap<QString, QString> envVars = envMemory.retrieveEnvironment();
-
-        if (!envVars.isEmpty())
-        {
-            qCInfo(lc::os) << "Using" << envVars.size()
-                           << "environment variables from Stream for Steam launch:" << envVars.keys();
-        }
-        else
-        {
-            qCDebug(lc::os)
-                << "No environment variables available from Stream - launching Steam with system environment";
-        }
-
         if (!executeDetached(exec_path, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{},
-                             envVars))
+                             env_overrides))
         {
             qCWarning(lc::os) << "Failed to launch Steam!";
             return false;
@@ -271,7 +256,7 @@ std::optional<std::tuple<std::uint64_t, enums::AppState>>
     return std::nullopt;
 }
 
-bool SteamHandler::launchApp(const std::uint64_t app_id)
+bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QString>& env_overrides)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -302,24 +287,9 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
     const bool is_app_running{
         SteamAppWatcher::getAppState(m_steam_process_tracker, app_id).value_or(enums::AppState::Stopped)
         != enums::AppState::Stopped};
-
     if (!is_app_running)
     {
-        // Retrieve environment variables from shared memory set by Stream application
-        utils::EnvSharedMemory envMemory;
-        QMap<QString, QString> envVars = envMemory.retrieveEnvironment();
-
-        if (!envVars.isEmpty())
-        {
-            qCInfo(lc::os) << "Using" << envVars.size()
-                           << "environment variables from Stream for game launch:" << envVars.keys();
-        }
-        else
-        {
-            qCDebug(lc::os) << "No environment variables available from Stream - launching with system environment";
-        }
-
-        if (!executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}, envVars))
+        if (!executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}, env_overrides))
         {
             qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
             return false;

@@ -26,14 +26,14 @@ public:
                           std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface);
     ~SteamHandler() override;
 
-    bool               launchSteam(bool big_picture_mode);
+    bool               launchSteam(bool big_picture_mode, const QMap<QString, QString>& env_overrides);
     enums::SteamUiMode getSteamUiMode() const;
     bool               close();
     bool               closeBigPictureMode();
 
     std::optional<std::tuple<std::uint64_t, enums::AppState>>
          getAppData(const std::optional<std::uint64_t>& app_id) const;
-    bool launchApp(std::uint64_t app_id);
+    bool launchApp(std::uint64_t app_id, const QMap<QString, QString>& env_overrides);
     void clearSessionData();
 
     std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;

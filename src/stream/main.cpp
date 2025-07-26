@@ -1,15 +1,33 @@
 // system/Qt includes
 #include <QCoreApplication>
+#include <QProcessEnvironment>
+#include <QRegularExpression>
 
 // local includes
 #include "os/sleepinhibitor.h"
 #include "shared/appmetadata.h"
 #include "shared/loggingcategories.h"
-#include "utils/envsharedmemory.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
+#include "utils/shmserialization.h"
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
+
+QMap<QString, QString> getMatchingEnv(const QRegularExpression& regex)
+{
+    QMap<QString, QString> captured_env;
+    for (const auto env{QProcessEnvironment::systemEnvironment()}; const QString& key : env.keys())
+    {
+        if (const auto match = regex.match(key); match.hasMatch())
+        {
+            const auto value{env.value(key)};
+            qCDebug(lc::streamMain) << "Captured environment variable:" << key << "=" << value;
+            captured_env[key] = value;
+        }
+    }
+
+    return captured_env;
+}
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
@@ -32,26 +50,29 @@ int main(int argc, char* argv[])
     qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
 
     // Capture and store environment variables for Buddy to use when launching games
-    utils::EnvSharedMemory envMemory;
-    if (!envMemory.captureAndStoreEnvironment({"APOLLO", "SUNSHINE"}))
+    utils::ShmSerializer env_map_serializer{app_meta.getSharedEnvMapKey()};
     {
-        qCWarning(lc::streamMain) << "Failed to capture environment variables, but continuing...";
+        utils::ShmDeserializer env_regex_deserializer{app_meta.getSharedEnvRegexKey()};
+        if (const auto regex = env_regex_deserializer.read<QRegularExpression>())
+        {
+            qCInfo(lc::streamMain) << "Got the following ENV regex from Buddy:" << *regex;
+            if (!env_map_serializer.write(getMatchingEnv(*regex)))
+            {
+                qCWarning(lc::streamMain) << "Failed to capture environment variables, still continuing...";
+            }
+        }
+        else
+        {
+            qCWarning(lc::streamMain) << "Failed to read ENV regex from shared memory!";
+        }
     }
 
     const os::SleepInhibitor sleep_inhibitor{app_meta.getAppName()};
     utils::Heartbeat         heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
-
-    // Clear environment variables when the application exits
-    QObject::connect(&app, &QCoreApplication::aboutToQuit,
-                     [&envMemory]()
-                     {
-                         envMemory.clearEnvironment();
-                         qCInfo(lc::streamMain) << "shutdown.";
-                     });
-
     heartbeat.startBeating();
 
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
     qCInfo(lc::streamMain) << "startup finished.";
 
     return QCoreApplication::exec();

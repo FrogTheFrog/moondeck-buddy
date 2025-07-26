@@ -46,6 +46,12 @@ void StreamStateHandler::slotHandleProcessStateChanges()
         {
             if (!m_helper_heartbeat.isAlive())
             {
+                if (m_state == enums::StreamState::Streaming)
+                {
+                    m_state = enums::StreamState::StreamEnding;
+                    emit signalStreamStateChanged();
+                }
+
                 m_state = enums::StreamState::NotStreaming;
                 emit signalStreamStateChanged();
             }

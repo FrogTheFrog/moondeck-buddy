@@ -160,6 +160,13 @@ int main(int argc, char* argv[])
     const utils::AppSettings app_settings{app_meta};
     utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
 
+    // Capture and store environment variable regex for Stream to save when it's started
+    utils::ShmSerializer env_regex_serializer{app_meta.getSharedEnvRegexKey()};
+    if (!env_regex_serializer.write(app_settings.getEnvCaptureRegex()))
+    {
+        qCWarning(lc::buddyMain) << "Failed to write ENV regex to the shared memory, still continuing...";
+    }
+
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids};
