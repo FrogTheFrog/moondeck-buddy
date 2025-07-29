@@ -200,6 +200,28 @@ bool SteamHandler::close()
     return true;
 }
 
+bool SteamHandler::closeBigPictureMode()
+{
+    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
+    if (exec_path.isEmpty())
+    {
+        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
+        return false;
+    }
+
+    m_steam_process_tracker.slotCheckState();
+    if (m_steam_process_tracker.isRunning() && getSteamUiMode() == enums::SteamUiMode::BigPicture)
+    {
+        if (!executeDetached(exec_path, {"steam://close/bigpicture"}))
+        {
+            qCWarning(lc::os) << "Failed to close Steam's BPM!";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 std::optional<std::tuple<std::uint64_t, enums::AppState>>
     SteamHandler::getAppData(const std::optional<std::uint64_t>& app_id) const
 {

@@ -336,6 +336,18 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                      const bool result{pc_control.closeSteam()};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
+
+    server.route("/closeSteamBigPictureMode", QHttpServerRequest::Method::Post,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const bool result{pc_control.closeSteamBigPictureMode()};
+                     return QHttpServerResponse{QJsonObject{{"result", result}}};
+                 });
 }
 
 void setupStream(server::HttpServer& server, os::PcControl& pc_control)

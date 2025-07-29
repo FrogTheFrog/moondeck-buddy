@@ -54,6 +54,11 @@ bool PcControl::closeSteam()
     return m_steam_handler.close();
 }
 
+bool PcControl::closeSteamBigPictureMode()
+{
+    return m_steam_handler.closeBigPictureMode();
+}
+
 bool PcControl::launchSteamApp(std::uint64_t app_id)
 {
     return m_steam_handler.launchApp(app_id);

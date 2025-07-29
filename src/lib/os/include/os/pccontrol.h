@@ -34,6 +34,7 @@ public:
     bool               launchSteam(bool big_picture_mode);
     enums::SteamUiMode getSteamUiMode() const;
     bool               closeSteam();
+    bool               closeSteamBigPictureMode();
 
     bool launchSteamApp(std::uint64_t app_id);
     std::optional<std::tuple<std::uint64_t, enums::AppState>>
