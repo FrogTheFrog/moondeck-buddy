@@ -28,6 +28,7 @@ PcControl::PcControl(const utils::AppSettings& app_settings)
     , m_steam_handler{m_app_settings, std::make_unique<NativeProcessHandler>()}
     , m_stream_state_handler{std::make_unique<StreamStateHandler>(
           m_app_settings.getAppMetadata().getAppName(shared::AppMetadata::App::Stream))}
+    , m_shared_env_reader{m_app_settings.getAppMetadata().getSharedEnvMapKey()}
 {
     Q_ASSERT(m_stream_state_handler != nullptr);
 
@@ -41,7 +42,7 @@ PcControl::~PcControl() = default;
 
 bool PcControl::launchSteam(const bool big_picture_mode)
 {
-    return m_steam_handler.launchSteam(big_picture_mode);
+    return m_steam_handler.launchSteam(big_picture_mode, m_cached_env);
 }
 
 enums::SteamUiMode PcControl::getSteamUiMode() const
@@ -61,7 +62,7 @@ bool PcControl::closeSteamBigPictureMode()
 
 bool PcControl::launchSteamApp(std::uint64_t app_id)
 {
-    return m_steam_handler.launchApp(app_id);
+    return m_steam_handler.launchApp(app_id, m_cached_env);
 }
 
 std::optional<std::tuple<std::uint64_t, enums::AppState>>
@@ -177,12 +178,25 @@ void PcControl::slotHandleStreamStateChange()
         case enums::StreamState::Streaming:
         {
             qCInfo(lc::os) << "Stream started.";
+            if (auto env = m_shared_env_reader.read<decltype(m_cached_env)>())
+            {
+                m_cached_env = std::move(*env);
+                if (!m_cached_env.empty())
+                {
+                    qCInfo(lc::os) << "Got the following ENV from Stream:";
+                    for (const auto& [key, value] : m_cached_env.asKeyValueRange())
+                    {
+                        qCInfo(lc::os) << "  " << key << "=" << value;
+                    }
+                }
+            }
             break;
         }
         case enums::StreamState::StreamEnding:
         {
             qCInfo(lc::os) << "Stream is ending.";
             m_steam_handler.clearSessionData();
+            m_cached_env.clear();
             break;
         }
     }

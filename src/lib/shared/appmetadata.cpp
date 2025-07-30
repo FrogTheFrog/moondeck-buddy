@@ -184,4 +184,14 @@ QString AppMetadata::getDefaultSteamExecutable() const
     #error OS is not supported!
 #endif
 }
+
+QString AppMetadata::getSharedEnvRegexKey() const
+{
+    return QStringLiteral("MoonDeck_EnvRegex_Key");
+}
+
+QString AppMetadata::getSharedEnvMapKey() const
+{
+    return QStringLiteral("MoonDeck_EnvMap_Key");
+}
 }  // namespace shared

@@ -13,7 +13,8 @@
 
 namespace
 {
-bool executeDetached(const QString& steam_exec, const QStringList& args)
+bool executeDetached(const QString& steam_exec, const QStringList& args,
+                     const QMap<QString, QString>& env_overrides = {})
 {
     QProcess steam_process;
     steam_process.setStandardOutputFile(QProcess::nullDevice());
@@ -21,6 +22,19 @@ bool executeDetached(const QString& steam_exec, const QStringList& args)
     steam_process.setProgram(steam_exec);
     steam_process.setArguments(args);
 
+    if (!env_overrides.empty())
+    {
+        auto env{QProcessEnvironment::systemEnvironment()};
+        for (const auto& [key, value] : env_overrides.asKeyValueRange())
+        {
+            env.insert(key, value);
+        }
+
+        steam_process.setProcessEnvironment(env);
+    }
+
+    qCInfo(lc::os).nospace() << (env_overrides.empty() ? "" : "[WITH ENV OVERRIDES] ") << "Executing: " << steam_exec
+                             << " " << args.join(" ");
     return steam_process.startDetached();
 }
 
@@ -136,7 +150,7 @@ SteamHandler::SteamHandler(const utils::AppSettings&                      app_se
 
 SteamHandler::~SteamHandler() = default;
 
-bool SteamHandler::launchSteam(const bool big_picture_mode)
+bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, QString>& env_overrides)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -149,7 +163,8 @@ bool SteamHandler::launchSteam(const bool big_picture_mode)
     if (!m_steam_process_tracker.isRunning()
         || (big_picture_mode && getSteamUiMode() != enums::SteamUiMode::BigPicture))
     {
-        if (!executeDetached(exec_path, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{}))
+        if (!executeDetached(exec_path, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{},
+                             env_overrides))
         {
             qCWarning(lc::os) << "Failed to launch Steam!";
             return false;
@@ -241,7 +256,7 @@ std::optional<std::tuple<std::uint64_t, enums::AppState>>
     return std::nullopt;
 }
 
-bool SteamHandler::launchApp(const std::uint64_t app_id)
+bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QString>& env_overrides)
 {
     const auto& exec_path{m_app_settings.getSteamExecutablePath()};
     if (exec_path.isEmpty())
@@ -272,10 +287,13 @@ bool SteamHandler::launchApp(const std::uint64_t app_id)
     const bool is_app_running{
         SteamAppWatcher::getAppState(m_steam_process_tracker, app_id).value_or(enums::AppState::Stopped)
         != enums::AppState::Stopped};
-    if (!is_app_running && !executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}))
+    if (!is_app_running)
     {
-        qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
-        return false;
+        if (!executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}, env_overrides))
+        {
+            qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
+            return false;
+        }
     }
 
     m_session_data = {.m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};

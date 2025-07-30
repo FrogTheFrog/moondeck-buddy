@@ -1,9 +1,9 @@
 #pragma once
 
 // system/Qt includes
+#include <QRegularExpression>
 #include <QString>
 #include <QtNetwork/QSsl>
-#include <set>
 
 // local includes
 #include "shared/appmetadata.h"
@@ -27,6 +27,7 @@ public:
     bool                       getCloseSteamBeforeSleep() const;
     QString                    getSteamExecutablePath() const;
     const QString&             getMacAddressOverride() const;
+    const QRegularExpression&  getEnvCaptureRegex() const;
 
 private:
     bool parseSettingsFile(const QString& filepath);
@@ -41,5 +42,6 @@ private:
     bool                       m_close_steam_before_sleep;
     QString                    m_steam_exec_override;
     QString                    m_mac_address_override;
+    QRegularExpression         m_env_capture_regex;
 };
 }  // namespace utils

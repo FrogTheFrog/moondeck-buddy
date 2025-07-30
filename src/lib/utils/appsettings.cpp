@@ -51,6 +51,7 @@ AppSettings::AppSettings(const shared::AppMetadata& app_metadata)
     , m_prefer_hibernation{false}
     , m_ssl_protocol{QSsl::SecureProtocols}
     , m_close_steam_before_sleep{true}
+    , m_env_capture_regex{"^(?:SUNSHINE|APOLLO).*"}
 {
     auto settings_path{m_app_metadata.getSettingsPath()};
     if (!parseSettingsFile(settings_path))
@@ -116,6 +117,11 @@ const QString& AppSettings::getMacAddressOverride() const
     return m_mac_address_override;
 }
 
+const QRegularExpression& AppSettings::getEnvCaptureRegex() const
+{
+    return m_env_capture_regex;
+}
+
 // NOLINTNEXTLINE(*-function-cognitive-complexity)
 bool AppSettings::parseSettingsFile(const QString& filepath)
 {
@@ -147,8 +153,9 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
             const auto close_steam_before_sleep_v = obj_v.value(QLatin1String("close_steam_before_sleep"));
             const auto mac_address_override_v     = obj_v.value(QLatin1String("mac_address_override"));
             const auto steam_exec_override_v      = obj_v.value(QLatin1String("steam_exec_override"));
+            const auto env_capture_regex_v        = obj_v.value(QLatin1String("env_capture_regex"));
 
-            constexpr int current_entries{8};
+            constexpr int current_entries{9};
             int           valid_entries{0};
 
             if (port_v.isDouble())
@@ -211,6 +218,12 @@ bool AppSettings::parseSettingsFile(const QString& filepath)
                 valid_entries++;
             }
 
+            if (env_capture_regex_v.isString())
+            {
+                m_env_capture_regex = QRegularExpression{env_capture_regex_v.toString()};
+                valid_entries++;
+            }
+
             return valid_entries == current_entries;
         }
     }
@@ -230,6 +243,7 @@ void AppSettings::saveDefaultFile(const QString& filepath) const
     obj["close_steam_before_sleep"] = m_close_steam_before_sleep;
     obj["mac_address_override"]     = m_mac_address_override;
     obj["steam_exec_override"]      = m_steam_exec_override;
+    obj["env_capture_regex"]        = m_env_capture_regex.pattern();
 
     QFile file{filepath};
     if (!file.exists())

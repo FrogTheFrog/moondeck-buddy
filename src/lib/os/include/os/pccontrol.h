@@ -8,6 +8,7 @@
 #include "os/autostarthandler.h"
 #include "os/pcstatehandler.h"
 #include "os/steamhandler.h"
+#include "utils/shmserialization.h"
 
 // forward declarations
 namespace utils
@@ -68,5 +69,8 @@ private:
     PcStateHandler                               m_pc_state_handler;
     SteamHandler                                 m_steam_handler;
     std::unique_ptr<StreamStateHandlerInterface> m_stream_state_handler;
+
+    utils::ShmDeserializer m_shared_env_reader;
+    QMap<QString, QString> m_cached_env;
 };
 }  // namespace os
