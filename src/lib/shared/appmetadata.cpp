@@ -157,7 +157,7 @@ QString AppMetadata::getAutoStartDir(const AutoStartDelegation version) const
         case AutoStartDelegation::V1:
             return QDir::cleanPath(getConfigDir() + "/autostart");
         case AutoStartDelegation::V2:
-            return QDir::cleanPath(getConfigDir() + "/autostart");
+            return QStringLiteral("UNSUPPORTED");
     }
 
     Q_UNREACHABLE();
@@ -177,7 +177,7 @@ QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
         case AutoStartDelegation::V1:
             return getAppName().toLower() + ".desktop";
         case AutoStartDelegation::V2:
-            return getAppName().toLower() + ".desktop";
+            return getAppName().toLower() + ".service";
     }
 
     Q_UNREACHABLE();
@@ -188,7 +188,22 @@ QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
 
 QString AppMetadata::getAutoStartPath(const AutoStartDelegation version) const
 {
+#if defined(Q_OS_WIN)
+    Q_UNUSED(version);
     return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
+#elif defined(Q_OS_LINUX)
+    switch (version)
+    {
+        case AutoStartDelegation::V1:
+            return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
+        case AutoStartDelegation::V2:
+            return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
+    }
+
+    Q_UNREACHABLE();
+#else
+    #error OS is not supported!
+#endif
 }
 
 // NOLINTNEXTLINE(*-static)
