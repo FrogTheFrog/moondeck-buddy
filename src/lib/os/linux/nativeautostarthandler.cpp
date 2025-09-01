@@ -12,6 +12,20 @@
 
 namespace
 {
+// [Unit]
+// Description=MoonDeck companion
+// After=sunshine.service
+// PartOf=graphical-session.target
+// Requisite=graphical-session.target
+//
+// [Service]
+// ExecStart=%h/Downloads/MoonDeckBuddy.AppImage
+// Restart=on-failure
+// RestartSec=10
+//
+// [Install]
+// WantedBy=graphical-session.target
+//
 // QString getAutoStartContents(const shared::AppMetadata& app_meta)
 // {
 //     QString     contents;
