@@ -9,6 +9,7 @@
 #include <QTimer>
 
 // local includes
+#include "shared/enums.h"
 #include "shared/loggingcategories.h"
 
 namespace
@@ -58,9 +59,21 @@ AppMetadata::AppMetadata(App app)
                            qCDebug(lc::shared) << "getSettingsDir() >> " << getSettingsDir();
                            qCDebug(lc::shared) << "getSettingsName() >> " << getSettingsName();
                            qCDebug(lc::shared) << "getSettingsPath() >> " << getSettingsPath();
-                           qCDebug(lc::shared) << "getAutoStartDir() >> " << getAutoStartDir();
-                           qCDebug(lc::shared) << "getAutoStartPath() >> " << getAutoStartPath();
+
+                           for (const auto& value : enums::qEnumValues<AutoStartDelegation>())
+                           {
+                               qCDebug(lc::shared).nospace() << "getAutoStartDir(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartDir(value);
+                               qCDebug(lc::shared).nospace() << "getAutoStartName(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartName(value);
+                               qCDebug(lc::shared).nospace() << "getAutoStartPath(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartPath(value);
+                           }
+
                            qCDebug(lc::shared) << "getAutoStartExec() >> " << getAutoStartExec();
+                           qCDebug(lc::shared) << "getDefaultSteamExecutable() >> " << getDefaultSteamExecutable();
+                           qCDebug(lc::shared) << "getSharedEnvRegexKey() >> " << getSharedEnvRegexKey();
+                           qCDebug(lc::shared) << "getSharedEnvMapKey() >> " << getSharedEnvMapKey();
                        });
 }
 
@@ -132,32 +145,50 @@ QString AppMetadata::getSettingsPath() const
 }
 
 // NOLINTNEXTLINE(*-static)
-QString AppMetadata::getAutoStartDir() const
+QString AppMetadata::getAutoStartDir(const AutoStartDelegation version) const
 {
 #if defined(Q_OS_WIN)
+    Q_UNUSED(version);
     Q_ASSERT(QCoreApplication::instance() != nullptr);
     return QDir::cleanPath(QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) + "/Startup");
 #elif defined(Q_OS_LINUX)
-    return QDir::cleanPath(getConfigDir() + "/autostart");
+    switch (version)
+    {
+        case AutoStartDelegation::V1:
+            return QDir::cleanPath(getConfigDir() + "/autostart");
+        case AutoStartDelegation::V2:
+            return QDir::cleanPath(getConfigDir() + "/autostart");
+    }
+
+    Q_UNREACHABLE();
 #else
     #error OS is not supported!
 #endif
 }
 
-QString AppMetadata::getAutoStartName() const
+QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
 {
 #if defined(Q_OS_WIN)
+    Q_UNUSED(version);
     return getAppName() + ".lnk";
 #elif defined(Q_OS_LINUX)
-    return getAppName().toLower() + ".desktop";
+    switch (version)
+    {
+        case AutoStartDelegation::V1:
+            return getAppName().toLower() + ".desktop";
+        case AutoStartDelegation::V2:
+            return getAppName().toLower() + ".desktop";
+    }
+
+    Q_UNREACHABLE();
 #else
     #error OS is not supported!
 #endif
 }
 
-QString AppMetadata::getAutoStartPath() const
+QString AppMetadata::getAutoStartPath(const AutoStartDelegation version) const
 {
-    return QDir::cleanPath(getAutoStartDir() + "/" + getAutoStartName());
+    return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
 }
 
 // NOLINTNEXTLINE(*-static)
@@ -165,6 +196,7 @@ QString AppMetadata::getAutoStartExec() const
 {
     Q_ASSERT(QCoreApplication::instance() != nullptr);
 #if defined(Q_OS_WIN)
+    Q_UNUSED(version);
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();

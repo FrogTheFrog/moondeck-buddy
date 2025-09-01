@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 
 // local includes
+#include "shared/enums.h"
 #include "shared/loggingcategories.h"
 
 namespace os
@@ -81,23 +82,21 @@ SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const std::
 
 void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
-    static const auto known_states{
-        []()
-        {
-            static const QRegularExpression   capital_letter_regex{R"(([A-Z]))"};
-            const auto                        enum_size{QMetaEnum::fromType<AppStateChange>().keyCount()};
-            std::map<QString, AppStateChange> states;
-            for (int i = 0; i < enum_size; ++i)
-            {
-                const auto value{static_cast<AppStateChange>(QMetaEnum::fromType<AppStateChange>().value(i))};
-                QString    key{QMetaEnum::fromType<AppStateChange>().key(i)};
-                key = key.replace(capital_letter_regex, R"( \1)").trimmed();
+    static const auto known_states{[]()
+                                   {
+                                       static const QRegularExpression   capital_letter_regex{R"(([A-Z]))"};
+                                       const auto&                       values{enums::qEnumValues<AppStateChange>()};
+                                       std::map<QString, AppStateChange> states;
+                                       for (const auto& value : values)
+                                       {
+                                           QString key{enums::qEnumToString(value)};
+                                           key = key.replace(capital_letter_regex, R"( \1)").trimmed();
 
-                states[key] = value;
-            }
+                                           states[key] = value;
+                                       }
 
-            return states;
-        }()};
+                                       return states;
+                                   }()};
 
     std::map<std::uint64_t, QVector<AppStateChange>> new_change_states;
     for (const QString& line : new_lines)
@@ -142,8 +141,9 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
                 continue;
             }
 
-            qCInfo(lc::os) << "New app state for AppID" << app_id << "detected:" << lc::qEnumToString(AppState::Stopped)
-                           << "->" << lc::qEnumToString(app_state);
+            qCInfo(lc::os) << "New app state for AppID" << app_id
+                           << "detected:" << enums::qEnumToString(AppState::Stopped) << "->"
+                           << enums::qEnumToString(app_state);
             m_app_states[app_id] = app_state;
             continue;
         }
@@ -153,8 +153,8 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             continue;
         }
 
-        qCInfo(lc::os) << "New app state for AppID" << app_id << "detected:" << lc::qEnumToString(it->second) << "->"
-                       << lc::qEnumToString(app_state);
+        qCInfo(lc::os) << "New app state for AppID" << app_id << "detected:" << enums::qEnumToString(it->second) << "->"
+                       << enums::qEnumToString(app_state);
         if (app_state == AppState::Stopped)
         {
             m_app_states.erase(it);

@@ -7,12 +7,23 @@ namespace shared
 {
 class AppMetadata final : public QObject
 {
+    Q_OBJECT
+
 public:
     enum class App
     {
         Buddy,
         Stream
     };
+
+    enum class AutoStartDelegation
+    {
+        V1,
+#if defined(Q_OS_LINUX)
+        V2
+#endif
+    };
+    Q_ENUM(AutoStartDelegation)
 
     explicit AppMetadata(App app);
     ~AppMetadata() override = default;
@@ -28,9 +39,9 @@ public:
     QString getSettingsName() const;
     QString getSettingsPath() const;
 
-    QString getAutoStartDir() const;
-    QString getAutoStartName() const;
-    QString getAutoStartPath() const;
+    QString getAutoStartDir(AutoStartDelegation version) const;
+    QString getAutoStartName(AutoStartDelegation version) const;
+    QString getAutoStartPath(AutoStartDelegation version) const;
     QString getAutoStartExec() const;
 
     QString getDefaultSteamExecutable() const;
