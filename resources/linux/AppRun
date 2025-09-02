@@ -4,7 +4,7 @@ set -e
 HERE="$(readlink -f "$(dirname "$0")")"
 
 # Wayland plugin is not packaged, so defining this to get rid of the warning
-export QT_QPA_PLATFORM=xcb
+# export QT_QPA_PLATFORM=xcb
 
 if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
