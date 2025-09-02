@@ -20,10 +20,10 @@ QString getConfigDir()
     const auto xdg_config_env = qgetenv("XDG_CONFIG_HOME");
     if (!xdg_config_env.isEmpty())
     {
-        const QDir xdg_cnnfig_dir{xdg_config_env};
-        if (xdg_cnnfig_dir.exists())
+        const QDir xdg_config_dir{xdg_config_env};
+        if (xdg_config_dir.exists())
         {
-            return xdg_cnnfig_dir.absolutePath();
+            return xdg_config_dir.absolutePath();
         }
     }
 
@@ -157,7 +157,7 @@ QString AppMetadata::getAutoStartDir(const AutoStartDelegation version) const
         case AutoStartDelegation::V1:
             return QDir::cleanPath(getConfigDir() + "/autostart");
         case AutoStartDelegation::V2:
-            return QStringLiteral("UNSUPPORTED");
+            return QDir::cleanPath(getConfigDir() + "/systemd/user");
     }
 
     Q_UNREACHABLE();
@@ -188,22 +188,7 @@ QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
 
 QString AppMetadata::getAutoStartPath(const AutoStartDelegation version) const
 {
-#if defined(Q_OS_WIN)
-    Q_UNUSED(version);
     return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
-#elif defined(Q_OS_LINUX)
-    switch (version)
-    {
-        case AutoStartDelegation::V1:
-            return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
-        case AutoStartDelegation::V2:
-            return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
-    }
-
-    Q_UNREACHABLE();
-#else
-    #error OS is not supported!
-#endif
 }
 
 // NOLINTNEXTLINE(*-static)
