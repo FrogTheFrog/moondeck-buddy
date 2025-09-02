@@ -6,7 +6,7 @@ HERE="$(readlink -f "$(dirname "$0")")"
 # Wayland plugin is not packaged, so defining this to get rid of the warning
 export QT_QPA_PLATFORM=xcb
 
-echo "LOL"
+echo "1 $*"
 
 if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
@@ -18,10 +18,13 @@ if [ "$1" = "--exec" ]; then
     fi
 elif [ -n "$APPIMAGE" ] ; then
     BINARY_NAME=$(basename "$ARGV0")
+    echo "2 $ARGV0"
+    echo "3 $BINARY_NAME"
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
         # Replace the app image env with the symlink as it will be used
         # to create an autostart script
         SYMLINK_PATH="$(realpath -s "$ARGV0")"
+        echo "4 $SYMLINK_PATH"
         APPIMAGE="$SYMLINK_PATH" exec "$HERE/usr/bin/$BINARY_NAME" "$@"
     else
         exec "$HERE/usr/bin/MoonDeckBuddy" "$@"
