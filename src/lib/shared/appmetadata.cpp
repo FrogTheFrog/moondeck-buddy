@@ -196,7 +196,6 @@ QString AppMetadata::getAutoStartExec() const
 {
     Q_ASSERT(QCoreApplication::instance() != nullptr);
 #if defined(Q_OS_WIN)
-    Q_UNUSED(version);
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();
