@@ -28,7 +28,11 @@ elif [ -n "$APPIMAGE" ] ; then
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
         # Replace the app image env with the symlink as it will be used
         # to create an autostart script
-        SYMLINK_PATH="$(realpath -s "$ARGV0")"
+        if [ -x "$ARGV0" ]; then
+            SYMLINK_PATH="$(realpath -s "$ARGV0")"
+        else
+            SYMLINK_PATH="$(realpath -s "$(command -v "$ARGV0")")"
+        fi
         echo "4 $SYMLINK_PATH"
         APPIMAGE="$SYMLINK_PATH" exec "$HERE/usr/bin/$BINARY_NAME" "$@"
     else
