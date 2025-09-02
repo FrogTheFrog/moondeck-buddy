@@ -52,13 +52,13 @@ AppMetadata::AppMetadata(App app)
     QTimer::singleShot(0, this,
                        [this]()
                        {
-                           qCDebug(lc::shared) << "getAppName() >> " << getAppName();
-                           qCDebug(lc::shared) << "getLogDir() >> " << getLogDir();
-                           qCDebug(lc::shared) << "getLogName() >> " << getLogName();
-                           qCDebug(lc::shared) << "getLogPath() >> " << getLogPath();
-                           qCDebug(lc::shared) << "getSettingsDir() >> " << getSettingsDir();
-                           qCDebug(lc::shared) << "getSettingsName() >> " << getSettingsName();
-                           qCDebug(lc::shared) << "getSettingsPath() >> " << getSettingsPath();
+                           qCDebug(lc::shared) << "getAppName() >>" << getAppName();
+                           qCDebug(lc::shared) << "getLogDir() >>" << getLogDir();
+                           qCDebug(lc::shared) << "getLogName() >>" << getLogName();
+                           qCDebug(lc::shared) << "getLogPath() >>" << getLogPath();
+                           qCDebug(lc::shared) << "getSettingsDir() >>" << getSettingsDir();
+                           qCDebug(lc::shared) << "getSettingsName() >>" << getSettingsName();
+                           qCDebug(lc::shared) << "getSettingsPath() >>" << getSettingsPath();
 
                            for (const auto& value : enums::qEnumValues<AutoStartDelegation>())
                            {
@@ -70,10 +70,10 @@ AppMetadata::AppMetadata(App app)
                                                              << ") >> " << getAutoStartPath(value);
                            }
 
-                           qCDebug(lc::shared) << "getAutoStartExec() >> " << getAutoStartExec();
-                           qCDebug(lc::shared) << "getDefaultSteamExecutable() >> " << getDefaultSteamExecutable();
-                           qCDebug(lc::shared) << "getSharedEnvRegexKey() >> " << getSharedEnvRegexKey();
-                           qCDebug(lc::shared) << "getSharedEnvMapKey() >> " << getSharedEnvMapKey();
+                           qCDebug(lc::shared) << "getAutoStartExec() >>" << getAutoStartExec();
+                           qCDebug(lc::shared) << "getDefaultSteamExecutable() >>" << getDefaultSteamExecutable();
+                           qCDebug(lc::shared) << "getSharedEnvRegexKey() >>" << getSharedEnvRegexKey();
+                           qCDebug(lc::shared) << "getSharedEnvMapKey() >>" << getSharedEnvMapKey();
                        });
 }
 
