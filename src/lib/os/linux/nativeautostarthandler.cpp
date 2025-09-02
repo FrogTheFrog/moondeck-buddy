@@ -13,6 +13,18 @@
 
 namespace
 {
+std::unique_ptr<QDBusInterface> getSystemdManager()
+{
+    auto bus_interface{std::make_unique<QDBusInterface>("org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+                                                        "org.freedesktop.systemd1.Manager",
+                                                        QDBusConnection::sessionBus())};
+    if (!bus_interface || !bus_interface->isValid())
+    {
+        qCWarning(lc::os()) << "Could not create QDBusInterface instance for managing services!";
+    }
+
+    return bus_interface;
+}
 // [Unit]
 // Description=MoonDeck companion
 // After=sunshine.service
@@ -45,6 +57,39 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
 
     return contents;
 }
+
+bool hasSameAutoStartContents(const shared::AppMetadata& app_meta)
+{
+    QFile file{app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::V2)};
+    if (file.exists())
+    {
+        if (file.open(QIODevice::ReadOnly))
+        {
+            return file.readAll() == getAutoStartContents(app_meta);
+        }
+
+        qCWarning(lc::os()) << "Could not open" << file.fileName() << "for reading - " << file.error();
+    }
+
+    return false;
+}
+
+bool isUnitFileEnabled(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+{
+    const QString method{"GetUnitFileState"};
+    const auto    file{app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::V2)};
+
+    const QDBusReply<QString> reply{systemd_manager.call(QDBus::Block, method, file)};
+    if (!reply.isValid())
+    {
+        qCDebug(lc::os()) << "Service unit" << file << "does not exist.";
+        return false;
+    }
+
+    qCDebug(lc::os()) << "Service unit has the following state:" << reply.value();
+    return reply.value() == QStringLiteral("enabled");
+}
+
 }  // namespace
 
 // struct MyStructure
@@ -174,25 +219,12 @@ void NativeAutoStartHandler::setAutoStart(const bool enable)
 
 bool NativeAutoStartHandler::isAutoStartEnabled() const
 {
-    QDBusInterface manager_bus("org.freedesktop.systemd1",          // service name
-                               "/org/freedesktop/systemd1",         // object path
-                               "org.freedesktop.systemd1.Manager",  // interface name
-                               QDBusConnection::sessionBus());
-    if (!manager_bus.isValid())
+    const auto systemd_manager{getSystemdManager()};
+    if (!systemd_manager)
     {
-        qFatal("Could not create QDBusInterface instance for managing services!");
         return false;
     }
 
-    const auto                unit_name{m_app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::V2)};
-    const QDBusReply<QString> reply{manager_bus.call("GetUnitFileState", unit_name)};
-    if (!reply.isValid())
-    {
-        qCInfo(lc::os()) << "Service unit" << unit_name << "does not exist.";
-        return false;
-    }
-
-    qCInfo(lc::os()) << "Service unit has the following state:" << reply.value();
-    return reply.value() == QStringLiteral("enabled");
+    return isUnitFileEnabled(*systemd_manager, m_app_meta) && hasSameAutoStartContents(m_app_meta);
 }
 }  // namespace os
