@@ -33,6 +33,8 @@ QString getConfigDir()
 QString getAppFilePath()
 {
     const auto app_image_env = qgetenv("APPIMAGE");
+    qCDebug(lc::shared) << "WUT >>" << app_image_env << "hmm" << QCoreApplication::applicationFilePath();
+
     if (!app_image_env.isEmpty())
     {
         return QString{app_image_env};
