@@ -25,20 +25,7 @@ std::unique_ptr<QDBusInterface> getSystemdManager()
 
     return bus_interface;
 }
-// [Unit]
-// Description=MoonDeck companion
-// After=sunshine.service
-// PartOf=graphical-session.target
-// Requisite=graphical-session.target
-//
-// [Service]
-// ExecStart=%h/Downloads/MoonDeckBuddy.AppImage
-// Restart=on-failure
-// RestartSec=10
-//
-// [Install]
-// WantedBy=graphical-session.target
-//
+
 QString getAutoStartContents(const shared::AppMetadata& app_meta)
 {
     QString     contents;
@@ -47,9 +34,10 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
     stream << "[Unit]" << Qt::endl;
     stream << "Description=MoonDeck host companion" << Qt::endl;
     stream << "After=graphical-session.target" << Qt::endl;
-    stream << "After=display-manager.service" << Qt::endl;
+    stream << "Wants=graphical-session.target" << Qt::endl;
     stream << Qt::endl;
     stream << "[Service]" << Qt::endl;
+    stream << "Type=exec" << Qt::endl;
     stream << "ExecStart=" << app_meta.getAutoStartExec() << Qt::endl;
     stream << "Restart=on-failure" << Qt::endl;
     stream << "RestartSec=10" << Qt::endl;
