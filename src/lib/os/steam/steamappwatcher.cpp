@@ -83,7 +83,8 @@ void SteamAppWatcher::slotCheckState()
         }
 
         qCInfo(lc::os) << "[TRACKING] New app state for AppID" << m_app_id
-                       << "detected:" << enums::qEnumToString(m_current_state) << "->" << enums::qEnumToString(new_state);
+                       << "detected:" << enums::qEnumToString(m_current_state) << "->"
+                       << enums::qEnumToString(new_state);
         m_current_state = new_state;
         m_delay_counter = 0;
     }
