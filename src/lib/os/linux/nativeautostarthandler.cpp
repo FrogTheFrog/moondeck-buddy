@@ -46,6 +46,8 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
 
     stream << "[Unit]" << Qt::endl;
     stream << "Description=MoonDeck host companion" << Qt::endl;
+    stream << "After=graphical-session.target" << Qt::endl;
+    stream << "After=display-manager.service" << Qt::endl;
     stream << Qt::endl;
     stream << "[Service]" << Qt::endl;
     stream << "ExecStart=" << app_meta.getAutoStartExec() << Qt::endl;
@@ -53,7 +55,7 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta)
     stream << "RestartSec=10" << Qt::endl;
     stream << Qt::endl;
     stream << "[Install]" << Qt::endl;
-    stream << "WantedBy=graphical-session.target" << Qt::endl;
+    stream << "WantedBy=default.target" << Qt::endl;
 
     return contents;
 }
