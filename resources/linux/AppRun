@@ -2,11 +2,16 @@
 set -e
 
 HERE="$(readlink -f "$(dirname "$0")")"
+HERE2="$(readlink -f "$(dirname "$ARGV0")")"
 
 # Wayland plugin is not packaged, so defining this to get rid of the warning
 export QT_QPA_PLATFORM=xcb
 
-echo "1 $*"
+echo "1-1 $*"
+echo "1-2 $@"
+echo "1-3 $0"
+echo "1-4 $HERE"
+echo "1-5 $HERE2"
 
 if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
