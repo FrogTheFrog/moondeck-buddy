@@ -16,7 +16,7 @@ class PairingManager : public QObject
     Q_OBJECT
 
 public:
-    explicit PairingManager(ClientIds& client_ids);
+    explicit PairingManager(ClientIds& client_ids, bool pairing_enabled);
     ~PairingManager() override = default;
 
     bool isPaired(const QString& client_id) const;
@@ -42,6 +42,7 @@ private:
     };
 
     ClientIds&                 m_client_ids;
+    bool                       m_pairing_enabled;
     std::optional<PairingData> m_pairing_data;
 };
 }  // namespace server

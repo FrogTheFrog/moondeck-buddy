@@ -133,7 +133,17 @@ int main(int argc, char* argv[])
     const shared::AppMetadata  app_meta{shared::AppMetadata::App::Buddy};
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
 
-    QApplication app{argc, argv};
+    auto app{[&]() -> std::unique_ptr<QCoreApplication>
+             {
+                 if (app_meta.isGuiEnabled())
+                 {
+                     auto gui_app = std::make_unique<QApplication>(argc, argv);
+                     gui_app->setQuitOnLastWindowClosed(false);
+                     return gui_app;
+                 }
+
+                 return std::make_unique<QCoreApplication>(argc, argv);
+             }()};
     QCoreApplication::setApplicationName(app_meta.getAppName());
     QCoreApplication::setApplicationVersion(EXEC_VERSION);
 
@@ -154,7 +164,7 @@ int main(int argc, char* argv[])
     qCInfo(lc::buddyMain) << "startup. Version:" << EXEC_VERSION;
 
     utils::Heartbeat heartbeat{app_meta.getAppName()};
-    QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
+    QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, app.get(), &QCoreApplication::quit);
     heartbeat.startBeating();
 
     const utils::AppSettings app_settings{app_meta};
@@ -169,30 +179,42 @@ int main(int argc, char* argv[])
 
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
     server::HttpServer     new_server{api_version, client_ids};
-    server::PairingManager pairing_manager{client_ids};
+    server::PairingManager pairing_manager{client_ids, app_meta.isGuiEnabled()};
 
     os::PcControl    pc_control{app_settings};
     os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
-    const QIcon               icon{QIcon::fromTheme("moondeckbuddy", QIcon{":/icons/moondeckbuddy.ico"})};
-    const os::SystemTray      tray{icon, app_meta.getAppName(), pc_control};
-    const utils::PairingInput pairing_input;
+    std::unique_ptr<QIcon>               icon;
+    std::unique_ptr<os::SystemTray>      tray;
+    std::unique_ptr<utils::PairingInput> pairing_input;
 
-    // Tray + app
-    QObject::connect(&tray, &os::SystemTray::signalQuitApp, &app, &QApplication::quit);
+    if (app_meta.isGuiEnabled())
+    {
+        icon          = std::make_unique<QIcon>(QIcon::fromTheme("moondeckbuddy", QIcon{":/icons/moondeckbuddy.ico"}));
+        tray          = std::make_unique<os::SystemTray>(*icon, app_meta.getAppName(), pc_control);
+        pairing_input = std::make_unique<utils::PairingInput>();
 
-    // Tray + pc control
-    QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, &tray, &os::SystemTray::slotShowTrayMessage);
+        // Tray + app
+        QObject::connect(tray.get(), &os::SystemTray::signalQuitApp, app.get(), &QApplication::quit);
 
-    // Pairing manager + pairing input
-    QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing, &pairing_input,
-                     &utils::PairingInput::slotRequestUserInputForPairing);
-    QObject::connect(&pairing_manager, &server::PairingManager::signalAbortPairing, &pairing_input,
-                     &utils::PairingInput::slotAbortPairing);
-    QObject::connect(&pairing_input, &utils::PairingInput::signalFinishPairing, &pairing_manager,
-                     &server::PairingManager::slotFinishPairing);
-    QObject::connect(&pairing_input, &utils::PairingInput::signalPairingRejected, &pairing_manager,
-                     &server::PairingManager::slotPairingRejected);
+        // Tray + pc control
+        QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, tray.get(),
+                         &os::SystemTray::slotShowTrayMessage);
+
+        // Pairing manager + pairing input
+        QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing,
+                         pairing_input.get(), &utils::PairingInput::slotRequestUserInputForPairing);
+        QObject::connect(&pairing_manager, &server::PairingManager::signalAbortPairing, pairing_input.get(),
+                         &utils::PairingInput::slotAbortPairing);
+        QObject::connect(pairing_input.get(), &utils::PairingInput::signalFinishPairing, &pairing_manager,
+                         &server::PairingManager::slotFinishPairing);
+        QObject::connect(pairing_input.get(), &utils::PairingInput::signalPairingRejected, &pairing_manager,
+                         &server::PairingManager::slotPairingRejected);
+    }
+    else
+    {
+        qCInfo(lc::buddyMain) << "NO_GUI mode enabled.";
+    }
 
     // HERE WE GO!!! (a.k.a. starting point)
     setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getMacAddressOverride());
@@ -204,8 +226,7 @@ int main(int argc, char* argv[])
         qFatal("Failed to start server!");
     }
 
-    QGuiApplication::setQuitOnLastWindowClosed(false);
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
+    QObject::connect(app.get(), &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
     qCInfo(lc::buddyMain) << "startup finished.";
     return QCoreApplication::exec();
 }

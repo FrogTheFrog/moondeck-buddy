@@ -41,6 +41,32 @@ QString getAppFilePath()
     return QCoreApplication::applicationFilePath();
 }
 #endif
+
+bool isNoGuiEnvSet()
+{
+    const auto no_gui_env = qgetenv("NO_GUI");
+    if (!no_gui_env.isEmpty())
+    {
+        const QString env_str{no_gui_env.toLower().trimmed()};
+        return env_str == "1" || env_str == "true";
+    }
+
+    return false;
+}
+
+bool isDisplayAvailable()
+{
+#if defined(Q_OS_WIN)
+    return true;
+#elif defined(Q_OS_LINUX)
+    const auto qt_platform_env     = qgetenv("QT_QPA_PLATFORM");
+    const auto display_env         = qgetenv("DISPLAY");
+    const auto wayland_display_env = qgetenv("WAYLAND_DISPLAY");
+    return qt_platform_env.toLower().contains("wayland") ? !wayland_display_env.isEmpty() : !display_env.isEmpty();
+#else
+    #error OS is not supported!
+#endif
+}
 }  // namespace
 
 namespace shared
@@ -74,6 +100,7 @@ AppMetadata::AppMetadata(App app)
                            qCDebug(lc::shared) << "getDefaultSteamExecutable() >>" << getDefaultSteamExecutable();
                            qCDebug(lc::shared) << "getSharedEnvRegexKey() >>" << getSharedEnvRegexKey();
                            qCDebug(lc::shared) << "getSharedEnvMapKey() >>" << getSharedEnvMapKey();
+                           qCDebug(lc::shared) << "isGuiEnabled() >>" << isGuiEnabled();
                        });
 }
 
@@ -224,5 +251,10 @@ QString AppMetadata::getSharedEnvRegexKey() const
 QString AppMetadata::getSharedEnvMapKey() const
 {
     return QStringLiteral("MoonDeck_EnvMap_Key");
+}
+
+bool AppMetadata::isGuiEnabled() const
+{
+    return !isNoGuiEnvSet() && isDisplayAvailable();
 }
 }  // namespace shared

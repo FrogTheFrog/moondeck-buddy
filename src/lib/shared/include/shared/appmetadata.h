@@ -49,6 +49,8 @@ public:
     QString getSharedEnvRegexKey() const;
     QString getSharedEnvMapKey() const;
 
+    bool isGuiEnabled() const;
+
 private:
     App m_current_app;
 };
