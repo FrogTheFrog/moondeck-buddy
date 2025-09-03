@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
         pairing_input = std::make_unique<utils::PairingInput>();
 
         // Tray + app
-        QObject::connect(tray.get(), &os::SystemTray::signalQuitApp, app.get(), &QApplication::quit);
+        QObject::connect(tray.get(), &os::SystemTray::signalQuitApp, app.get(), &QCoreApplication::quit);
 
         // Tray + pc control
         QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, tray.get(),
