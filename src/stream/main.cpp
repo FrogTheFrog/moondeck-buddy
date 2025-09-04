@@ -41,13 +41,13 @@ int main(int argc, char* argv[])
 
     if (!guard.tryToRun())
     {
-        qCWarning(lc::streamMain) << "another instance of" << app_meta.getAppName() << "is already running!";
+        qCWarning(lc::streamMain) << "Another instance of" << app_meta.getAppName() << "is already running!";
         return EXIT_FAILURE;
     }
 
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     utils::installSignalHandler();
-    qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
+    qCInfo(lc::streamMain) << "Startup. Version:" << EXEC_VERSION;
 
     // Capture and store environment variables for Buddy to use when launching games
     utils::ShmSerializer env_map_serializer{app_meta.getSharedEnvMapKey()};
@@ -72,8 +72,7 @@ int main(int argc, char* argv[])
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, &app, &QCoreApplication::quit);
     heartbeat.startBeating();
 
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "shutdown."; });
-    qCInfo(lc::streamMain) << "startup finished.";
-
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() { qCInfo(lc::streamMain) << "Shutdown."; });
+    qCInfo(lc::streamMain) << "Startup finished.";
     return QCoreApplication::exec();
 }

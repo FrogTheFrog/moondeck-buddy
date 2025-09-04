@@ -155,13 +155,13 @@ int main(int argc, char* argv[])
 
     if (!guard.tryToRun())
     {
-        qCWarning(lc::buddyMain) << "another instance of" << app_meta.getAppName() << "is already running!";
+        qCWarning(lc::buddyMain) << "Another instance of" << app_meta.getAppName() << "is already running!";
         return EXIT_FAILURE;
     }
 
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     utils::installSignalHandler();
-    qCInfo(lc::buddyMain) << "startup. Version:" << EXEC_VERSION;
+    qCInfo(lc::buddyMain) << "Startup. Version:" << EXEC_VERSION;
 
     utils::Heartbeat heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, app.get(), &QCoreApplication::quit);
@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
         qFatal("Failed to start server!");
     }
 
-    QObject::connect(app.get(), &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "shutdown."; });
-    qCInfo(lc::buddyMain) << "startup finished.";
+    QObject::connect(app.get(), &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "Shutdown."; });
+    qCInfo(lc::buddyMain) << "Startup finished.";
     return QCoreApplication::exec();
 }

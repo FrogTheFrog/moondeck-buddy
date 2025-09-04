@@ -160,18 +160,19 @@ QString AppMetadata::getSettingsPath() const
 }
 
 // NOLINTNEXTLINE(*-static)
-QString AppMetadata::getAutoStartDir(const AutoStartDelegation version) const
+QString AppMetadata::getAutoStartDir(const AutoStartDelegation type) const
 {
 #if defined(Q_OS_WIN)
-    Q_UNUSED(version);
+    Q_UNUSED(type);
     Q_ASSERT(QCoreApplication::instance() != nullptr);
     return QDir::cleanPath(QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) + "/Startup");
 #elif defined(Q_OS_LINUX)
-    switch (version)
+    switch (type)
     {
-        case AutoStartDelegation::V1:
+        case AutoStartDelegation::Desktop:
             return QDir::cleanPath(getConfigDir() + "/autostart");
-        case AutoStartDelegation::V2:
+        case AutoStartDelegation::ServiceMain:
+        case AutoStartDelegation::ServiceHelper:
             return QDir::cleanPath(getConfigDir() + "/systemd/user");
     }
 
@@ -181,18 +182,20 @@ QString AppMetadata::getAutoStartDir(const AutoStartDelegation version) const
 #endif
 }
 
-QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
+QString AppMetadata::getAutoStartName(const AutoStartDelegation type) const
 {
 #if defined(Q_OS_WIN)
-    Q_UNUSED(version);
+    Q_UNUSED(type);
     return getAppName() + ".lnk";
 #elif defined(Q_OS_LINUX)
-    switch (version)
+    switch (type)
     {
-        case AutoStartDelegation::V1:
+        case AutoStartDelegation::Desktop:
             return getAppName().toLower() + ".desktop";
-        case AutoStartDelegation::V2:
+        case AutoStartDelegation::ServiceMain:
             return getAppName().toLower() + ".service";
+        case AutoStartDelegation::ServiceHelper:
+            return getAppName().toLower() + "-session-restart.service";
     }
 
     Q_UNREACHABLE();
@@ -201,9 +204,9 @@ QString AppMetadata::getAutoStartName(const AutoStartDelegation version) const
 #endif
 }
 
-QString AppMetadata::getAutoStartPath(const AutoStartDelegation version) const
+QString AppMetadata::getAutoStartPath(const AutoStartDelegation type) const
 {
-    return QDir::cleanPath(getAutoStartDir(version) + "/" + getAutoStartName(version));
+    return QDir::cleanPath(getAutoStartDir(type) + "/" + getAutoStartName(type));
 }
 
 // NOLINTNEXTLINE(*-static)

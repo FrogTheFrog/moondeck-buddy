@@ -18,9 +18,10 @@ public:
 
     enum class AutoStartDelegation
     {
-        V1,
+        Desktop,
 #if defined(Q_OS_LINUX)
-        V2
+        ServiceMain,
+        ServiceHelper,
 #endif
     };
     Q_ENUM(AutoStartDelegation)
@@ -39,9 +40,9 @@ public:
     QString getSettingsName() const;
     QString getSettingsPath() const;
 
-    QString getAutoStartDir(AutoStartDelegation version) const;
-    QString getAutoStartName(AutoStartDelegation version) const;
-    QString getAutoStartPath(AutoStartDelegation version) const;
+    QString getAutoStartDir(AutoStartDelegation type) const;
+    QString getAutoStartName(AutoStartDelegation type) const;
+    QString getAutoStartPath(AutoStartDelegation type) const;
     QString getAutoStartExec() const;
 
     QString getDefaultSteamExecutable() const;

@@ -26,45 +26,75 @@ std::unique_ptr<QDBusInterface> getSystemdManager()
     return bus_interface;
 }
 
-QString getAutoStartContents(const shared::AppMetadata& app_meta)
+QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::AppMetadata::AutoStartDelegation type)
 {
     QString     contents;
     QTextStream stream(&contents);
 
-    stream << "[Unit]" << Qt::endl;
-    stream << "Description=MoonDeck host companion" << Qt::endl;
-    stream << "After=graphical-session.target" << Qt::endl;
-    stream << "Wants=graphical-session.target" << Qt::endl;
-    stream << Qt::endl;
-    stream << "[Service]" << Qt::endl;
-    stream << "Type=exec" << Qt::endl;
-    stream << "ExecStart=" << app_meta.getAutoStartExec() << Qt::endl;
-    stream << "Restart=on-failure" << Qt::endl;
-    stream << "RestartSec=10" << Qt::endl;
-    stream << Qt::endl;
-    stream << "[Install]" << Qt::endl;
-    stream << "WantedBy=default.target" << Qt::endl;
+    switch (type)
+    {
+        case shared::AppMetadata::AutoStartDelegation::Desktop:
+            break;
+        case shared::AppMetadata::AutoStartDelegation::ServiceMain:
+        {
+            stream << "[Unit]" << Qt::endl;
+            stream << "Description=MoonDeck host companion" << Qt::endl;
+            stream << "After=default.target" << Qt::endl;
+            stream << Qt::endl;
+            stream << "[Service]" << Qt::endl;
+            stream << "Type=exec" << Qt::endl;
+            stream << "ExecStart=NO_GUI=auto " << app_meta.getAutoStartExec() << Qt::endl;
+            stream << "Restart=on-failure" << Qt::endl;
+            stream << "RestartSec=10" << Qt::endl;
+            stream << Qt::endl;
+            stream << "[Install]" << Qt::endl;
+            stream << "WantedBy=default.target" << Qt::endl;
+            stream << "Also=" << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceHelper)
+                   << Qt::endl;
+            break;
+        }
+        case shared::AppMetadata::AutoStartDelegation::ServiceHelper:
+        {
+            stream << "[Unit]" << Qt::endl;
+            stream << "Description=Restarts moondeckbuddy.service when leaving/entering DE environment" << Qt::endl;
+            stream << "After=xdg-desktop-autostart.target" << Qt::endl;
+            stream << "PartOf=xdg-desktop-autostart.target" << Qt::endl;
+            stream << Qt::endl;
+            stream << "[Service]" << Qt::endl;
+            stream << "Type=exec" << Qt::endl;
+            stream
+                << R"(ExecStart=/bin/sh -c 'sleep infinity & PID=$!; trap "kill $PID" INT TERM; systemctl --user try-restart )"
+                << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceMain)
+                << R"(; wait; systemctl --user try-restart )"
+                << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceMain) << ";'" << Qt::endl;
+            stream << "Restart=no" << Qt::endl;
+            stream << Qt::endl;
+            stream << "[Install]" << Qt::endl;
+            stream << "WantedBy=xdg-desktop-autostart.target" << Qt::endl;
+            break;
+        }
+    }
 
     return contents;
 }
 
-bool writeAutoStartContents(const shared::AppMetadata& app_meta)
+bool writeAutoStartContents(const shared::AppMetadata& app_meta, const shared::AppMetadata::AutoStartDelegation type)
 {
-    const auto dir{app_meta.getAutoStartDir(shared::AppMetadata::AutoStartDelegation::V2)};
+    const auto dir{app_meta.getAutoStartDir(type)};
     if (const QDir autostart_dir; !autostart_dir.mkpath(dir))
     {
         qCWarning(lc::os()) << "Failed at mkpath for" << dir;
         return false;
     }
 
-    QFile file{app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::V2)};
+    QFile file{app_meta.getAutoStartPath(type)};
     if (!file.open(QIODevice::WriteOnly))
     {
         qCWarning(lc::os()) << "Failed to open" << file.fileName();
         return false;
     }
 
-    const auto data{getAutoStartContents(app_meta).toUtf8()};
+    const auto data{getAutoStartContents(app_meta, type).toUtf8()};
     if (file.write(data) != data.size())
     {
         qCWarning(lc::os()) << "Failed to write full contents to" << file.fileName();
@@ -74,10 +104,9 @@ bool writeAutoStartContents(const shared::AppMetadata& app_meta)
     return true;
 }
 
-bool removeAutoStartContents(const shared::AppMetadata&                     app_meta,
-                             const shared::AppMetadata::AutoStartDelegation version)
+bool removeAutoStartContents(const shared::AppMetadata& app_meta, const shared::AppMetadata::AutoStartDelegation type)
 {
-    QFile file{app_meta.getAutoStartPath(version)};
+    QFile file{app_meta.getAutoStartPath(type)};
     if (file.exists())
     {
         if (!file.remove())
@@ -90,14 +119,14 @@ bool removeAutoStartContents(const shared::AppMetadata&                     app_
     return true;
 }
 
-bool hasSameAutoStartContents(const shared::AppMetadata& app_meta)
+bool hasSameAutoStartContents(const shared::AppMetadata& app_meta, const shared::AppMetadata::AutoStartDelegation type)
 {
-    QFile file{app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::V2)};
+    QFile file{app_meta.getAutoStartPath(type)};
     if (file.exists())
     {
         if (file.open(QIODevice::ReadOnly))
         {
-            return file.readAll() == getAutoStartContents(app_meta);
+            return file.readAll() == getAutoStartContents(app_meta, type);
         }
 
         qCWarning(lc::os()) << "Could not open" << file.fileName() << "for reading - " << file.error();
@@ -106,10 +135,11 @@ bool hasSameAutoStartContents(const shared::AppMetadata& app_meta)
     return false;
 }
 
-bool isUnitFileEnabled(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+bool isUnitFileEnabled(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                       const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString method{"GetUnitFileState"};
-    const auto    file{app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::V2)};
+    const auto    file{app_meta.getAutoStartName(type)};
 
     const QDBusReply<QString> reply{systemd_manager.call(QDBus::Block, method, file)};
     if (!reply.isValid())
@@ -118,17 +148,18 @@ bool isUnitFileEnabled(QDBusInterface& systemd_manager, const shared::AppMetadat
         return false;
     }
 
-    qCDebug(lc::os()) << "Service unit has the following state:" << reply.value();
+    qCDebug(lc::os()) << "Service unit" << file << "has the following state:" << reply.value();
     return reply.value() == QStringLiteral("enabled");
 }
 
-QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                        const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString object_path{
-        [&systemd_manager, &app_meta]()
+        [&systemd_manager, &app_meta, type]()
         {
             const QString method{"GetUnit"};
-            const auto    name{app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::V2)};
+            const auto    name{app_meta.getAutoStartName(type)};
 
             const QDBusReply<QDBusObjectPath> reply{systemd_manager.call(QDBus::Block, method, name)};
             if (!reply.isValid())
@@ -166,16 +197,17 @@ QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetada
     return reply.value().variant().toString();
 }
 
-bool hasSameUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+bool hasSameUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                         const shared::AppMetadata::AutoStartDelegation type)
 {
-    return getUnitFilePath(systemd_manager, app_meta)
-           == app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::V2);
+    return getUnitFilePath(systemd_manager, app_meta, type) == app_meta.getAutoStartPath(type);
 }
 
-bool enableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+bool enableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                    const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString  method{"EnableUnitFiles"};
-    const QVector  files{app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::V2)};
+    const QVector  files{app_meta.getAutoStartPath(type)};
     constexpr bool runtime{false};
     constexpr bool force{true};
 
@@ -189,10 +221,11 @@ bool enableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& 
     return true;
 }
 
-bool disableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta)
+bool disableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                     const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString  method{"DisableUnitFiles"};
-    const QVector  files{app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::V2)};
+    const QVector  files{app_meta.getAutoStartName(type)};
     constexpr bool runtime{false};
 
     const QDBusReply<void> reply{systemd_manager.call(QDBus::Block, method, files, runtime)};
@@ -227,8 +260,10 @@ NativeAutoStartHandler::NativeAutoStartHandler(const shared::AppMetadata& app_me
 
 void NativeAutoStartHandler::setAutoStart(const bool enable)
 {
+    using enum shared::AppMetadata::AutoStartDelegation;
+
     // Cleanup old startup file
-    if (!removeAutoStartContents(m_app_meta, shared::AppMetadata::AutoStartDelegation::V1))
+    if (!removeAutoStartContents(m_app_meta, Desktop))
     {
         return;
     }
@@ -249,44 +284,63 @@ void NativeAutoStartHandler::setAutoStart(const bool enable)
             }
         })};
 
-    // Any related unit will do, we want to disable it anyway...
-    if (isUnitFileEnabled(*systemd_manager, m_app_meta))
+    // Any related units will do, we want to disable them anyway...
+    for (const auto type : {ServiceMain, ServiceHelper})
     {
-        if (!disableUnitFile(*systemd_manager, m_app_meta))
+        if (isUnitFileEnabled(*systemd_manager, m_app_meta, type))
         {
-            return;
-        }
-
-        reload_daemon = true;
-    }
-
-    if (enable)
-    {
-        if (!hasSameAutoStartContents(m_app_meta))
-        {
-            if (!writeAutoStartContents(m_app_meta))
+            if (!disableUnitFile(*systemd_manager, m_app_meta, type))
             {
                 return;
             }
-        }
 
-        reload_daemon = enableUnitFile(*systemd_manager, m_app_meta) || reload_daemon;
+            reload_daemon = true;
+        }
     }
-    else
+
+    for (const auto type : {ServiceMain, ServiceHelper})
     {
-        removeAutoStartContents(m_app_meta, shared::AppMetadata::AutoStartDelegation::V2);
+        if (enable)
+        {
+            if (!hasSameAutoStartContents(m_app_meta, type))
+            {
+                if (!writeAutoStartContents(m_app_meta, type))
+                {
+                    return;
+                }
+            }
+
+            if (!enableUnitFile(*systemd_manager, m_app_meta, type))
+            {
+                return;
+            }
+
+            reload_daemon = true;
+        }
+        else
+        {
+            removeAutoStartContents(m_app_meta, type);
+        }
     }
 }
 
 bool NativeAutoStartHandler::isAutoStartEnabled() const
 {
+    using enum shared::AppMetadata::AutoStartDelegation;
+
     const auto systemd_manager{getSystemdManager()};
     if (!systemd_manager)
     {
         return false;
     }
 
-    return isUnitFileEnabled(*systemd_manager, m_app_meta) && hasSameUnitFilePath(*systemd_manager, m_app_meta)
-           && hasSameAutoStartContents(m_app_meta);
+    static const std::vector types{ServiceMain, ServiceHelper};
+    return std::ranges::all_of(types,
+                               [&](const auto type)
+                               {
+                                   return isUnitFileEnabled(*systemd_manager, m_app_meta, type)
+                                          && hasSameUnitFilePath(*systemd_manager, m_app_meta, type)
+                                          && hasSameAutoStartContents(m_app_meta, type);
+                               });
 }
 }  // namespace os
