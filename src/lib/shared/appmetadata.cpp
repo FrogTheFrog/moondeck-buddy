@@ -42,18 +42,6 @@ QString getAppFilePath()
 }
 #endif
 
-bool isNoGuiEnvSet()
-{
-    const auto no_gui_env = qgetenv("NO_GUI");
-    if (!no_gui_env.isEmpty())
-    {
-        const QString env_str{no_gui_env.toLower().trimmed()};
-        return env_str == "1" || env_str == "true";
-    }
-
-    return false;
-}
-
 bool isDisplayAvailable()
 {
 #if defined(Q_OS_WIN)
@@ -255,6 +243,18 @@ QString AppMetadata::getSharedEnvMapKey() const
 
 bool AppMetadata::isGuiEnabled() const
 {
-    return !isNoGuiEnvSet() && isDisplayAvailable();
+    const auto no_gui_env = qgetenv("NO_GUI");
+    if (!no_gui_env.isEmpty())
+    {
+        const QString env_str{no_gui_env.toLower().trimmed()};
+        if (env_str == "auto")
+        {
+            return isDisplayAvailable();
+        }
+
+        return env_str != "1" && env_str != "true";
+    }
+
+    return true;
 }
 }  // namespace shared
