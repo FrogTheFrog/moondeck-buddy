@@ -5,7 +5,7 @@
 #include <csignal>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "utils/logsettings.h"
 
 namespace
 {
@@ -13,24 +13,7 @@ volatile sig_atomic_t SIGNALED_CODE{0};
 
 void log_signal()
 {
-    qCInfo(lc::utils).nospace().noquote() << "interrupted by signal " << SIGNALED_CODE << ([]()
-    {
-        switch (SIGNALED_CODE)
-        {
-            case SIGINT:
-                return " (SIGINT)";
-            case SIGTERM:
-                return " (SIGTERM)";
-#if defined(Q_OS_LINUX)
-            case SIGHUP:
-                return " (SIGHUP)";
-            case SIGQUIT:
-                return " (SIGQUIT)";
-#endif
-            default:
-                return "";
-        }
-    }());
+    utils::LogSettings::getInstance().logSignalBeforeExit(SIGNALED_CODE);
 }
 
 void handler(const int code)

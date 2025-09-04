@@ -12,14 +12,18 @@ class LogSettings final
 public:
     static LogSettings& getInstance();
 
-    void           init(const QString& filepath);
-    const QString& getFilepath() const;
+    void init(const QString& filepath);
+    void writeToStdOut(QStringView view);
+    void writeToStdErr(QStringView view);
+    void writeToFile(QStringView view);
 
+    void logSignalBeforeExit(int code);
     void setLoggingRules(const QString& rules);
 
 private:
     explicit LogSettings() = default;
 
     QString m_filepath;
+    bool    m_file_appended{false};
 };
 }  // namespace utils
