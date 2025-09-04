@@ -43,7 +43,8 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
             stream << Qt::endl;
             stream << "[Service]" << Qt::endl;
             stream << "Type=exec" << Qt::endl;
-            stream << "ExecStart=NO_GUI=auto " << app_meta.getAutoStartExec() << Qt::endl;
+            stream << R"(Environment="NO_GUI=auto")" << Qt::endl;
+            stream << "ExecStart=" << app_meta.getAutoStartExec() << Qt::endl;
             stream << "Restart=on-failure" << Qt::endl;
             stream << "RestartSec=10" << Qt::endl;
             stream << Qt::endl;
