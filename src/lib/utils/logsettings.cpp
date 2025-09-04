@@ -96,6 +96,10 @@ void LogSettings::init(const QString& filepath)
     appendEmptyLine(filepath);
     qInstallMessageHandler(messageHandler);
 
+    const auto uninstall_handler{[]() { qInstallMessageHandler(nullptr); }};
+    std::at_quick_exit(uninstall_handler);
+    std::atexit(uninstall_handler);
+
     qCInfo(lc::utils) << "Log location:" << m_filepath;
 }
 

@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    utils::installSignalHandler();
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
+    utils::installSignalHandler();
     qCInfo(lc::streamMain) << "startup. Version:" << EXEC_VERSION;
 
     // Capture and store environment variables for Buddy to use when launching games
