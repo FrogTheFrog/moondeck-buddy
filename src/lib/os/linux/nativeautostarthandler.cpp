@@ -43,8 +43,8 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
             stream << Qt::endl;
             stream << "[Service]" << Qt::endl;
             stream << "Type=exec" << Qt::endl;
-            stream << R"(Environment="NO_GUI=auto")" << Qt::endl;
-            stream << "ExecStart=" << app_meta.getAutoStartExec() << Qt::endl;
+            stream << R"(ExecStart=/bin/sh -c 'NO_GUI="${MOONDECKBUDDY_NO_GUI:-true}" )" << app_meta.getAutoStartExec()
+                   << "'" << Qt::endl;
             stream << "Restart=on-failure" << Qt::endl;
             stream << "RestartSec=10" << Qt::endl;
             stream << Qt::endl;
@@ -64,9 +64,9 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
             stream << "[Service]" << Qt::endl;
             stream << "Type=exec" << Qt::endl;
             stream
-                << R"(ExecStart=/bin/sh -c 'sleep infinity & PID=$!; trap "kill $PID" INT TERM; systemctl --user try-restart )"
+                << R"(ExecStart=/bin/sh -c 'sleep infinity & PID=$!; trap "kill $PID" INT TERM; systemctl --user set-environment MOONDECKBUDDY_NO_GUI=false; systemctl --user try-restart )"
                 << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceMain)
-                << R"(; wait; systemctl --user try-restart )"
+                << R"(; wait; systemctl --user unset-environment MOONDECKBUDDY_NO_GUI; systemctl --user try-restart )"
                 << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceMain) << ";'" << Qt::endl;
             stream << "Restart=no" << Qt::endl;
             stream << Qt::endl;
