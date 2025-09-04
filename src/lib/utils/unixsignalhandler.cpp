@@ -19,7 +19,7 @@ void log_signal()
 void handler(const int code)
 {
     SIGNALED_CODE = code;
-    std::quick_exit(0);
+    std::quick_exit(code);
 }
 }  // namespace
 
