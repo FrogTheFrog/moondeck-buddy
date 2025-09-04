@@ -21,10 +21,12 @@ void log_signal()
                 return " (SIGINT)";
             case SIGTERM:
                 return " (SIGTERM)";
+#if defined(Q_OS_LINUX)
             case SIGHUP:
                 return " (SIGHUP)";
             case SIGQUIT:
                 return " (SIGQUIT)";
+#endif
             default:
                 return "";
         }
