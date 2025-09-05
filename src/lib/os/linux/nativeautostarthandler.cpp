@@ -158,7 +158,7 @@ QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetada
     const QString object_path{
         [&systemd_manager, &app_meta, type]()
         {
-            const QString method{"GetUnit"};
+            const QString method{"LoadUnit"};
             const auto    name{app_meta.getAutoStartName(type)};
 
             const QDBusReply<QDBusObjectPath> reply{systemd_manager.call(QDBus::Block, method, name)};
@@ -168,6 +168,7 @@ QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetada
                 return QString{};
             }
 
+            qCDebug(lc::os()) << "Mapped" << name << "to unit" << reply.value().path();
             return reply.value().path();
         }()};
     if (object_path.isEmpty())
@@ -194,6 +195,7 @@ QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetada
         return {};
     }
 
+    qCDebug(lc::os()) << "Mapped" << object_path << "to unit file" << reply.value().variant().toString();
     return reply.value().variant().toString();
 }
 
