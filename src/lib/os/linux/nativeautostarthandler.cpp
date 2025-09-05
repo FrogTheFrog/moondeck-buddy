@@ -50,8 +50,6 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
             stream << Qt::endl;
             stream << "[Install]" << Qt::endl;
             stream << "WantedBy=default.target" << Qt::endl;
-            stream << "Also=" << app_meta.getAutoStartName(shared::AppMetadata::AutoStartDelegation::ServiceHelper)
-                   << Qt::endl;
             break;
         }
         case shared::AppMetadata::AutoStartDelegation::ServiceHelper:

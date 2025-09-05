@@ -195,7 +195,7 @@ QString AppMetadata::getAutoStartName(const AutoStartDelegation type) const
         case AutoStartDelegation::ServiceMain:
             return getAppName().toLower() + ".service";
         case AutoStartDelegation::ServiceHelper:
-            return getAppName().toLower() + "-session-restart.service";
+            return getAppName().toLower() + "-gui-session.service";
     }
 
     Q_UNREACHABLE();
