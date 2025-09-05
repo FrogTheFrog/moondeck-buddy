@@ -47,6 +47,7 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
                    << "'" << Qt::endl;
             stream << "Restart=on-failure" << Qt::endl;
             stream << "RestartSec=10" << Qt::endl;
+            stream << "SuccessExitStatus=SIGTERM SIGINT SIGHUP SIGQUIT" << Qt::endl;
             stream << Qt::endl;
             stream << "[Install]" << Qt::endl;
             stream << "WantedBy=default.target" << Qt::endl;
