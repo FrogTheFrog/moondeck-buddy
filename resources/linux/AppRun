@@ -8,25 +8,29 @@ export QT_QPA_PLATFORM=xcb
 
 if [ "$1" = "--exec" ]; then
     BINARY_NAME="$2"
-    ARGS="${@:3}"
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
-        exec "$HERE/usr/bin/$BINARY_NAME" $ARGS
+        exec "$HERE/usr/bin/$BINARY_NAME" "${@:3}"
     else
         echo "$BINARY_NAME does not exist!"
         exit 1
     fi
-elif [ ! -z $APPIMAGE ] ; then
+elif [ -n "$APPIMAGE" ] ; then
     BINARY_NAME=$(basename "$ARGV0")
-    ARGS="$@"
     if [ -e "$HERE/usr/bin/$BINARY_NAME" ] ; then
         # Replace the app image env with the symlink as it will be used
         # to create an autostart script
-        SYMLINK_PATH="$(realpath -s "$ARGV0")"
-        APPIMAGE=$SYMLINK_PATH exec "$HERE/usr/bin/$BINARY_NAME" $ARGS
+        if [ -x "$ARGV0" ]; then
+            # Resolve the path if it actually exists
+            SYMLINK_PATH="$(realpath -s "$ARGV0")"
+        else
+            # Try resolving the command as a fallback
+            SYMLINK_PATH="$(command -v "$ARGV0")"
+        fi
+
+        APPIMAGE="$SYMLINK_PATH" exec "$HERE/usr/bin/$BINARY_NAME" "$@"
     else
-        exec "$HERE/usr/bin/MoonDeckBuddy" $ARGS
+        exec "$HERE/usr/bin/MoonDeckBuddy" "$@"
     fi
 else
-    ARGS="$@"
-    exec "$HERE/usr/bin/MoonDeckBuddy" $ARGS
+    exec "$HERE/usr/bin/MoonDeckBuddy" "$@"
 fi

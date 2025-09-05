@@ -2,15 +2,26 @@
 #include "utils/unixsignalhandler.h"
 
 // system/Qt includes
-#include <QCoreApplication>
 #include <csignal>
+
+// local includes
+#include "utils/logsettings.h"
 
 namespace
 {
-void handler(int code)
+volatile sig_atomic_t SIGNALED_CODE{0};
+
+void log_signal()
 {
-    std::signal(code, SIG_DFL);
-    QCoreApplication::quit();
+    utils::LogSettings::getInstance().logSignalBeforeExit(SIGNALED_CODE);
+}
+
+void handler(const int code)
+{
+    SIGNALED_CODE = code;
+
+    constexpr int error_code_lower_bound{128};
+    std::quick_exit(error_code_lower_bound + code);
 }
 }  // namespace
 
@@ -18,9 +29,12 @@ namespace utils
 {
 void installSignalHandler()
 {
-    Q_ASSERT(QCoreApplication::instance() != nullptr);
-
+    std::at_quick_exit(log_signal);
     std::signal(SIGINT, handler);
     std::signal(SIGTERM, handler);
+#if defined(Q_OS_LINUX)
+    std::signal(SIGHUP, handler);
+    std::signal(SIGQUIT, handler);
+#endif
 }
 }  // namespace utils

@@ -61,8 +61,8 @@ void SteamWebHelperLogTracker::onLogChanged(const std::vector<QString>& new_line
 
     if (new_ui_mode != m_ui_mode)
     {
-        qCInfo(lc::os()) << "Steam UI mode change:" << lc::qEnumToString(m_ui_mode) << "->"
-                         << lc::qEnumToString(new_ui_mode);
+        qCInfo(lc::os()) << "Steam UI mode change:" << enums::qEnumToString(m_ui_mode) << "->"
+                         << enums::qEnumToString(new_ui_mode);
         m_ui_mode = new_ui_mode;
     }
 }

@@ -76,7 +76,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                                               : pairing_manager.isPairing(id) ? PairingState::Pairing
                                                                               : PairingState::NotPaired};
 
-                     return QJsonObject{{"state", lc::qEnumToString(state)}};
+                     return QJsonObject{{"state", enums::qEnumToString(state)}};
                  });
 
     server.route("/pair", QHttpServerRequest::Method::Post,
@@ -131,7 +131,7 @@ void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     return QHttpServerResponse{QJsonObject{{"state", lc::qEnumToString(pc_control.getPcState())}}};
+                     return QHttpServerResponse{QJsonObject{{"state", enums::qEnumToString(pc_control.getPcState())}}};
                  });
 
     server.route("/changePcState", QHttpServerRequest::Method::Post,
@@ -225,7 +225,7 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                      }
 
                      const auto mode{pc_control.getSteamUiMode()};
-                     return QHttpServerResponse{QJsonObject{{"mode", lc::qEnumToString(mode)}}};
+                     return QHttpServerResponse{QJsonObject{{"mode", enums::qEnumToString(mode)}}};
                  });
 
     server.route("/nonSteamAppData", QHttpServerRequest::Method::Get,
@@ -361,7 +361,7 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                      }
 
                      const auto state{pc_control.getStreamState()};
-                     return QHttpServerResponse{QJsonObject{{"state", lc::qEnumToString(state)}}};
+                     return QHttpServerResponse{QJsonObject{{"state", enums::qEnumToString(state)}}};
                  });
 
     server.route("/streamedAppData", QHttpServerRequest::Method::Get,
@@ -382,8 +382,9 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                              }
 
                              const auto& [app_id, app_state] = *data;
-                             return QJsonObject{{"data", QJsonObject{{{"app_id", QString::number(app_id)},
-                                                                      {"app_state", lc::qEnumToString(app_state)}}}}};
+                             return QJsonObject{
+                                 {"data", QJsonObject{{{"app_id", QString::number(app_id)},
+                                                       {"app_state", enums::qEnumToString(app_state)}}}}};
                          }()};
                  });
 

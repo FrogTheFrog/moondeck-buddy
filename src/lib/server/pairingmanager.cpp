@@ -7,8 +7,9 @@
 
 namespace server
 {
-PairingManager::PairingManager(ClientIds& client_ids)
+PairingManager::PairingManager(ClientIds& client_ids, const bool pairing_enabled)
     : m_client_ids{client_ids}
+    , m_pairing_enabled{pairing_enabled}
 {
 }
 
@@ -30,6 +31,12 @@ bool PairingManager::isPairing() const
 // NOLINTNEXTLINE(*-identifier-length)
 bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
 {
+    if (!m_pairing_enabled)
+    {
+        qCWarning(lc::server) << "Pairing has been disabled!";
+        return false;
+    }
+
     if (m_pairing_data)
     {
         qCWarning(lc::server) << "Cannot start pairing as" << m_pairing_data->m_id << "is currently being paired!";

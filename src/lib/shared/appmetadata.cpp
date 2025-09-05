@@ -9,6 +9,7 @@
 #include <QTimer>
 
 // local includes
+#include "shared/enums.h"
 #include "shared/loggingcategories.h"
 
 namespace
@@ -19,10 +20,10 @@ QString getConfigDir()
     const auto xdg_config_env = qgetenv("XDG_CONFIG_HOME");
     if (!xdg_config_env.isEmpty())
     {
-        const QDir xdg_cnnfig_dir{xdg_config_env};
-        if (xdg_cnnfig_dir.exists())
+        const QDir xdg_config_dir{xdg_config_env};
+        if (xdg_config_dir.exists())
         {
-            return xdg_cnnfig_dir.absolutePath();
+            return xdg_config_dir.absolutePath();
         }
     }
 
@@ -40,6 +41,20 @@ QString getAppFilePath()
     return QCoreApplication::applicationFilePath();
 }
 #endif
+
+bool isDisplayAvailable()
+{
+#if defined(Q_OS_WIN)
+    return true;
+#elif defined(Q_OS_LINUX)
+    const auto qt_platform_env     = qgetenv("QT_QPA_PLATFORM");
+    const auto display_env         = qgetenv("DISPLAY");
+    const auto wayland_display_env = qgetenv("WAYLAND_DISPLAY");
+    return qt_platform_env.toLower().contains("wayland") ? !wayland_display_env.isEmpty() : !display_env.isEmpty();
+#else
+    #error OS is not supported!
+#endif
+}
 }  // namespace
 
 namespace shared
@@ -51,16 +66,29 @@ AppMetadata::AppMetadata(App app)
     QTimer::singleShot(0, this,
                        [this]()
                        {
-                           qCDebug(lc::shared) << "getAppName() >> " << getAppName();
-                           qCDebug(lc::shared) << "getLogDir() >> " << getLogDir();
-                           qCDebug(lc::shared) << "getLogName() >> " << getLogName();
-                           qCDebug(lc::shared) << "getLogPath() >> " << getLogPath();
-                           qCDebug(lc::shared) << "getSettingsDir() >> " << getSettingsDir();
-                           qCDebug(lc::shared) << "getSettingsName() >> " << getSettingsName();
-                           qCDebug(lc::shared) << "getSettingsPath() >> " << getSettingsPath();
-                           qCDebug(lc::shared) << "getAutoStartDir() >> " << getAutoStartDir();
-                           qCDebug(lc::shared) << "getAutoStartPath() >> " << getAutoStartPath();
-                           qCDebug(lc::shared) << "getAutoStartExec() >> " << getAutoStartExec();
+                           qCDebug(lc::shared) << "getAppName() >>" << getAppName();
+                           qCDebug(lc::shared) << "getLogDir() >>" << getLogDir();
+                           qCDebug(lc::shared) << "getLogName() >>" << getLogName();
+                           qCDebug(lc::shared) << "getLogPath() >>" << getLogPath();
+                           qCDebug(lc::shared) << "getSettingsDir() >>" << getSettingsDir();
+                           qCDebug(lc::shared) << "getSettingsName() >>" << getSettingsName();
+                           qCDebug(lc::shared) << "getSettingsPath() >>" << getSettingsPath();
+
+                           for (const auto& value : enums::qEnumValues<AutoStartDelegation>())
+                           {
+                               qCDebug(lc::shared).nospace() << "getAutoStartDir(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartDir(value);
+                               qCDebug(lc::shared).nospace() << "getAutoStartName(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartName(value);
+                               qCDebug(lc::shared).nospace() << "getAutoStartPath(" << enums::qEnumToString(value)
+                                                             << ") >> " << getAutoStartPath(value);
+                           }
+
+                           qCDebug(lc::shared) << "getAutoStartExec() >>" << getAutoStartExec();
+                           qCDebug(lc::shared) << "getDefaultSteamExecutable() >>" << getDefaultSteamExecutable();
+                           qCDebug(lc::shared) << "getSharedEnvRegexKey() >>" << getSharedEnvRegexKey();
+                           qCDebug(lc::shared) << "getSharedEnvMapKey() >>" << getSharedEnvMapKey();
+                           qCDebug(lc::shared) << "isGuiEnabled() >>" << isGuiEnabled();
                        });
 }
 
@@ -132,32 +160,53 @@ QString AppMetadata::getSettingsPath() const
 }
 
 // NOLINTNEXTLINE(*-static)
-QString AppMetadata::getAutoStartDir() const
+QString AppMetadata::getAutoStartDir(const AutoStartDelegation type) const
 {
 #if defined(Q_OS_WIN)
+    Q_UNUSED(type);
     Q_ASSERT(QCoreApplication::instance() != nullptr);
     return QDir::cleanPath(QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) + "/Startup");
 #elif defined(Q_OS_LINUX)
-    return QDir::cleanPath(getConfigDir() + "/autostart");
+    switch (type)
+    {
+        case AutoStartDelegation::Desktop:
+            return QDir::cleanPath(getConfigDir() + "/autostart");
+        case AutoStartDelegation::ServiceMain:
+        case AutoStartDelegation::ServiceHelper:
+            return QDir::cleanPath(getConfigDir() + "/systemd/user");
+    }
+
+    Q_UNREACHABLE();
 #else
     #error OS is not supported!
 #endif
 }
 
-QString AppMetadata::getAutoStartName() const
+QString AppMetadata::getAutoStartName(const AutoStartDelegation type) const
 {
 #if defined(Q_OS_WIN)
+    Q_UNUSED(type);
     return getAppName() + ".lnk";
 #elif defined(Q_OS_LINUX)
-    return getAppName().toLower() + ".desktop";
+    switch (type)
+    {
+        case AutoStartDelegation::Desktop:
+            return getAppName().toLower() + ".desktop";
+        case AutoStartDelegation::ServiceMain:
+            return getAppName().toLower() + ".service";
+        case AutoStartDelegation::ServiceHelper:
+            return getAppName().toLower() + "-gui-session.service";
+    }
+
+    Q_UNREACHABLE();
 #else
     #error OS is not supported!
 #endif
 }
 
-QString AppMetadata::getAutoStartPath() const
+QString AppMetadata::getAutoStartPath(const AutoStartDelegation type) const
 {
-    return QDir::cleanPath(getAutoStartDir() + "/" + getAutoStartName());
+    return QDir::cleanPath(getAutoStartDir(type) + "/" + getAutoStartName(type));
 }
 
 // NOLINTNEXTLINE(*-static)
@@ -193,5 +242,22 @@ QString AppMetadata::getSharedEnvRegexKey() const
 QString AppMetadata::getSharedEnvMapKey() const
 {
     return QStringLiteral("MoonDeck_EnvMap_Key");
+}
+
+bool AppMetadata::isGuiEnabled() const
+{
+    const auto no_gui_env = qgetenv("NO_GUI");
+    if (!no_gui_env.isEmpty())
+    {
+        const QString env_str{no_gui_env.toLower().trimmed()};
+        if (env_str == "auto")
+        {
+            return isDisplayAvailable();
+        }
+
+        return env_str != "1" && env_str != "true";
+    }
+
+    return true;
 }
 }  // namespace shared

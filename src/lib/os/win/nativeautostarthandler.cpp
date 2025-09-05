@@ -17,23 +17,25 @@ NativeAutoStartHandler::NativeAutoStartHandler(const shared::AppMetadata& app_me
 {
 }
 
-void NativeAutoStartHandler::setAutoStart(bool enable)
+void NativeAutoStartHandler::setAutoStart(const bool enable)
 {
-    const auto dir{m_app_meta.getAutoStartDir()};
-    QFile      file{m_app_meta.getAutoStartPath()};
+    const auto dir{m_app_meta.getAutoStartDir(shared::AppMetadata::AutoStartDelegation::Desktop)};
+    QFile      file{m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop)};
 
     if (file.exists() && !file.remove())
     {
-        qFatal("Failed to remove %s", qUtf8Printable(m_app_meta.getAutoStartPath()));
+        qFatal("Failed to remove %s",
+               qUtf8Printable(m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop)));
         return;
     }
 
     if (enable)
     {
-        if (!QFile::link(m_app_meta.getAutoStartExec(), m_app_meta.getAutoStartPath()))
+        if (!QFile::link(m_app_meta.getAutoStartExec(),
+                         m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop)))
         {
             qFatal("Failed to create link for %s -> %s", qUtf8Printable(m_app_meta.getAutoStartExec()),
-                   qUtf8Printable(m_app_meta.getAutoStartPath()));
+                   qUtf8Printable(m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop)));
             return;
         }
     }
@@ -41,12 +43,12 @@ void NativeAutoStartHandler::setAutoStart(bool enable)
 
 bool NativeAutoStartHandler::isAutoStartEnabled() const
 {
-    if (!QFile::exists(m_app_meta.getAutoStartPath()))
+    if (!QFile::exists(m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop)))
     {
         return false;
     }
 
-    const QFileInfo info(m_app_meta.getAutoStartPath());
+    const QFileInfo info(m_app_meta.getAutoStartPath(shared::AppMetadata::AutoStartDelegation::Desktop));
     if (!info.isShortcut())
     {
         return false;

@@ -26,7 +26,8 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
                 if (m_autostart_action.isChecked() != m_pc_control.isAutoStartEnabled())
                 {
                     qCWarning(lc::utils) << "failed to enable/disable autostart!";
-                    m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled());
+                    QTimer::singleShot(0, this,
+                                       [this]() { m_autostart_action.setChecked(m_pc_control.isAutoStartEnabled()); });
                 }
             });
     connect(&m_menu, &QMenu::aboutToShow, this,

@@ -1,6 +1,7 @@
 #pragma once
 
 // system/Qt includes
+#include <QMetaEnum>
 #include <QObject>
 
 namespace enums
@@ -40,4 +41,30 @@ enum class StreamState
     StreamEnding
 };
 Q_ENUM_NS(StreamState)
+
+template<class T>
+const std::vector<T>& qEnumValues()
+{
+    static const std::vector<T> all_values{[]()
+                                           {
+                                               const auto     enum_size{QMetaEnum::fromType<T>().keyCount()};
+                                               std::vector<T> values;
+
+                                               for (int i = 0; i < enum_size; ++i)
+                                               {
+                                                   const auto value{static_cast<T>(QMetaEnum::fromType<T>().value(i))};
+                                                   values.emplace_back(value);
+                                               }
+
+                                               return values;
+                                           }()};
+
+    return all_values;
+}
+
+template<class T>
+QString qEnumToString(const T value)
+{
+    return QMetaEnum::fromType<T>().valueToKey(static_cast<int>(value));
+}
 }  // namespace enums
