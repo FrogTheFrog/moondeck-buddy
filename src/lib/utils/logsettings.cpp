@@ -126,14 +126,14 @@ void LogSettings::logSignalBeforeExit(const int code)
             switch (code)
             {
                 case SIGINT:
-                    return " (SIGINT)";
+                    return ":SIGINT";
                 case SIGTERM:
-                    return " (SIGTERM)";
+                    return ":SIGTERM";
 #if defined(Q_OS_LINUX)
                 case SIGHUP:
-                    return " (SIGHUP)";
+                    return ":SIGHUP";
                 case SIGQUIT:
-                    return " (SIGQUIT)";
+                    return ":SIGQUIT";
 #endif
                 default:
                     return "";

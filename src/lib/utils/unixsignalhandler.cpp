@@ -19,7 +19,9 @@ void log_signal()
 void handler(const int code)
 {
     SIGNALED_CODE = code;
-    std::quick_exit(code);
+
+    constexpr int error_code_lower_bound{128};
+    std::quick_exit(error_code_lower_bound + code);
 }
 }  // namespace
 
