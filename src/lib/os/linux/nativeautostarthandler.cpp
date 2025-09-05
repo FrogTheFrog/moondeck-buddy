@@ -47,7 +47,7 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
                    << "'" << Qt::endl;
             stream << "Restart=on-failure" << Qt::endl;
             stream << "RestartSec=10" << Qt::endl;
-            stream << "SuccessExitStatus=SIGTERM SIGINT SIGHUP SIGQUIT" << Qt::endl;
+            stream << "SuccessExitStatus=143" << Qt::endl;
             stream << Qt::endl;
             stream << "[Install]" << Qt::endl;
             stream << "WantedBy=default.target" << Qt::endl;
@@ -56,7 +56,7 @@ QString getAutoStartContents(const shared::AppMetadata& app_meta, const shared::
         case shared::AppMetadata::AutoStartDelegation::ServiceHelper:
         {
             stream << "[Unit]" << Qt::endl;
-            stream << "Description=Restarts moondeckbuddy.service when leaving/entering DE environment" << Qt::endl;
+            stream << "Description=GUI session monitor for MoonDeckBuddy service" << Qt::endl;
             stream << "After=xdg-desktop-autostart.target" << Qt::endl;
             stream << "PartOf=xdg-desktop-autostart.target" << Qt::endl;
             stream << Qt::endl;
