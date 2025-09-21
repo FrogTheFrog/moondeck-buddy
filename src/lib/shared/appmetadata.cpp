@@ -15,30 +15,39 @@
 namespace
 {
 #if defined(Q_OS_LINUX)
-QString getConfigDir()
+const QString& getConfigDir()
 {
-    const auto xdg_config_env = qgetenv("XDG_CONFIG_HOME");
-    if (!xdg_config_env.isEmpty())
-    {
-        const QDir xdg_config_dir{xdg_config_env};
-        if (xdg_config_dir.exists())
-        {
-            return xdg_config_dir.absolutePath();
-        }
-    }
+    static const auto config_dir{[]()
+                                 {
+                                     const auto xdg_config_env = qgetenv("XDG_CONFIG_HOME");
+                                     if (!xdg_config_env.isEmpty())
+                                     {
+                                         const QDir xdg_config_dir{xdg_config_env};
+                                         if (xdg_config_dir.exists())
+                                         {
+                                             return xdg_config_dir.absolutePath();
+                                         }
+                                     }
 
-    return QDir::cleanPath(QDir::homePath() + "/.config");
+                                     return QDir::cleanPath(QDir::homePath() + "/.config");
+                                 }()};
+    return config_dir;
 }
 
 QString getAppFilePath()
 {
-    const auto app_image_env = qgetenv("APPIMAGE");
-    if (!app_image_env.isEmpty())
-    {
-        return QString{app_image_env};
-    }
+    static const auto app_file_path{[]()
+                                    {
+                                        const auto app_image_env = qgetenv("APPIMAGE");
+                                        if (!app_image_env.isEmpty())
+                                        {
+                                            return QString{app_image_env};
+                                        }
 
-    return QCoreApplication::applicationFilePath();
+                                        Q_ASSERT(QCoreApplication::instance() != nullptr);
+                                        return QCoreApplication::applicationFilePath();
+                                    }()};
+    return app_file_path;
 }
 #endif
 
@@ -212,8 +221,8 @@ QString AppMetadata::getAutoStartPath(const AutoStartDelegation type) const
 // NOLINTNEXTLINE(*-static)
 QString AppMetadata::getAutoStartExec() const
 {
-    Q_ASSERT(QCoreApplication::instance() != nullptr);
 #if defined(Q_OS_WIN)
+    Q_ASSERT(QCoreApplication::instance() != nullptr);
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();

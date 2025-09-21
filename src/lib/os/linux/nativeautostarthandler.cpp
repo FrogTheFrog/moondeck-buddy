@@ -152,25 +152,27 @@ bool isUnitFileEnabled(QDBusInterface& systemd_manager, const shared::AppMetadat
     return reply.value() == QStringLiteral("enabled");
 }
 
-QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
-                        const shared::AppMetadata::AutoStartDelegation type)
+QString loadUnit(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                 const shared::AppMetadata::AutoStartDelegation type)
 {
-    const QString object_path{
-        [&systemd_manager, &app_meta, type]()
-        {
-            const QString method{"LoadUnit"};
-            const auto    name{app_meta.getAutoStartName(type)};
+    const QString method{"LoadUnit"};
+    const auto    name{app_meta.getAutoStartName(type)};
 
-            const QDBusReply<QDBusObjectPath> reply{systemd_manager.call(QDBus::Block, method, name)};
-            if (!reply.isValid())
-            {
-                qCWarning(lc::os()) << method << "request failed -" << reply.error();
-                return QString{};
-            }
+    const QDBusReply<QDBusObjectPath> reply{systemd_manager.call(QDBus::Block, method, name)};
+    if (!reply.isValid())
+    {
+        qCWarning(lc::os()) << method << "request failed -" << reply.error();
+        return QString{};
+    }
 
-            qCDebug(lc::os()) << "Mapped" << name << "to unit" << reply.value().path();
-            return reply.value().path();
-        }()};
+    qCDebug(lc::os()) << "Mapped" << name << "to unit" << reply.value().path();
+    return reply.value().path();
+}
+
+QString getUnitFragmentPath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                            const shared::AppMetadata::AutoStartDelegation type)
+{
+    const QString object_path{loadUnit(systemd_manager, app_meta, type)};
     if (object_path.isEmpty())
     {
         return {};
@@ -199,14 +201,49 @@ QString getUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetada
     return reply.value().variant().toString();
 }
 
+bool isUnitActive(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                  const shared::AppMetadata::AutoStartDelegation type)
+{
+    const QString object_path{loadUnit(systemd_manager, app_meta, type)};
+    if (object_path.isEmpty())
+    {
+        return false;
+    }
+
+    QDBusInterface unit_interface{"org.freedesktop.systemd1", object_path, "org.freedesktop.DBus.Properties",
+                                  QDBusConnection::sessionBus()};
+    if (!unit_interface.isValid())
+    {
+        qCWarning(lc::os()) << "Could not create QDBusInterface instance for unit" << object_path;
+        return false;
+    }
+
+    const QString method{"Get"};
+    const QString interface_name{"org.freedesktop.systemd1.Unit"};
+    const QString property_name{"ActiveState"};
+
+    const QDBusReply<QDBusVariant> reply{unit_interface.call(QDBus::Block, method, interface_name, property_name)};
+    if (!reply.isValid())
+    {
+        qCWarning(lc::os()) << method << "request failed -" << reply.error();
+        return false;
+    }
+
+    const auto state{reply.value().variant().toString()};
+    qCDebug(lc::os()) << object_path << "has state" << state;
+
+    static const std::vector invalid_states{"active", "reloading", "activating"};
+    return std::ranges::any_of(invalid_states, [&](const auto invalid_state) { return state == invalid_state; });
+}
+
 bool hasSameUnitFilePath(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
                          const shared::AppMetadata::AutoStartDelegation type)
 {
-    return getUnitFilePath(systemd_manager, app_meta, type) == app_meta.getAutoStartPath(type);
+    return getUnitFragmentPath(systemd_manager, app_meta, type) == app_meta.getAutoStartPath(type);
 }
 
-bool enableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
-                    const shared::AppMetadata::AutoStartDelegation type)
+bool enableUnitFiles(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                     const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString  method{"EnableUnitFiles"};
     const QVector  files{app_meta.getAutoStartPath(type)};
@@ -223,14 +260,48 @@ bool enableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& 
     return true;
 }
 
-bool disableUnitFile(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
-                     const shared::AppMetadata::AutoStartDelegation type)
+bool disableUnitFiles(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                      const shared::AppMetadata::AutoStartDelegation type)
 {
     const QString  method{"DisableUnitFiles"};
     const QVector  files{app_meta.getAutoStartName(type)};
     constexpr bool runtime{false};
 
     const QDBusReply<void> reply{systemd_manager.call(QDBus::Block, method, files, runtime)};
+    if (!reply.isValid())
+    {
+        qCWarning(lc::os()) << method << "request failed -" << reply.error();
+        return false;
+    }
+
+    return true;
+}
+
+bool restartUnit(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+                 const shared::AppMetadata::AutoStartDelegation type)
+{
+    const QString method{"RestartUnit"};
+    const auto    name{app_meta.getAutoStartName(type)};
+    const QString mode{"replace"};
+
+    const QDBusReply<void> reply{systemd_manager.call(QDBus::Block, method, name, mode)};
+    if (!reply.isValid())
+    {
+        qCWarning(lc::os()) << method << "request failed -" << reply.error();
+        return false;
+    }
+
+    return true;
+}
+
+bool startUnit(QDBusInterface& systemd_manager, const shared::AppMetadata& app_meta,
+               const shared::AppMetadata::AutoStartDelegation type)
+{
+    const QString method{"StartUnit"};
+    const auto    name{app_meta.getAutoStartName(type)};
+    const QString mode{"replace"};
+
+    const QDBusReply<void> reply{systemd_manager.call(QDBus::Block, method, name, mode)};
     if (!reply.isValid())
     {
         qCWarning(lc::os()) << method << "request failed -" << reply.error();
@@ -291,7 +362,7 @@ void NativeAutoStartHandler::setAutoStart(const bool enable)
     {
         if (isUnitFileEnabled(*systemd_manager, m_app_meta, type))
         {
-            if (!disableUnitFile(*systemd_manager, m_app_meta, type))
+            if (!disableUnitFiles(*systemd_manager, m_app_meta, type))
             {
                 return;
             }
@@ -312,7 +383,7 @@ void NativeAutoStartHandler::setAutoStart(const bool enable)
                 }
             }
 
-            if (!enableUnitFile(*systemd_manager, m_app_meta, type))
+            if (!enableUnitFiles(*systemd_manager, m_app_meta, type))
             {
                 return;
             }
@@ -344,5 +415,27 @@ bool NativeAutoStartHandler::isAutoStartEnabled() const
                                           && hasSameUnitFilePath(*systemd_manager, m_app_meta, type)
                                           && hasSameAutoStartContents(m_app_meta, type);
                                });
+}
+
+bool NativeAutoStartHandler::isServiceSupported() const
+{
+    return true;
+}
+
+bool NativeAutoStartHandler::restartIntoService()
+{
+    qCInfo(lc::os) << "Trying to restart" << m_app_meta.getAppName() << "into a service!";
+    Q_ASSERT(isServiceSupported() && isAutoStartEnabled());
+
+    using enum shared::AppMetadata::AutoStartDelegation;
+    const auto systemd_manager{getSystemdManager()};
+    if (!systemd_manager)
+    {
+        return false;
+    }
+
+    const bool is_helper_active{isUnitActive(*systemd_manager, m_app_meta, ServiceHelper)};
+    return restartUnit(*systemd_manager, m_app_meta, ServiceMain)
+           && (is_helper_active || startUnit(*systemd_manager, m_app_meta, ServiceHelper));
 }
 }  // namespace os

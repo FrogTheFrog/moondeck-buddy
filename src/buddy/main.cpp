@@ -136,9 +136,10 @@ std::optional<int> parseArguments(int argc, char* argv[], const shared::AppMetad
     return return_code;
 }
 
-int mainLoop(int argc, char* argv[], const shared::AppMetadata& app_meta, const bool gui_enabled)
+std::tuple<int, bool> mainLoop(int argc, char* argv[], const shared::AppMetadata& app_meta, const bool gui_enabled)
 {
     constexpr int api_version{7};
+    bool          restart_into_service{false};
 
     auto app{[&]() -> std::unique_ptr<QCoreApplication>
              {
@@ -205,6 +206,14 @@ int mainLoop(int argc, char* argv[], const shared::AppMetadata& app_meta, const 
                          &server::PairingManager::slotFinishPairing);
         QObject::connect(pairing_input.get(), &utils::PairingInput::signalPairingRejected, &pairing_manager,
                          &server::PairingManager::slotPairingRejected);
+
+        // Service handling
+        QObject::connect(tray.get(), &os::SystemTray::signalRestartIntoService, app.get(),
+                         [&restart_into_service]()
+                         {
+                             restart_into_service = true;
+                             QCoreApplication::quit();
+                         });
     }
     else
     {
@@ -223,7 +232,7 @@ int mainLoop(int argc, char* argv[], const shared::AppMetadata& app_meta, const 
 
     QObject::connect(app.get(), &QCoreApplication::aboutToQuit, []() { qCInfo(lc::buddyMain) << "Shutdown."; });
     qCInfo(lc::buddyMain) << "Startup finished.";
-    return QCoreApplication::exec();
+    return {QCoreApplication::exec(), restart_into_service};
 }
 
 }  // namespace
@@ -236,12 +245,31 @@ int main(int argc, char* argv[])
         return *result;
     }
 
-    utils::SingleInstanceGuard guard{app_meta.getAppName()};
-    if (!guard.tryToRun())
+    // Scope the instance guard so that the service can start another process
     {
-        qCWarning(lc::buddyMain) << "Another instance of" << app_meta.getAppName() << "is already running!";
-        return EXIT_FAILURE;
+        utils::SingleInstanceGuard guard{app_meta.getAppName()};
+        if (!guard.tryToRun())
+        {
+            qCWarning(lc::buddyMain) << "Another instance of" << app_meta.getAppName() << "is already running!";
+            return EXIT_FAILURE;
+        }
+
+        const auto [exit_code, restart_into_service] = mainLoop(argc, argv, app_meta, app_meta.isGuiEnabled());
+        if (!restart_into_service)
+        {
+            return exit_code;
+        }
+
+        if (exit_code != EXIT_SUCCESS)
+        {
+            qCCritical(lc::buddyMain) << "Cannot restart" << app_meta.getAppName()
+                                      << "into a service, because app quit with exit code" << exit_code;
+            return exit_code;
+        }
     }
 
-    return mainLoop(argc, argv, app_meta, app_meta.isGuiEnabled());
+    // No additional logging from here on as it will mess up the log file! Only `restartIntoService` may do so
+    // intelligently.
+    os::AutoStartHandler handler{app_meta};
+    return handler.restartIntoService() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

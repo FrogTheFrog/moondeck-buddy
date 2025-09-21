@@ -25,6 +25,7 @@ public:
 
 signals:
     void signalQuitApp();
+    void signalRestartIntoService();
 
 public slots:
     void slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,

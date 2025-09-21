@@ -25,6 +25,9 @@ public:
     void setAutoStart(bool enable) override;
     bool isAutoStartEnabled() const override;
 
+    bool isServiceSupported() const override;
+    bool restartIntoService() override;
+
 private:
     const shared::AppMetadata& m_app_meta;
 };

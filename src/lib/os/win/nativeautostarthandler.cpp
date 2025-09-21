@@ -57,4 +57,14 @@ bool NativeAutoStartHandler::isAutoStartEnabled() const
     return QFileInfo(info.symLinkTarget()).canonicalFilePath()
            == QFileInfo(m_app_meta.getAutoStartExec()).canonicalFilePath();
 }
+
+bool NativeAutoStartHandler::isServiceSupported() const
+{
+    return false;
+}
+
+bool NativeAutoStartHandler::restartIntoService()
+{
+    return false;
+}
 }  // namespace os

@@ -31,4 +31,14 @@ bool AutoStartHandler::isAutoStartEnabled() const
 {
     return m_impl->isAutoStartEnabled();
 }
+
+bool AutoStartHandler::isServiceSupported() const
+{
+    return m_impl->isServiceSupported();
+}
+
+bool AutoStartHandler::restartIntoService()
+{
+    return m_impl->restartIntoService();
+}
 }  // namespace os

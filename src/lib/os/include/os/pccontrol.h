@@ -55,6 +55,9 @@ public:
     void setAutoStart(bool enable);
     bool isAutoStartEnabled() const;
 
+    bool isServiceSupported() const;
+    bool restartIntoService();
+
 signals:
     void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
                                int milliseconds_timeout_hint);

@@ -24,6 +24,9 @@ public:
     void setAutoStart(bool enable);
     bool isAutoStartEnabled() const;
 
+    bool isServiceSupported() const;
+    bool restartIntoService();
+
 private:
     std::unique_ptr<NativeAutoStartHandlerInterface> m_impl;
 };

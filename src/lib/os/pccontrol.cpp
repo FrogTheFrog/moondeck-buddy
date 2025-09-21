@@ -161,6 +161,16 @@ bool PcControl::isAutoStartEnabled() const
     return m_auto_start_handler.isAutoStartEnabled();
 }
 
+bool PcControl::isServiceSupported() const
+{
+    return m_auto_start_handler.isServiceSupported();
+}
+
+bool PcControl::restartIntoService()
+{
+    return m_auto_start_handler.restartIntoService();
+}
+
 void PcControl::slotHandleSteamClosed()
 {
     endStream();
