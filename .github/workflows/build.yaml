@@ -30,6 +30,9 @@ jobs:
           arch: 'win64_msvc2022_64'
           modules: 'qthttpserver qtwebsockets'
 
+      - name: Install Inno Setup
+        run: choco install innosetup
+
       - name: Configure
         run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
 
