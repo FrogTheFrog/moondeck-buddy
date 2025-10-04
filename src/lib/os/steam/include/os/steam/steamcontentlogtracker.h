@@ -32,7 +32,8 @@ public:
         Uninstalled,
         ComponentInUse,
         Terminating,
-        PrefetchingInfo
+        PrefetchingInfo,
+        SharedOnly
     };
     Q_ENUM(AppStateChange)
 
