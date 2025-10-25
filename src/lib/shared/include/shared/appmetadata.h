@@ -45,8 +45,6 @@ public:
     QString getAutoStartPath(AutoStartDelegation type) const;
     QString getAutoStartExec() const;
 
-    QString getDefaultSteamExecutable() const;
-
     QString getSharedEnvRegexKey() const;
     QString getSharedEnvMapKey() const;
 

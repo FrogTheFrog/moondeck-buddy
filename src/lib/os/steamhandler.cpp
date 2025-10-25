@@ -13,31 +13,6 @@
 
 namespace
 {
-bool executeDetached(const QString& steam_exec, const QStringList& args,
-                     const QMap<QString, QString>& env_overrides = {})
-{
-    QProcess steam_process;
-    steam_process.setStandardOutputFile(QProcess::nullDevice());
-    steam_process.setStandardErrorFile(QProcess::nullDevice());
-    steam_process.setProgram(steam_exec);
-    steam_process.setArguments(args);
-
-    if (!env_overrides.empty())
-    {
-        auto env{QProcessEnvironment::systemEnvironment()};
-        for (const auto& [key, value] : env_overrides.asKeyValueRange())
-        {
-            env.insert(key, value);
-        }
-
-        steam_process.setProcessEnvironment(env);
-    }
-
-    qCInfo(lc::os).nospace() << (env_overrides.empty() ? "" : "[WITH ENV OVERRIDES] ") << "Executing: " << steam_exec
-                             << " " << args.join(" ");
-    return steam_process.startDetached();
-}
-
 // This is a very "son, we have a parser at home" kind of parser, very basic, but gets the job done...
 std::optional<std::map<std::uint64_t, QString>> scrapeShortcutsVdf(const QByteArray& contents)
 {
@@ -141,7 +116,7 @@ namespace os
 {
 SteamHandler::SteamHandler(const utils::AppSettings&                      app_settings,
                            std::unique_ptr<NativeProcessHandlerInterface> process_handler_interface)
-    : m_app_settings{app_settings}
+    : m_command_proxy{app_settings}
     , m_steam_process_tracker{std::move(process_handler_interface)}
 {
     connect(&m_steam_process_tracker, &SteamProcessTracker::signalProcessStateChanged, this,
@@ -152,10 +127,9 @@ SteamHandler::~SteamHandler() = default;
 
 bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, QString>& env_overrides)
 {
-    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
-    if (exec_path.isEmpty())
+    if (!m_command_proxy.canExecuteCommands())
     {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
+        qCWarning(lc::os) << "Steam commands cannot be executed yet!";
         return false;
     }
 
@@ -163,8 +137,7 @@ bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, 
     if (!m_steam_process_tracker.isRunning()
         || (big_picture_mode && getSteamUiMode() != enums::SteamUiMode::BigPicture))
     {
-        if (!executeDetached(exec_path, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{},
-                             env_overrides))
+        if (!m_command_proxy.launchSteam(big_picture_mode, env_overrides))
         {
             qCWarning(lc::os) << "Failed to launch Steam!";
             return false;
@@ -196,10 +169,9 @@ bool SteamHandler::close()
     clearSessionData();
 
     // Try to shut down steam gracefully first
-    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
-    if (!exec_path.isEmpty())
+    if (m_command_proxy.canExecuteCommands())
     {
-        if (QProcess::startDetached(exec_path, {"-shutdown"}))
+        if (m_command_proxy.close())
         {
             return true;
         }
@@ -208,7 +180,7 @@ bool SteamHandler::close()
     }
     else
     {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet, using other means of closing!";
+        qCWarning(lc::os) << "Steam commands cannot be executed yet, using other means of closing!";
     }
 
     m_steam_process_tracker.close();
@@ -217,17 +189,16 @@ bool SteamHandler::close()
 
 bool SteamHandler::closeBigPictureMode()
 {
-    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
-    if (exec_path.isEmpty())
+    if (!m_command_proxy.canExecuteCommands())
     {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
+        qCWarning(lc::os) << "Steam commands cannot be executed yet!";
         return false;
     }
 
     m_steam_process_tracker.slotCheckState();
     if (m_steam_process_tracker.isRunning() && getSteamUiMode() == enums::SteamUiMode::BigPicture)
     {
-        if (!executeDetached(exec_path, {"steam://close/bigpicture"}))
+        if (!m_command_proxy.closeBigPictureMode())
         {
             qCWarning(lc::os) << "Failed to close Steam's BPM!";
             return false;
@@ -258,10 +229,9 @@ std::optional<std::tuple<std::uint64_t, enums::AppState>>
 
 bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QString>& env_overrides)
 {
-    const auto& exec_path{m_app_settings.getSteamExecutablePath()};
-    if (exec_path.isEmpty())
+    if (!m_command_proxy.canExecuteCommands())
     {
-        qCWarning(lc::os) << "Steam EXEC path is not available yet!";
+        qCWarning(lc::os) << "Steam commands cannot be executed yet!";
         return false;
     }
 
@@ -289,7 +259,7 @@ bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QSt
         != enums::AppState::Stopped};
     if (!is_app_running)
     {
-        if (!executeDetached(exec_path, QStringList{"steam://rungameid/" + QString::number(app_id)}, env_overrides))
+        if (!m_command_proxy.launchApp(app_id, env_overrides))
         {
             qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
             return false;
