@@ -25,7 +25,7 @@ public:
     bool                       getPreferHibernation() const;
     QSsl::SslProtocol          getSslProtocol() const;
     bool                       getCloseSteamBeforeSleep() const;
-    QString                    getSteamExecutablePath() const;
+    const QString&             getSteamExecutablePath() const;
     const QString&             getMacAddressOverride() const;
     const QRegularExpression&  getEnvCaptureRegex() const;
 

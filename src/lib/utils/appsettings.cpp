@@ -4,7 +4,6 @@
 // system/Qt includes
 #include <QDir>
 #include <QFile>
-#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -100,16 +99,9 @@ bool AppSettings::getCloseSteamBeforeSleep() const
     return m_close_steam_before_sleep;
 }
 
-QString AppSettings::getSteamExecutablePath() const
+const QString& AppSettings::getSteamExecutablePath() const
 {
-    const auto& exec_path{m_steam_exec_override.isEmpty() ? m_app_metadata.getDefaultSteamExecutable()
-                                                          : m_steam_exec_override};
-    if (QFileInfo::exists(exec_path))
-    {
-        return exec_path;
-    }
-
-    return QString{};
+    return m_steam_exec_override;
 }
 
 const QString& AppSettings::getMacAddressOverride() const

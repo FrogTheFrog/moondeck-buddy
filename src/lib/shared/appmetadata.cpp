@@ -94,7 +94,6 @@ AppMetadata::AppMetadata(App app)
                            }
 
                            qCDebug(lc::shared) << "getAutoStartExec() >>" << getAutoStartExec();
-                           qCDebug(lc::shared) << "getDefaultSteamExecutable() >>" << getDefaultSteamExecutable();
                            qCDebug(lc::shared) << "getSharedEnvRegexKey() >>" << getSharedEnvRegexKey();
                            qCDebug(lc::shared) << "getSharedEnvMapKey() >>" << getSharedEnvMapKey();
                            qCDebug(lc::shared) << "isGuiEnabled() >>" << isGuiEnabled();
@@ -226,18 +225,6 @@ QString AppMetadata::getAutoStartExec() const
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();
-#else
-    #error OS is not supported!
-#endif
-}
-
-QString AppMetadata::getDefaultSteamExecutable() const
-{
-#if defined(Q_OS_WIN)
-    const QSettings settings(R"(HKEY_CURRENT_USER\Software\Valve\Steam)", QSettings::NativeFormat);
-    return settings.value("SteamExe").toString();
-#elif defined(Q_OS_LINUX)
-    return "/usr/bin/steam";
 #else
     #error OS is not supported!
 #endif

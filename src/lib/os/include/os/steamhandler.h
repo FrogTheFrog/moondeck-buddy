@@ -1,6 +1,7 @@
 #pragma once
 
 // local includes
+#include "os/steam/steamcommandproxy.h"
 #include "os/steam/steamprocesstracker.h"
 #include "shared/enums.h"
 
@@ -50,8 +51,8 @@ private:
         std::unique_ptr<SteamAppWatcher> m_steam_app_watcher;
     };
 
-    const utils::AppSettings& m_app_settings;
-    SteamProcessTracker       m_steam_process_tracker;
-    SessionData               m_session_data;
+    SteamCommandProxy   m_command_proxy;
+    SteamProcessTracker m_steam_process_tracker;
+    SessionData         m_session_data;
 };
 }  // namespace os
