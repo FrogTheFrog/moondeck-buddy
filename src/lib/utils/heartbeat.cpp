@@ -2,9 +2,12 @@
 #include "utils/heartbeat.h"
 
 // system/Qt includes
+#include "shared/loggingcategories.h"
+
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QTimeZone>
+#include <qloggingcategory.h>
 
 namespace
 {
@@ -16,6 +19,7 @@ QString generateKeyHash(const QString& key, const QString& salt)
     data.append(salt.toUtf8());
     data = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
 
+    qCInfo(lc::utils) << "Heartbeat hash:" << key << "+" << salt << "->" << data;
     return data;
 }
 
@@ -66,12 +70,30 @@ void HeartbeatAccessor::setTime(const QDateTime& time)
     qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     mem_ptr[TIME_INDEX] = time_ms;
+
+    // NOLINTNEXTLINE(*-pointer-arithmetic)
+    qCInfo(lc::utils) << "[" << m_shared_mem.key() << "] Heartbeat setTime:" << time << "-" << mem_ptr[1]
+                      << ","
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << mem_ptr[0];
 }
 
 QDateTime HeartbeatAccessor::getTime() const
 {
     // NOLINTNEXTLINE(*-reinterpret-cast)
     const qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
+    // NOLINTNEXTLINE(*-reinterpret-cast)
+    const auto last_beat{QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], QTimeZone::UTC)};
+    const auto time_ms{last_beat.msecsTo(QDateTime::currentDateTimeUtc())};
+
+    qCInfo(lc::utils) << "[" << m_shared_mem.key()
+                      << "] Heartbeat getTime:"
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << last_beat << "=" << time_ms << "alive:"
+                      << (time_ms <= HEARTBEAT_TIMEOUT)
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << "-" << mem_ptr[1] << "," << mem_ptr[0];
+
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     return QDateTime::fromMSecsSinceEpoch(mem_ptr[TIME_INDEX], QTimeZone::UTC);
 }
@@ -82,12 +104,25 @@ void HeartbeatAccessor::setShouldTerminate(bool terminate)
     qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     mem_ptr[TERMINATE_INDEX] = static_cast<qint64>(terminate);
+
+    qCInfo(lc::utils) << "[" << m_shared_mem.key() << "] Heartbeat setShouldTerminate:" << terminate
+                      << "-"
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << mem_ptr[1] << "," << mem_ptr[0];
 }
 
 bool HeartbeatAccessor::getShouldTerminate() const
 {
     // NOLINTNEXTLINE(*-reinterpret-cast)
     const qint64* mem_ptr{reinterpret_cast<qint64*>(m_shared_mem.data())};
+
+    qCInfo(lc::utils) << "[" << m_shared_mem.key()
+                      << "] Heartbeat getShouldTerminate:"
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << static_cast<bool>(mem_ptr[TERMINATE_INDEX])
+                      // NOLINTNEXTLINE(*-pointer-arithmetic)
+                      << "-" << mem_ptr[1] << "," << mem_ptr[0];
+
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     return static_cast<bool>(mem_ptr[TERMINATE_INDEX]);
 }
