@@ -13,6 +13,97 @@
 #include "utils/singleinstanceguard.h"
 #include "utils/unixsignalhandler.h"
 
+#include "avfromtojson.h"
+
+struct nested_struct
+{
+    QMap<QString, int>      m_qt_map;
+    QHash<QString, QString> m_ugh;
+};
+
+struct my_struct
+{
+    Q_GADGET
+
+public:
+    enum class Who
+    {
+        Mario,
+        Luigi
+    };
+    Q_ENUM(Who)
+
+    enum class SimpleWho
+    {
+        SimpleMario,
+        SimpleLuigi
+    };
+
+    Who                              m_its_a_me;
+    SimpleWho                        m_simple;
+    QHash<Who, SimpleWho>            m_asd;
+    QMap<SimpleWho, Who>             m_asdf;
+    QString                          m_test;
+    QVector<QString>                 m_vec;
+    std::map<QString, nested_struct> m_std_map;
+    std::optional<int>               opt_int_1;
+    std::optional<int>               opt_int_2;
+};
+
+void test_glaze()
+{
+    const QString buffer = R"(
+    {
+        "its_a_me": "Luigi",
+        "simple": 1,
+        "asd" : {
+            "Mario": 0,
+            "Luigi": 1
+        },
+        "asdf" : {
+            "0": "Mario",
+            "1": "Luigi"
+        },
+        "test": "MEH",
+        "vec": ["1", "2", "3"],
+        "std_map": {
+            "m_key1": {
+                "ugh": {
+                    "1": "on\"e",
+                    "2": "twO"
+                },
+                "qt_map": {
+                    "on\"e": 1,
+                    "two": 2
+                }
+            }
+        },
+        "opt_int_1": null,
+        "opt_int_2": 123
+    })";
+    qInfo().noquote().nospace() << "INITIAL! " << buffer;
+    auto parsed{AVFromJson<my_struct>(buffer)};
+    if (parsed)
+    {
+        auto value{parsed.value()};
+
+        qInfo().noquote().nospace() << "YAY 1!";
+        auto json_string{AVToJson(value)};
+        if (json_string)
+        {
+            qInfo().noquote().nospace() << "YAY 2!" << json_string.value();
+        }
+        else
+        {
+            qInfo().noquote().nospace() << "NAY 2!" << json_string.error();
+        }
+    }
+    else
+    {
+        qInfo().noquote().nospace() << "NAY 1!" << parsed.error();
+    }
+}
+
 QMap<QString, QString> getMatchingEnv(const QRegularExpression& regex)
 {
     QMap<QString, QString> captured_env;
@@ -45,6 +136,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    test_glaze();
+
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     utils::installSignalHandler();
     qCInfo(lc::streamMain) << "Startup. Version:" << EXEC_VERSION;
@@ -76,3 +169,5 @@ int main(int argc, char* argv[])
     qCInfo(lc::streamMain) << "Startup finished.";
     return QCoreApplication::exec();
 }
+
+#include "main.moc"
