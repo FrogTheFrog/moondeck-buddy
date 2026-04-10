@@ -132,7 +132,7 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
     }
 
     const auto new_app_states = remapStateChanges(new_change_states);
-    for (const auto [app_id, app_state] : new_app_states)
+    for (const auto& [app_id, app_state] : new_app_states)
     {
         auto it = m_app_states.find(app_id);
         if (it == std::end(m_app_states))

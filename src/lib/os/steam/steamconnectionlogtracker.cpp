@@ -1,0 +1,43 @@
+// header file include
+#include "os/steam/steamconnectionlogtracker.h"
+
+// system/Qt includes
+#include <QRegularExpression>
+
+// local includes
+#include "shared/enums.h"
+#include "shared/loggingcategories.h"
+
+namespace os
+{
+SteamConnectionLogTracker::SteamConnectionLogTracker(const std::filesystem::path& logs_dir,
+                                                     QDateTime                    first_entry_time_filter)
+    : SteamLogTracker(logs_dir / "connection_log.txt", logs_dir / "connection_log.previous.txt",
+                      std::move(first_entry_time_filter))
+{
+}
+
+const std::optional<shared::SteamId>& SteamConnectionLogTracker::getCurrentSteamId() const
+{
+    return m_current_steam_id;
+}
+
+void SteamConnectionLogTracker::onLogChanged(const std::vector<QString>& new_lines)
+{
+    std::optional<shared::SteamId> new_steam_id;
+    for (const QString& line : new_lines)
+    {
+        static const QRegularExpression regex{R"(^(?:\[[^\]]*\]\s*){2}\[([^\]]+)\])"};
+        if (const auto match{regex.match(line)}; match.hasMatch())
+        {
+            new_steam_id = shared::SteamId::fromString(match.captured(1));
+        }
+    }
+
+    if (new_steam_id && m_current_steam_id != new_steam_id)
+    {
+        m_current_steam_id = new_steam_id;
+        qCInfo(lc::os).noquote().nospace() << "New user SteamId detected:\n" << m_current_steam_id->toString();
+    }
+}
+}  // namespace os

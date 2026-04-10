@@ -42,7 +42,7 @@ public:
          getAppData(const std::optional<std::uint64_t>& app_id) const;
     bool clearAppData();
 
-    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
+    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(const shared::SteamId& user_id) const;
 
     bool shutdownPC(uint delay_in_seconds);
     bool restartPC(uint delay_in_seconds);

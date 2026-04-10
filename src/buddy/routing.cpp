@@ -242,21 +242,17 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto user_id_opt{utils::getJsonValue<QString>(json, "user_id")};
-                     bool       user_id_ok{false};
-
-                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-                     const std::uint64_t user_id{user_id_opt ? user_id_opt->toULongLong(&user_id_ok) : 0};
-
-                     if (!user_id_ok)
+                     const auto user_id_opt{
+                         shared::SteamId::fromString(utils::getJsonValue<QString>(json, "user_id").value_or({}))};
+                     if (!user_id_opt)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
                      return QHttpServerResponse{
-                         [&pc_control, user_id]()
+                         [&pc_control, &user_id_opt]()
                          {
-                             const auto data{pc_control.getNonSteamAppData(user_id)};
+                             const auto data{pc_control.getNonSteamAppData(*user_id_opt)};
                              if (!data)
                              {
                                  return QJsonObject{{"data", QJsonValue::Null}};

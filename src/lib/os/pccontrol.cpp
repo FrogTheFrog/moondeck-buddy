@@ -77,7 +77,7 @@ bool PcControl::clearAppData()
     return true;
 }
 
-std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(const std::uint64_t user_id) const
+std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(const shared::SteamId& user_id) const
 {
     return m_steam_handler.getNonSteamAppData(user_id);
 }

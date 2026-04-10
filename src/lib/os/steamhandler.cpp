@@ -276,7 +276,7 @@ void SteamHandler::clearSessionData()
     m_session_data = {};
 }
 
-std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData(const std::uint64_t user_id) const
+std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData(const shared::SteamId& user_id) const
 {
     const auto& steam_dir{m_steam_process_tracker.getSteamDir()};
     if (steam_dir.empty())
@@ -285,15 +285,10 @@ std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData
         return std::nullopt;
     }
 
-    const auto user_dir_id{[user_id]() -> QString
-                           {
-                               // See https://developer.valvesoftware.com/wiki/SteamID for how to get SteamID3
-                               const uint64_t id_number{user_id & 0x1U};
-                               const uint64_t account_number{(user_id & 0xFFFFFFFE) >> 1U};
-                               return QString::number((account_number * 2) + id_number);
-                           }()};
-    const auto shortcuts_file{steam_dir / "userdata" / user_dir_id.toStdString() / "config" / "shortcuts.vdf"};
-    qInfo(lc::os) << "Mapped user id to shortcuts file:" << user_id << "->" << shortcuts_file.generic_string();
+    const auto shortcuts_file{steam_dir / "userdata" / user_id.toSteamId32().toStdString() / "config"
+                              / "shortcuts.vdf"};
+    qInfo(lc::os) << "Mapped user id to shortcuts file:" << user_id.toSteamId64() << "->"
+                  << shortcuts_file.generic_string();
 
     QFile file{shortcuts_file};
     if (!file.exists())

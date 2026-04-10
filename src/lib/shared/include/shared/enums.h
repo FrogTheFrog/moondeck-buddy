@@ -67,4 +67,40 @@ QString qEnumToString(const T value)
 {
     return QMetaEnum::fromType<T>().valueToKey(static_cast<int>(value));
 }
+
+template<class T>
+std::optional<T> qEnumFromInt(const int value)
+{
+    const auto enum_size{QMetaEnum::fromType<T>().keyCount()};
+    for (int i = 0; i < enum_size; ++i)
+    {
+        const auto enum_value{QMetaEnum::fromType<T>().value(i)};
+        if (enum_value == value)
+        {
+            return static_cast<T>(enum_value);
+        }
+    }
+
+    return std::nullopt;
+}
+
+template<class T>
+std::optional<T> qEnumFromIntString(const QString& value)
+{
+    bool       converted{false};
+    const auto number{value.toInt(&converted)};
+
+    if (converted)
+    {
+        return qEnumFromInt<T>(number);
+    }
+
+    return std::nullopt;
+}
+
+template<class T>
+std::optional<T> qEnumFromUInt(const std::uint32_t value)
+{
+    return qEnumFromInt<T>(static_cast<int>(value));
+}
 }  // namespace enums

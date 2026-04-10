@@ -4,6 +4,7 @@
 #include <filesystem>
 
 // local includes
+#include "os/steam/steamconnectionlogtracker.h"
 #include "os/steam/steamcontentlogtracker.h"
 #include "os/steam/steamgameprocesslogtracker.h"
 #include "os/steam/steamshaderlogtracker.h"
@@ -30,6 +31,7 @@ public:
         SteamContentLogTracker     m_content_log;
         SteamGameProcessLogTracker m_gameprocess_log;
         SteamShaderLogTracker      m_shader_log;
+        SteamConnectionLogTracker  m_connection_log;
     };
 
     explicit SteamProcessTracker(std::unique_ptr<NativeProcessHandlerInterface> native_handler);

@@ -4,6 +4,7 @@
 #include "os/steam/steamcommandproxy.h"
 #include "os/steam/steamprocesstracker.h"
 #include "shared/enums.h"
+#include "shared/steamid.h"
 
 // forward declarations
 namespace utils
@@ -37,7 +38,7 @@ public:
     bool launchApp(std::uint64_t app_id, const QMap<QString, QString>& env_overrides);
     void clearSessionData();
 
-    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(std::uint64_t user_id) const;
+    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(const shared::SteamId& user_id) const;
 
 signals:
     void signalSteamClosed();
