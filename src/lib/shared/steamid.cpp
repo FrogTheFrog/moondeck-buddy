@@ -43,7 +43,7 @@ std::optional<shared::SteamId::Type> getTypeFromLetter(const QString& letter_to_
 {
     for (const auto& [type, letters] : getTypeLetterMap().asKeyValueRange())
     {
-        if (std::ranges::contains(letters, letter_to_find))
+        if (std::ranges::any_of(letters, [&letter_to_find](const auto& value) { return letter_to_find == value; }))
         {
             return type;
         }
