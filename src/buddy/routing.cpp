@@ -242,8 +242,8 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto user_id_opt{
-                         shared::SteamId::fromString(utils::getJsonValue<QString>(json, "user_id").value_or({}))};
+                     const auto user_id_opt{shared::SteamId::fromString(
+                         utils::getJsonValue<QString>(json, "user_id").value_or(QString{}))};
                      if (!user_id_opt)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
