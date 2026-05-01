@@ -36,8 +36,16 @@ void SteamConnectionLogTracker::onLogChanged(const std::vector<QString>& new_lin
 
     if (new_steam_id && m_current_steam_id != new_steam_id)
     {
-        m_current_steam_id = new_steam_id;
-        qCInfo(lc::os).noquote().nospace() << "New user SteamId detected:\n" << m_current_steam_id->toString();
+        if (new_steam_id->isNull())
+        {
+            qCInfo(lc::os).noquote().nospace() << "New user SteamId detected: NULL";
+            m_current_steam_id = std::nullopt;
+        }
+        else
+        {
+            qCInfo(lc::os).noquote().nospace() << "New user SteamId detected:\n" << new_steam_id->toString();
+            m_current_steam_id = new_steam_id;
+        }
     }
 }
 }  // namespace os

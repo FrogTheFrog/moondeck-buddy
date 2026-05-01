@@ -50,6 +50,8 @@ public:
 
     QString toString() const;
 
+    bool isNull() const;
+
     bool operator==(const SteamId&) const = default;
     bool operator!=(const SteamId&) const = default;
 

@@ -158,6 +158,11 @@ QString SteamId::toString() const
     return buffer;
 }
 
+bool SteamId::isNull() const
+{
+    return m_account_number == 0U;
+}
+
 std::optional<SteamId> SteamId::tryConstruct(const QString& original_str, const std::optional<Universe>& universe,
                                              const std::optional<Type>& type, std::uint32_t account_instance,
                                              std::uint32_t account_number, std::uint32_t parity_bit)
