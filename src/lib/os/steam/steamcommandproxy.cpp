@@ -176,12 +176,12 @@ bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QMap<QStr
         m_app_settings, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{}, env_overrides);
 }
 
-bool SteamCommandProxy::launchApp(const std::uint64_t app_id, const QMap<QString, QString>& env_overrides)
+bool SteamCommandProxy::launchApp(const shared::AppId& app_id, const QMap<QString, QString>& env_overrides)
 {
-    const bool is_game_id{(app_id & 0x02000000U) != 0U};
     return executeSteamCommand(m_app_settings,
-                               is_game_id ? QStringList{"steam://rungameid/" + QString::number(app_id)}
-                                          : QStringList{"steam://launch/" + QString::number(app_id) + "/dialog"},
+                               app_id.isGameId()
+                                   ? QStringList{"steam://rungameid/" + QString::number(app_id.getId())}
+                                   : QStringList{"steam://launch/" + QString::number(app_id.getId()) + "/dialog"},
                                env_overrides);
 }
 

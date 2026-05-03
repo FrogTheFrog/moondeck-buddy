@@ -15,14 +15,14 @@ SteamShaderLogTracker::SteamShaderLogTracker(const std::filesystem::path& logs_d
 {
 }
 
-bool SteamShaderLogTracker::isAppCompilingShaders(const std::uint64_t app_id) const
+bool SteamShaderLogTracker::isAppCompilingShaders(const shared::AppId& app_id) const
 {
     return m_apps_with_compiling_shaders.contains(app_id);
 }
 
 void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
-    std::map<std::uint64_t, bool> new_shader_states;
+    std::map<shared::AppId, bool> new_shader_states;
     for (const QString& line : new_lines)
     {
         static const QRegularExpression regex{
@@ -30,14 +30,14 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
         if (const auto match{regex.match(line)}; match.hasMatch())
         {
             const bool started{match.hasCaptured(1)};
-            const auto app_id{appIdFromString(started ? match.captured(1) : match.captured(2))};
-            if (app_id == 0)
+            const auto app_id{shared::AppId::fromString(started ? match.captured(1) : match.captured(2))};
+            if (!app_id)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
                 continue;
             }
 
-            new_shader_states[app_id] = started;
+            new_shader_states[*app_id] = started;
         }
     }
 
@@ -49,7 +49,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             if (data_it == std::end(m_apps_with_compiling_shaders))
             {
                 m_apps_with_compiling_shaders.insert(app_id);
-                qCInfo(lc::os) << "Compiling shaders for AppID:" << app_id;
+                qCInfo(lc::os) << "Compiling shaders for AppID:" << app_id.getId();
             }
         }
         else
@@ -57,7 +57,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             if (data_it != std::end(m_apps_with_compiling_shaders))
             {
                 m_apps_with_compiling_shaders.erase(data_it);
-                qCInfo(lc::os) << "Stopped compiling shaders for AppID:" << app_id;
+                qCInfo(lc::os) << "Stopped compiling shaders for AppID:" << app_id.getId();
             }
         }
     }

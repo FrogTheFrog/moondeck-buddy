@@ -33,12 +33,12 @@ public:
     bool               close();
     bool               closeBigPictureMode();
 
-    std::optional<std::tuple<std::uint64_t, enums::AppState>>
-         getAppData(const std::optional<std::uint64_t>& app_id) const;
-    bool launchApp(std::uint64_t app_id, const QMap<QString, QString>& env_overrides);
+    std::optional<std::tuple<shared::AppId, enums::AppState>>
+         getAppData(const std::optional<shared::AppId>& app_id) const;
+    bool launchApp(const shared::AppId& app_id, const QMap<QString, QString>& env_overrides);
     void clearSessionData();
 
-    std::optional<std::map<std::uint64_t, QString>> getNonSteamAppData(const shared::SteamId& user_id) const;
+    std::optional<std::map<shared::AppId, QString>> getNonSteamAppData(const shared::SteamId& user_id) const;
 
 signals:
     void signalSteamClosed();

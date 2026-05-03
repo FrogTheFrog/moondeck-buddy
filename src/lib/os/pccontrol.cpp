@@ -60,13 +60,13 @@ bool PcControl::closeSteamBigPictureMode()
     return m_steam_handler.closeBigPictureMode();
 }
 
-bool PcControl::launchSteamApp(std::uint64_t app_id)
+bool PcControl::launchSteamApp(const shared::AppId& app_id)
 {
     return m_steam_handler.launchApp(app_id, m_cached_env);
 }
 
-std::optional<std::tuple<std::uint64_t, enums::AppState>>
-    PcControl::getAppData(const std::optional<std::uint64_t>& app_id) const
+std::optional<std::tuple<shared::AppId, enums::AppState>>
+    PcControl::getAppData(const std::optional<shared::AppId>& app_id) const
 {
     return m_steam_handler.getAppData(app_id);
 }
@@ -77,7 +77,7 @@ bool PcControl::clearAppData()
     return true;
 }
 
-std::optional<std::map<std::uint64_t, QString>> PcControl::getNonSteamAppData(const shared::SteamId& user_id) const
+std::optional<std::map<shared::AppId, QString>> PcControl::getNonSteamAppData(const shared::SteamId& user_id) const
 {
     return m_steam_handler.getNonSteamAppData(user_id);
 }

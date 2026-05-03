@@ -237,10 +237,4 @@ void SteamLogTracker::slotCheckLog()
 
     qCDebug(lc::os) << "file" << m_main_filename.generic_string() << "did not change.";
 }
-
-std::uint64_t SteamLogTracker::appIdFromString(const QString& app_id)
-{
-    static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-    return app_id.toULongLong();
-}
 }  // namespace os

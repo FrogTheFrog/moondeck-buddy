@@ -1,61 +1,101 @@
 // header file include
 #include "os/steam/steamappwatcher.h"
 
+// system/Qt includes
+#include <QFile>
+
 // local includes
+#include "os/steam/shortcutsvdf.h"
 #include "os/steam/steamprocesstracker.h"
 #include "shared/loggingcategories.h"
 
-#include <QProcess>
+namespace
+{
+std::optional<shared::AppId>
+    tryFindAppIdOverrideForNonSteamGame(const os::SteamProcessTracker::LogTrackers& log_trackers,
+                                        const std::filesystem::path& steam_dir, const shared::AppId& game_id)
+{
+    if (steam_dir.empty())
+    {
+        qCWarning(lc::os) << "Steam directory is not available yet!";
+        return std::nullopt;
+    }
+
+    const auto current_steam_id{log_trackers.m_connection_log.getCurrentSteamId()};
+    if (!current_steam_id)
+    {
+        qCWarning(lc::os) << "User's SteamId is not available yet - cannot launch games until user logs in!";
+        return std::nullopt;
+    }
+
+    const auto entries{os::ShortcutsVdfEntry::scrapeShortcutsVdf(steam_dir, *current_steam_id)};
+    if (!entries)
+    {
+        return std::nullopt;
+    }
+
+    const auto found_entry{
+        std::ranges::find_if(*entries, [&game_id](const auto& entry) { return entry.m_app_id.toGameId() == game_id; })};
+    if (found_entry == entries->end())
+    {
+        // The shortcuts VDF does not contain such an entry - fallback to the usual detection.
+        qCWarning(lc::os) << "shortcuts.vdf does not contain " << game_id.getId()
+                          << "game id! Falling back to normal detection.";
+        return game_id;
+    }
+
+    QFile file{std::filesystem::path{found_entry->m_start_dir.toStdString()} / "steam_appid.txt"};
+    if (!file.exists())
+    {
+        qCInfo(lc::os) << "AppId override file" << file.filesystemFileName().generic_string() << "does not exist.";
+        return game_id;
+    }
+
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qCWarning(lc::os) << "file" << file.filesystemFileName().generic_string()
+                          << "could not be opened! Falling back to normal detection.";
+        return game_id;
+    }
+
+    // If it's gibberish, Steam will update it at some point
+    return shared::AppId::fromString(file.readLine().trimmed());
+}
+}  // namespace
 
 namespace os
 {
-SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, const std::uint64_t app_id)
+SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, const shared::AppId& app_id)
     : m_process_tracker{process_tracker}
     , m_app_id{app_id}
+    , m_metadata{std::nullopt}
 {
     connect(&m_check_timer, &QTimer::timeout, this, &SteamAppWatcher::slotCheckState);
 
     m_check_timer.setInterval(500);
     m_check_timer.setSingleShot(true);
 
-    qCInfo(lc::os) << "Started watching AppID:" << m_app_id;
+    qCInfo(lc::os) << "Started watching AppID:" << m_app_id.getId();
     slotCheckState();
 }
 
 SteamAppWatcher::~SteamAppWatcher()
 {
-    qCInfo(lc::os) << "Stopped watching AppID:" << m_app_id;
+    qCInfo(lc::os) << "Stopped watching AppID:" << m_app_id.getId();
 }
 
 std::optional<enums::AppState> SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker,
-                                                            const std::uint64_t        app_id,
-                                                            const enums::AppState      prev_state)
+                                                            const shared::AppId&       app_id)
 {
-    const auto* log_trackers{process_tracker.getLogTrackers()};
-    if (log_trackers == nullptr)
+    if (const auto* log_trackers{process_tracker.getLogTrackers()})
     {
-        return std::nullopt;
+        if (const auto metadata{TrackingMetadata::fromAppId(*log_trackers, process_tracker.getSteamDir(), app_id)})
+        {
+            return getAppState(*log_trackers, *metadata, enums::AppState::Stopped);
+        }
     }
 
-    auto       new_state{enums::AppState::Stopped};
-    const auto content_state{log_trackers->m_content_log.getAppState(app_id)};
-
-    if (content_state == SteamContentLogTracker::AppState::Updating
-        || log_trackers->m_shader_log.isAppCompilingShaders(app_id))
-    {
-        new_state = enums::AppState::Updating;
-    }
-    else if (content_state == SteamContentLogTracker::AppState::Running)
-    {
-        new_state = enums::AppState::Running;
-    }
-    else if (log_trackers->m_gameprocess_log.isAnyProcessRunning(app_id))
-    {
-        // Try to preserve the latest state from other logs, unless this is the only data available
-        new_state = prev_state == enums::AppState::Stopped ? enums::AppState::Running : prev_state;
-    }
-
-    return new_state;
+    return std::nullopt;
 }
 
 enums::AppState SteamAppWatcher::getAppState() const
@@ -63,7 +103,7 @@ enums::AppState SteamAppWatcher::getAppState() const
     return m_current_state;
 }
 
-std::uint64_t SteamAppWatcher::getAppId() const
+const shared::AppId& SteamAppWatcher::getAppId() const
 {
     return m_app_id;
 }
@@ -72,9 +112,26 @@ void SteamAppWatcher::slotCheckState()
 {
     const auto auto_start_timer{qScopeGuard([this]() { m_check_timer.start(); })};
 
-    if (const auto new_state{
-            getAppState(m_process_tracker, m_app_id, m_current_state).value_or(enums::AppState::Stopped)};
-        new_state != m_current_state)
+    auto new_state{enums::AppState::Stopped};
+    if (const auto* log_trackers{m_process_tracker.getLogTrackers()})
+    {
+        if (!m_metadata)
+        {
+            m_metadata = TrackingMetadata::fromAppId(*log_trackers, m_process_tracker.getSteamDir(), m_app_id);
+            if (m_metadata && m_metadata->m_trackable_app_id != m_app_id)
+            {
+                qCInfo(lc::os) << "[TRACKING] AppID override detected for non-Steam game. Mapping" << m_app_id.getId()
+                               << "->" << m_metadata->m_trackable_app_id.getId();
+            }
+        }
+
+        if (m_metadata)
+        {
+            new_state = getAppState(*log_trackers, *m_metadata, m_current_state);
+        }
+    }
+
+    if (new_state != m_current_state)
     {
         if (new_state == enums::AppState::Stopped && m_delay_counter < 5)
         {
@@ -82,11 +139,52 @@ void SteamAppWatcher::slotCheckState()
             return;
         }
 
-        qCInfo(lc::os) << "[TRACKING] New app state for AppID" << m_app_id
+        qCInfo(lc::os) << "[TRACKING] New app state for AppID" << m_app_id.getId()
                        << "detected:" << enums::qEnumToString(m_current_state) << "->"
                        << enums::qEnumToString(new_state);
         m_current_state = new_state;
         m_delay_counter = 0;
     }
+}
+
+std::optional<SteamAppWatcher::TrackingMetadata>
+    SteamAppWatcher::TrackingMetadata::fromAppId(const SteamProcessTracker::LogTrackers& log_trackers,
+                                                 const std::filesystem::path& steam_dir, const shared::AppId& app_id)
+{
+    if (!app_id.isGameId())
+    {
+        return TrackingMetadata{app_id};
+    }
+
+    if (const auto non_steam_app_id{tryFindAppIdOverrideForNonSteamGame(log_trackers, steam_dir, app_id)})
+    {
+        return TrackingMetadata{*non_steam_app_id};
+    }
+
+    return std::nullopt;
+}
+
+enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker::LogTrackers& log_trackers,
+                                             const TrackingMetadata& metadata, const enums::AppState prev_state)
+{
+    auto       new_state{enums::AppState::Stopped};
+    const auto content_state{log_trackers.m_content_log.getAppState(metadata.m_trackable_app_id)};
+
+    if (content_state == SteamContentLogTracker::AppState::Updating
+        || log_trackers.m_shader_log.isAppCompilingShaders(metadata.m_trackable_app_id))
+    {
+        new_state = enums::AppState::Updating;
+    }
+    else if (content_state == SteamContentLogTracker::AppState::Running)
+    {
+        new_state = enums::AppState::Running;
+    }
+    else if (log_trackers.m_gameprocess_log.isAnyProcessRunning(metadata.m_trackable_app_id))
+    {
+        // Try to preserve the latest state from other logs, unless this is the only data available
+        new_state = prev_state == enums::AppState::Stopped ? enums::AppState::Running : prev_state;
+    }
+
+    return new_state;
 }
 }  // namespace os

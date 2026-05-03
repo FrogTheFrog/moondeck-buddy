@@ -16,23 +16,23 @@ SteamGameProcessLogTracker::SteamGameProcessLogTracker(const std::filesystem::pa
 {
 }
 
-bool SteamGameProcessLogTracker::isAnyProcessRunning(const std::uint64_t app_id) const
+bool SteamGameProcessLogTracker::isAnyProcessRunning(const shared::AppId& app_id) const
 {
     return m_app_id_to_process_ids.contains(app_id);
 }
 
 void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
-    std::set<std::uint64_t> added_app_ids;
-    std::set<std::uint64_t> removed_app_ids;
+    std::set<shared::AppId> added_app_ids;
+    std::set<shared::AppId> removed_app_ids;
 
     for (const QString& line : new_lines)
     {
         static const QRegularExpression add_regex{R"(AppID (\d+) adding PID (\d+))"};
         if (const auto match{add_regex.match(line)}; match.hasMatch())
         {
-            const auto app_id{appIdFromString(match.captured(1))};
-            if (app_id == 0)
+            const auto app_id{shared::AppId::fromString(match.captured(1))};
+            if (!app_id)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
                 continue;
@@ -45,16 +45,16 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
                 continue;
             }
 
-            auto data_it = m_app_id_to_process_ids.find(app_id);
+            auto data_it = m_app_id_to_process_ids.find(*app_id);
             if (data_it == std::end(m_app_id_to_process_ids))
             {
-                data_it = m_app_id_to_process_ids.emplace(app_id, std::set<uint>{}).first;
+                data_it = m_app_id_to_process_ids.emplace(*app_id, std::set<uint>{}).first;
 
-                if (!removed_app_ids.contains(app_id))
+                if (!removed_app_ids.contains(*app_id))
                 {
-                    added_app_ids.insert(app_id);
+                    added_app_ids.insert(*app_id);
                 }
-                removed_app_ids.erase(app_id);
+                removed_app_ids.erase(*app_id);
             }
 
             data_it->second.insert(pid);
@@ -65,8 +65,8 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             R"((?:Game (\d+) going away.* PID (\d+))|(?:AppID (\d+) no longer.* PID (\d+)))"};
         if (const auto match{remove_regex.match(line)}; match.hasMatch())
         {
-            const auto app_id{appIdFromString(match.hasCaptured(1) ? match.captured(1) : match.captured(3))};
-            if (app_id == 0)
+            const auto app_id{shared::AppId::fromString(match.hasCaptured(1) ? match.captured(1) : match.captured(3))};
+            if (!app_id)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
                 continue;
@@ -79,10 +79,11 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
                 continue;
             }
 
-            auto data_it = m_app_id_to_process_ids.find(app_id);
+            auto data_it = m_app_id_to_process_ids.find(*app_id);
             if (data_it == std::end(m_app_id_to_process_ids))
             {
-                qCWarning(lc::os) << "Trying to remove PID" << pid << "from" << app_id << "but AppID is not tracked!";
+                qCWarning(lc::os) << "Trying to remove PID" << pid << "from" << app_id->getId()
+                                  << "but AppID is not tracked!";
                 continue;
             }
 
@@ -91,23 +92,23 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             {
                 m_app_id_to_process_ids.erase(data_it);
 
-                if (!added_app_ids.contains(app_id))
+                if (!added_app_ids.contains(*app_id))
                 {
-                    removed_app_ids.insert(app_id);
+                    removed_app_ids.insert(*app_id);
                 }
-                added_app_ids.erase(app_id);
+                added_app_ids.erase(*app_id);
             }
         }
     }
 
     for (const auto& app_id : added_app_ids)
     {
-        qCInfo(lc::os) << "Running processes added for AppID:" << app_id;
+        qCInfo(lc::os) << "Running processes added for AppID:" << app_id.getId();
     }
 
     for (const auto& app_id : removed_app_ids)
     {
-        qCInfo(lc::os) << "Running processes removed for AppID:" << app_id;
+        qCInfo(lc::os) << "Running processes removed for AppID:" << app_id.getId();
     }
 }
 }  // namespace os

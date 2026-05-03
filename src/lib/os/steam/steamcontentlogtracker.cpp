@@ -12,8 +12,8 @@ namespace os
 {
 namespace
 {
-std::map<std::uint64_t, SteamContentLogTracker::AppState>
-    remapStateChanges(const std::map<std::uint64_t, QVector<SteamContentLogTracker::AppStateChange>>& input)
+std::map<shared::AppId, SteamContentLogTracker::AppState>
+    remapStateChanges(const std::map<shared::AppId, QVector<SteamContentLogTracker::AppStateChange>>& input)
 {
     using AppStateChange = SteamContentLogTracker::AppStateChange;
     using AppState       = SteamContentLogTracker::AppState;
@@ -44,10 +44,10 @@ std::map<std::uint64_t, SteamContentLogTracker::AppState>
                              Q_UNREACHABLE();
                          }};
 
-    std::map<std::uint64_t, AppState> new_app_states;
+    std::map<shared::AppId, AppState> new_app_states;
     for (const auto& [app_id, state_changes] : input)
     {
-        qCDebug(lc::os) << "New state changes for AppID" << app_id << "detected:" << state_changes;
+        qCDebug(lc::os) << "New state changes for AppID" << app_id.getId() << "detected:" << state_changes;
 
         AppState new_state{AppState::Stopped};
         for (const auto state_change : state_changes)
@@ -75,7 +75,7 @@ SteamContentLogTracker::SteamContentLogTracker(const std::filesystem::path& logs
 {
 }
 
-SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const std::uint64_t app_id) const
+SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const shared::AppId& app_id) const
 {
     const auto it = m_app_states.find(app_id);
     return it != std::end(m_app_states) ? it->second : AppState::Stopped;
@@ -99,15 +99,15 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
                                        return states;
                                    }()};
 
-    std::map<std::uint64_t, QVector<AppStateChange>> new_change_states;
+    std::map<shared::AppId, QVector<AppStateChange>> new_change_states;
     for (const QString& line : new_lines)
     {
         static const QRegularExpression mode_regex{R"(AppID\s(\d+)\sstate\schanged\s:\s(.*),)"};
         const auto                      match{mode_regex.match(line)};
         if (match.hasMatch())
         {
-            const auto app_id{appIdFromString(match.captured(1))};
-            if (app_id == 0)
+            const auto app_id{shared::AppId::fromString(match.captured(1))};
+            if (!app_id)
             {
                 qCWarning(lc::os) << "Failed to get AppID from" << line;
                 continue;
@@ -120,14 +120,14 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
                 auto it = known_states.find(state);
                 if (it == std::end(known_states))
                 {
-                    qCWarning(lc::os) << "Unmapped state for AppID" << app_id << "found:" << state;
+                    qCWarning(lc::os) << "Unmapped state for AppID" << app_id->getId() << "found:" << state;
                     continue;
                 }
 
                 mapped_change_states.append(it->second);
             }
 
-            new_change_states[app_id] = std::move(mapped_change_states);
+            new_change_states[*app_id] = std::move(mapped_change_states);
         }
     }
 
@@ -142,7 +142,7 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
                 continue;
             }
 
-            qCInfo(lc::os) << "New app state for AppID" << app_id
+            qCInfo(lc::os) << "New app state for AppID" << app_id.getId()
                            << "detected:" << enums::qEnumToString(AppState::Stopped) << "->"
                            << enums::qEnumToString(app_state);
             m_app_states[app_id] = app_state;
@@ -154,8 +154,8 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             continue;
         }
 
-        qCInfo(lc::os) << "New app state for AppID" << app_id << "detected:" << enums::qEnumToString(it->second) << "->"
-                       << enums::qEnumToString(app_state);
+        qCInfo(lc::os) << "New app state for AppID" << app_id.getId() << "detected:" << enums::qEnumToString(it->second)
+                       << "->" << enums::qEnumToString(app_state);
         if (app_state == AppState::Stopped)
         {
             m_app_states.erase(it);

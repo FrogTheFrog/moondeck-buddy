@@ -1,116 +1,12 @@
 // header file include
 #include "os/steamhandler.h"
 
-// system/Qt includes
-#include <QFile>
-#include <QProcess>
-
 // local includes
 #include "os/shared/nativeprocesshandlerinterface.h"
+#include "os/steam/shortcutsvdf.h"
 #include "os/steam/steamappwatcher.h"
 #include "shared/loggingcategories.h"
 #include "utils/appsettings.h"
-
-namespace
-{
-// This is a very "son, we have a parser at home" kind of parser, very basic, but gets the job done...
-std::optional<std::map<std::uint64_t, QString>> scrapeShortcutsVdf(const QByteArray& contents)
-{
-    const auto index_of_insensitive{
-        [](const QByteArray& data, const QByteArrayView view, qsizetype from) -> qsizetype
-        {
-            const auto needle{view.at(0)};
-            while (true)
-            {
-                from = data.indexOf(needle, from);
-                if (from == -1)
-                {
-                    break;
-                }
-
-                if (const char* needle_ptr{data.data() + from};
-                    qstrnicmp(needle_ptr, view.data(), qMin(data.size() - from, view.size())) == 0)
-                {
-                    break;
-                }
-                ++from;
-            }
-
-            return from;
-        }};
-
-    std::vector<std::uint32_t> app_ids;
-    {
-        constexpr QByteArrayView app_id_view("\x02"
-                                             "appid"
-                                             "\x00");
-        qsizetype                from{0};
-        while (true)
-        {
-            from = index_of_insensitive(contents, app_id_view, from);
-            if (from == -1)
-            {
-                break;
-            }
-            from += app_id_view.size() + 1;
-
-            if (from + 4 > contents.size())
-            {
-                qCWarning(lc::os) << "Out of range error while scraping shortcuts.vdf for appid!";
-                return std::nullopt;
-            }
-
-            const std::uint32_t app_id{
-                static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from)))
-                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 1))) << 8U
-                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 2))) << 16U
-                | static_cast<std::uint32_t>(static_cast<std::uint8_t>(contents.at(from + 3))) << 24U};
-            app_ids.emplace_back(app_id);
-        }
-    }
-
-    std::vector<QString> app_names;
-    {
-        constexpr QByteArrayView app_name_view("\x01"
-                                               "appname"
-                                               "\x00");
-        qsizetype                from{0};
-        while (true)
-        {
-            from = index_of_insensitive(contents, app_name_view, from);
-            if (from == -1)
-            {
-                break;
-            }
-            from += app_name_view.size() + 1;
-
-            const auto to = contents.indexOf('\0', from);
-            if (to == -1)
-            {
-                qCWarning(lc::os) << "Out of range error while scraping shortcuts.vdf for appname!";
-                return std::nullopt;
-            }
-
-            app_names.emplace_back(QString::fromUtf8(contents.data() + from, to - from));
-        }
-    }
-
-    if (app_names.size() != app_ids.size())
-    {
-        qCWarning(lc::os) << "Failed to scrape shortcuts.vdf - app name and id list size mismatch!";
-        return std::nullopt;
-    }
-
-    std::map<std::uint64_t, QString> data;
-    for (std::size_t i{0}; i < app_ids.size(); ++i)
-    {
-        const auto game_id{static_cast<std::uint64_t>(app_ids[i]) << 32U | 0x02000000U};
-        data[game_id] = app_names[i];
-    }
-
-    return data;
-}
-}  // namespace
 
 namespace os
 {
@@ -208,8 +104,8 @@ bool SteamHandler::closeBigPictureMode()
     return true;
 }
 
-std::optional<std::tuple<std::uint64_t, enums::AppState>>
-    SteamHandler::getAppData(const std::optional<std::uint64_t>& app_id) const
+std::optional<std::tuple<shared::AppId, enums::AppState>>
+    SteamHandler::getAppData(const std::optional<shared::AppId>& app_id) const
 {
     if (app_id)
     {
@@ -227,7 +123,7 @@ std::optional<std::tuple<std::uint64_t, enums::AppState>>
     return std::nullopt;
 }
 
-bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QString>& env_overrides)
+bool SteamHandler::launchApp(const shared::AppId& app_id, const QMap<QString, QString>& env_overrides)
 {
     if (!m_command_proxy.canExecuteCommands())
     {
@@ -235,22 +131,36 @@ bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QSt
         return false;
     }
 
-    if (app_id == 0)
+    if (app_id.getId() == 0)
     {
         qCWarning(lc::os) << "Will not launch app with 0 ID!";
         return false;
     }
 
-    if (const auto app_data{getAppData(std::nullopt)}; app_data && std::get<std::uint64_t>(*app_data) != app_id)
+    m_steam_process_tracker.slotCheckState();
+    const auto* log_trackers{m_steam_process_tracker.getLogTrackers()};
+    if (log_trackers == nullptr)
     {
-        qCWarning(lc::os) << "Buddy is already tracking app id: " << std::get<std::uint64_t>(*app_data);
+        qCWarning(lc::os) << "Steam is not running or the log trackers have not been initialized yet!";
         return false;
     }
 
-    m_steam_process_tracker.slotCheckState();
-    if (getSteamUiMode() == enums::SteamUiMode::Unknown)
+    if (log_trackers->m_web_helper.getSteamUiMode() == enums::SteamUiMode::Unknown)
     {
-        qCWarning(lc::os) << "Steam is not running or has not reached a stable state yet!";
+        qCWarning(lc::os) << "Steam has not reached a stable UI state yet!";
+        return false;
+    }
+
+    const auto current_steam_id{log_trackers->m_connection_log.getCurrentSteamId()};
+    if (!current_steam_id)
+    {
+        qCWarning(lc::os) << "User's SteamId is not available yet - cannot launch games until user logs in!";
+        return false;
+    }
+
+    if (const auto app_data{getAppData(std::nullopt)}; app_data && std::get<shared::AppId>(*app_data) != app_id)
+    {
+        qCWarning(lc::os) << "Buddy is already tracking app id: " << std::get<shared::AppId>(*app_data).getId();
         return false;
     }
 
@@ -261,7 +171,7 @@ bool SteamHandler::launchApp(const std::uint64_t app_id, const QMap<QString, QSt
     {
         if (!m_command_proxy.launchApp(app_id, env_overrides))
         {
-            qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id;
+            qCWarning(lc::os) << "Failed to perform app launch for AppID: " << app_id.getId();
             return false;
         }
     }
@@ -276,44 +186,22 @@ void SteamHandler::clearSessionData()
     m_session_data = {};
 }
 
-std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData(const shared::SteamId& user_id) const
+std::optional<std::map<shared::AppId, QString>> SteamHandler::getNonSteamAppData(const shared::SteamId& user_id) const
 {
-    const auto& steam_dir{m_steam_process_tracker.getSteamDir()};
-    if (steam_dir.empty())
+    if (const auto shortcuts{ShortcutsVdfEntry::scrapeShortcutsVdf(m_steam_process_tracker.getSteamDir(), user_id)})
     {
-        qCWarning(lc::os) << "Steam directory is not available yet!";
-        return std::nullopt;
-    }
+        std::map<shared::AppId, QString> game_ids_to_app_names;
 
-    const auto shortcuts_file{steam_dir / "userdata" / user_id.toSteamId32().toStdString() / "config"
-                              / "shortcuts.vdf"};
-    qInfo(lc::os) << "Mapped user id to shortcuts file:" << user_id.toSteamId64() << "->"
-                  << shortcuts_file.generic_string();
-
-    QFile file{shortcuts_file};
-    if (!file.exists())
-    {
-        qCWarning(lc::os) << "file" << shortcuts_file.generic_string() << "does not exist!";
-        return std::nullopt;
-    }
-
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        qCWarning(lc::os) << "file" << shortcuts_file.generic_string() << "could not be opened!";
-        return std::nullopt;
-    }
-
-    const auto shortcuts{scrapeShortcutsVdf(file.readAll())};
-    if (shortcuts)
-    {
         QString     buffer;
         QTextStream stream(&buffer);
         if (!shortcuts->empty())
         {
             stream << "Found " << shortcuts->size() << " non-Steam shortcut(-s):";
-            for (const auto& [app_id, app_name] : *shortcuts)
+            for (const auto& entry : *shortcuts)
             {
-                stream << Qt::endl << "  " << app_id << " -> " << app_name;
+                const auto game_id{entry.m_app_id.toGameId()};
+                game_ids_to_app_names[game_id] = entry.m_app_name;
+                stream << Qt::endl << "  " << game_id.getId() << " -> " << entry.m_app_name;
             }
         }
         else
@@ -322,9 +210,10 @@ std::optional<std::map<std::uint64_t, QString>> SteamHandler::getNonSteamAppData
         }
 
         qCInfo(lc::os).noquote() << buffer;
+        return game_ids_to_app_names;
     }
 
-    return shortcuts;
+    return std::nullopt;
 }
 
 void SteamHandler::slotSteamProcessStateChanged()

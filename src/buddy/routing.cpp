@@ -228,45 +228,46 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                      return QHttpServerResponse{QJsonObject{{"mode", enums::qEnumToString(mode)}}};
                  });
 
-    server.route("/nonSteamAppData", QHttpServerRequest::Method::Get,
-                 [&server, &pc_control](const QHttpServerRequest& request)
-                 {
-                     if (!server.isAuthorized(request))
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
-                     }
+    server.route(
+        "/nonSteamAppData", QHttpServerRequest::Method::Get,
+        [&server, &pc_control](const QHttpServerRequest& request)
+        {
+            if (!server.isAuthorized(request))
+            {
+                return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+            }
 
-                     const auto json = requestToJsonObject(request);
-                     if (json.isEmpty())
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
-                     }
+            const auto json = requestToJsonObject(request);
+            if (json.isEmpty())
+            {
+                return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+            }
 
-                     const auto user_id_opt{shared::SteamId::fromString(
-                         utils::getJsonValue<QString>(json, "user_id").value_or(QString{}))};
-                     if (!user_id_opt)
-                     {
-                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
-                     }
+            const auto user_id_opt{
+                shared::SteamId::fromString(utils::getJsonValue<QString>(json, "user_id").value_or(QString{}))};
+            if (!user_id_opt)
+            {
+                return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+            }
 
-                     return QHttpServerResponse{
-                         [&pc_control, &user_id_opt]()
-                         {
-                             const auto data{pc_control.getNonSteamAppData(*user_id_opt)};
-                             if (!data)
-                             {
-                                 return QJsonObject{{"data", QJsonValue::Null}};
-                             }
+            return QHttpServerResponse{
+                [&pc_control, &user_id_opt]()
+                {
+                    const auto data{pc_control.getNonSteamAppData(*user_id_opt)};
+                    if (!data)
+                    {
+                        return QJsonObject{{"data", QJsonValue::Null}};
+                    }
 
-                             QJsonArray json_array;
-                             for (const auto& [app_id, app_name] : *data)
-                             {
-                                 json_array.push_back({{{"app_id", QString::number(app_id)}, {"app_name", app_name}}});
-                             }
+                    QJsonArray json_array;
+                    for (const auto& [app_id, app_name] : *data)
+                    {
+                        json_array.push_back({{{"app_id", QString::number(app_id.getId())}, {"app_name", app_name}}});
+                    }
 
-                             return QJsonObject{{"data", json_array}};
-                         }()};
-                 });
+                    return QJsonObject{{"data", json_array}};
+                }()};
+        });
 
     server.route("/launchSteam", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -306,18 +307,19 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto app_id_opt{utils::getJsonValue<QString>(json, "app_id")};
-                     bool       app_id_ok{false};
-
-                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-                     const std::uint64_t app_id{app_id_opt ? app_id_opt->toULongLong(&app_id_ok) : 0};
-
-                     if (!app_id_ok)
+                     const auto app_id_str{utils::getJsonValue<QString>(json, "app_id")};
+                     if (!app_id_str)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteamApp(app_id)};
+                     const auto app_id{shared::AppId::fromString(*app_id_str)};
+                     if (!app_id)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const bool result{pc_control.launchSteamApp(*app_id)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -379,7 +381,7 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
 
                              const auto& [app_id, app_state] = *data;
                              return QJsonObject{
-                                 {"data", QJsonObject{{{"app_id", QString::number(app_id)},
+                                 {"data", QJsonObject{{{"app_id", QString::number(app_id.getId())},
                                                        {"app_state", enums::qEnumToString(app_state)}}}}};
                          }()};
                  });
