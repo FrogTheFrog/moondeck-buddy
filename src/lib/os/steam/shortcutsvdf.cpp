@@ -2,7 +2,8 @@
 #include "os/steam/shortcutsvdf.h"
 
 // system/Qt includes
-#include <QFile>
+#include <QDateTime>
+#include <QFileInfo>
 
 // local includes
 #include "shared/loggingcategories.h"
@@ -158,6 +159,14 @@ std::optional<std::vector<ShortcutsVdfEntry>> ShortcutsVdfEntry::scrapeShortcuts
 std::optional<std::vector<ShortcutsVdfEntry>>
     ShortcutsVdfEntry::scrapeShortcutsVdf(const std::filesystem::path& steam_dir, const shared::SteamId& user_id)
 {
+    struct CacheMetadata
+    {
+        std::vector<ShortcutsVdfEntry> m_entries;
+        QDateTime                      m_last_modified;
+        QDateTime                      m_last_read_by_us;
+    };
+    static std::map<std::filesystem::path, CacheMetadata> entry_cache;
+
     if (steam_dir.empty())
     {
         qCWarning(lc::os) << "Steam directory is not available yet!";
@@ -166,8 +175,26 @@ std::optional<std::vector<ShortcutsVdfEntry>>
 
     const auto shortcuts_file{steam_dir / "userdata" / user_id.toSteamId32().toStdString() / "config"
                               / "shortcuts.vdf"};
-    qDebug(lc::os) << "Mapped user id to shortcuts file:" << user_id.toSteamId64() << "->"
-                   << shortcuts_file.generic_string();
+    const auto last_modified_ts{QFileInfo{shortcuts_file}.lastModified()};
+    const auto now{QDateTime::currentDateTimeUtc()};
+
+    if (const auto cache_it{entry_cache.find(shortcuts_file)}; cache_it != entry_cache.end())
+    {
+        constexpr int cache_lifetime_seconds{60};
+        const bool    modified_ts_is_same{last_modified_ts == cache_it->second.m_last_modified};
+        const bool cache_is_not_expired{qAbs(cache_it->second.m_last_read_by_us.secsTo(now)) < cache_lifetime_seconds};
+
+        if (modified_ts_is_same && cache_is_not_expired)
+        {
+            qInfo(lc::os) << "Hit cache for:" << shortcuts_file.generic_string();
+            return cache_it->second.m_entries;
+        }
+
+        entry_cache.erase(cache_it);
+    }
+
+    qInfo(lc::os) << "Mapped user id to shortcuts file:" << user_id.toSteamId64() << "->"
+                  << shortcuts_file.generic_string();
 
     QFile file{shortcuts_file};
     if (!file.exists())
@@ -182,6 +209,13 @@ std::optional<std::vector<ShortcutsVdfEntry>>
         return std::nullopt;
     }
 
-    return scrapeShortcutsVdf(file.readAll());
+    if (auto shortcuts{scrapeShortcutsVdf(file.readAll())})
+    {
+        entry_cache[shortcuts_file] =
+            CacheMetadata{.m_entries = *shortcuts, .m_last_modified = last_modified_ts, .m_last_read_by_us = now};
+        return shortcuts;
+    }
+
+    return std::nullopt;
 }
 }  // namespace os
