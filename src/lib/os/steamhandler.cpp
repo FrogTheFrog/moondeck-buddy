@@ -190,7 +190,7 @@ std::optional<std::map<shared::AppId, QString>> SteamHandler::getNonSteamAppData
 {
     if (const auto shortcuts{ShortcutsVdfEntry::scrapeShortcutsVdf(m_steam_process_tracker.getSteamDir(), user_id)})
     {
-        std::map<shared::AppId, QString> game_ids_to_app_names;
+        std::map<shared::AppId, QString> app_ids_to_app_names;
 
         QString     buffer;
         QTextStream stream(&buffer);
@@ -199,9 +199,8 @@ std::optional<std::map<shared::AppId, QString>> SteamHandler::getNonSteamAppData
             stream << "Found " << shortcuts->size() << " non-Steam shortcut(-s):";
             for (const auto& entry : *shortcuts)
             {
-                const auto game_id{entry.m_app_id.toGameId()};
-                game_ids_to_app_names[game_id] = entry.m_app_name;
-                stream << Qt::endl << "  " << game_id.getId() << " -> " << entry.m_app_name;
+                app_ids_to_app_names[entry.m_app_id] = entry.m_app_name;
+                stream << Qt::endl << "  " << entry.m_app_id.getGameId() << " -> " << entry.m_app_name;
             }
         }
         else
@@ -210,7 +209,7 @@ std::optional<std::map<shared::AppId, QString>> SteamHandler::getNonSteamAppData
         }
 
         qCInfo(lc::os).noquote() << buffer;
-        return game_ids_to_app_names;
+        return app_ids_to_app_names;
     }
 
     return std::nullopt;

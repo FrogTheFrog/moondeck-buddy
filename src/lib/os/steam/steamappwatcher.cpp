@@ -13,7 +13,7 @@ namespace
 {
 std::optional<shared::AppId>
     tryFindAppIdOverrideForNonSteamGame(const os::SteamProcessTracker::LogTrackers& log_trackers,
-                                        const std::filesystem::path& steam_dir, const shared::AppId& game_id)
+                                        const std::filesystem::path& steam_dir, const shared::AppId& app_id)
 {
     if (steam_dir.empty())
     {
@@ -34,28 +34,28 @@ std::optional<shared::AppId>
         return std::nullopt;
     }
 
-    const auto found_entry{
-        std::ranges::find_if(*entries, [&game_id](const auto& entry) { return entry.m_app_id.toGameId() == game_id; })};
+    const auto found_entry{std::ranges::find_if(*entries, [&app_id](const auto& entry)
+                                                { return entry.m_app_id.getGameId() == app_id.getGameId(); })};
     if (found_entry == entries->end())
     {
         // The shortcuts VDF does not contain such an entry - fallback to the usual detection.
-        qCWarning(lc::os) << "shortcuts.vdf does not contain " << game_id.getId()
+        qCWarning(lc::os) << "shortcuts.vdf does not contain " << app_id.getGameId()
                           << "game id! Falling back to normal detection.";
-        return game_id;
+        return app_id;
     }
 
     QFile file{std::filesystem::path{found_entry->m_start_dir.toStdString()} / "steam_appid.txt"};
     if (!file.exists())
     {
         qCInfo(lc::os) << "AppId override file" << file.filesystemFileName().generic_string() << "does not exist.";
-        return game_id;
+        return app_id;
     }
 
     if (!file.open(QIODevice::ReadOnly))
     {
         qCWarning(lc::os) << "file" << file.filesystemFileName().generic_string()
                           << "could not be opened! Falling back to normal detection.";
-        return game_id;
+        return app_id;
     }
 
     // If it's gibberish, Steam will update it at some point

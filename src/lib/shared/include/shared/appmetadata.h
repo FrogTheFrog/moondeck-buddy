@@ -7,7 +7,7 @@ namespace shared
 {
 class AppMetadata final : public QObject
 {
-    Q_OBJECT
+    Q_GADGET
 
 public:
     enum class App
