@@ -3,13 +3,13 @@
 
 namespace
 {
-constexpr std::uint32_t internal_app_id_mask{0x00FFFFFF};
-constexpr std::uint32_t internal_app_id_offset{24U};
-constexpr std::uint32_t high_bits_offset{32U};
-constexpr std::uint32_t game_id_type_mask{0xFF};
-constexpr std::uint32_t mod_id_flag{0x80000000};
-constexpr std::uint32_t game_mod_game_id_type{1};
-constexpr std::uint32_t shortcut_game_id_type{2};
+constexpr std::uint32_t INTERNAL_APP_ID_MASK{0x00FFFFFF};
+constexpr std::uint32_t INTERNAL_APP_ID_OFFSET{24U};
+constexpr std::uint32_t HIGH_BITS_OFFSET{32U};
+constexpr std::uint32_t GAME_ID_TYPE_MASK{0xFF};
+constexpr std::uint32_t MOD_ID_FLAG{0x80000000};
+constexpr std::uint32_t GAME_MOD_GAME_ID_TYPE{1};
+constexpr std::uint32_t SHORTCUT_GAME_ID_TYPE{2};
 
 std::uint32_t getLowBits(const std::uint64_t value)
 {
@@ -18,41 +18,41 @@ std::uint32_t getLowBits(const std::uint64_t value)
 
 std::uint32_t getHighBits(const std::uint64_t value)
 {
-    return static_cast<std::uint32_t>(value >> high_bits_offset);
+    return static_cast<std::uint32_t>(value >> HIGH_BITS_OFFSET);
 }
 
 std::uint32_t getAppId(const std::uint64_t app_or_game_id)
 {
-    return getLowBits(app_or_game_id) & internal_app_id_mask;
+    return getLowBits(app_or_game_id) & INTERNAL_APP_ID_MASK;
 }
 
 std::uint32_t getModId(const std::uint64_t app_or_game_id)
 {
     const auto bits{getHighBits(app_or_game_id)};
-    return (bits & mod_id_flag) != 0U ? bits : 0U;
+    return (bits & MOD_ID_FLAG) != 0U ? bits : 0U;
 }
 
 std::uint32_t getTypeValue(const std::uint64_t value)
 {
-    return getLowBits(value) >> internal_app_id_offset & game_id_type_mask;
+    return getLowBits(value) >> INTERNAL_APP_ID_OFFSET & GAME_ID_TYPE_MASK;
 }
 
 std::uint64_t toShortcutGameId(const std::uint64_t non_steam_app_id)
 {
-    return (non_steam_app_id << high_bits_offset) | (shortcut_game_id_type << internal_app_id_offset);
+    return (non_steam_app_id << HIGH_BITS_OFFSET) | (SHORTCUT_GAME_ID_TYPE << INTERNAL_APP_ID_OFFSET);
 }
 
 std::optional<steam::AppId::IdType> guessGameId(const std::uint64_t app_or_game_id)
 {
     switch (getTypeValue(app_or_game_id))
     {
-        case game_mod_game_id_type:
+        case GAME_MOD_GAME_ID_TYPE:
             if (getAppId(app_or_game_id) != 0U && getModId(app_or_game_id) != 0U)
             {
                 return steam::AppId::IdType::ModGameId;
             }
             break;
-        case shortcut_game_id_type:
+        case SHORTCUT_GAME_ID_TYPE:
             if (getModId(app_or_game_id) != 0U)
             {
                 return steam::AppId::IdType::ShortcutGameId;
