@@ -4,9 +4,9 @@
 #include <QRegularExpression>
 
 // local includes
+#include "common/appmetadata.h"
+#include "common/loggingcategories.h"
 #include "os/sleepinhibitor.h"
-#include "shared/appmetadata.h"
-#include "shared/loggingcategories.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
 #include "utils/shmserialization.h"
@@ -32,7 +32,7 @@ QMap<QString, QString> getMatchingEnv(const QRegularExpression& regex)
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 int main(int argc, char* argv[])
 {
-    const shared::AppMetadata  app_meta{shared::AppMetadata::App::Stream};
+    const common::AppMetadata  app_meta{common::AppMetadata::App::Stream};
     utils::SingleInstanceGuard guard{app_meta.getAppName()};
 
     QCoreApplication app{argc, argv};

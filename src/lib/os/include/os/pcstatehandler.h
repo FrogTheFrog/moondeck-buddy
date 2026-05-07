@@ -1,7 +1,7 @@
 #pragma once
 
 // local includes
-#include "shared/enums.h"
+#include "common/enums.h"
 
 // forward declarations
 namespace os
@@ -17,7 +17,7 @@ class PcStateHandler : public QObject
     Q_DISABLE_COPY(PcStateHandler)
 
 public:
-    explicit PcStateHandler(std::unique_ptr<NativePcStateHandlerInterface> native_handler);
+    explicit PcStateHandler();
     ~PcStateHandler() override;
 
     enums::PcState getState() const;

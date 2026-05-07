@@ -5,12 +5,11 @@
 #include <windows.h>
 
 // system/Qt includes
+#include <QTimeZone>
 #include <psapi.h>
 
 // local includes
-#include "shared/loggingcategories.h"
-
-#include <QTimeZone>
+#include "common/loggingcategories.h"
 
 namespace
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 // local includes
-#include "os/shared/nativeprocesshandlerinterface.h"
+#include "os/common/nativeprocesshandlerinterface.h"
 
 namespace os
 {

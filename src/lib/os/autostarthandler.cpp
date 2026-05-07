@@ -15,7 +15,7 @@
 
 namespace os
 {
-AutoStartHandler::AutoStartHandler(const shared::AppMetadata& app_meta)
+AutoStartHandler::AutoStartHandler(const common::AppMetadata& app_meta)
     : m_impl{std::make_unique<NativeAutoStartHandler>(app_meta)}
 {
 }

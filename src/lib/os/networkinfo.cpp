@@ -13,7 +13,7 @@
 #include <QtNetwork/QNetworkInterface>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
 
 namespace
 {

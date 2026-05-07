@@ -1,0 +1,52 @@
+#pragma once
+
+// local includes
+#include "appid.h"
+#include "steamlogtracker.h"
+
+namespace steam
+{
+class SteamContentLogTracker : public SteamLogTracker
+{
+    Q_OBJECT
+
+public:
+    enum class AppState
+    {
+        Stopped,
+        Running,
+        Updating
+    };
+    Q_ENUM(AppState)
+
+    enum class AppStateChange
+    {
+        UpdateRequired,
+        UpdateQueued,
+        UpdateRunning,
+        UpdateStarted,
+        UpdateOptional,
+        FullyInstalled,
+        AppRunning,
+        FilesMissing,
+        Uninstalling,
+        Uninstalled,
+        ComponentInUse,
+        Terminating,
+        PrefetchingInfo,
+        SharedOnly
+    };
+    Q_ENUM(AppStateChange)
+
+    explicit SteamContentLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
+    ~SteamContentLogTracker() override = default;
+
+    AppState getAppState(const AppId& app_id) const;
+
+protected:
+    void onLogChanged(const std::vector<QString>& new_lines) override;
+
+private:
+    std::map<AppId, AppState> m_app_states;
+};
+}  // namespace steam

@@ -4,7 +4,7 @@
 #include <QtDBus/QDBusInterface>
 
 // local includes
-#include "os/shared/nativepcstatehandlerinterface.h"
+#include "os/common/nativepcstatehandlerinterface.h"
 
 namespace os
 {

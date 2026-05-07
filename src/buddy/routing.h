@@ -1,10 +1,10 @@
 #pragma once
 
 // local includes
-#include "os/pccontrol.h"
-#include "os/sunshineapps.h"
+#include "pccontrol.h"
 #include "server/httpserver.h"
 #include "server/pairingmanager.h"
+#include "sunshineapps.h"
 
-void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps, const QString& mac_address_override);
+void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
+                 SunshineApps& sunshine_apps, const QString& mac_address_override);
