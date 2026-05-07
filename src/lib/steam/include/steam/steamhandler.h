@@ -27,7 +27,7 @@ public:
     explicit SteamHandler(const utils::AppSettings& app_settings);
     ~SteamHandler() override;
 
-    bool               launchSteam(bool big_picture_mode, const QMap<QString, QString>& env_overrides);
+    bool launchSteam(bool big_picture_mode, const QString& username, const QMap<QString, QString>& env_overrides);
     enums::SteamUiMode getSteamUiMode() const;
     bool               close();
     bool               closeBigPictureMode();
@@ -37,6 +37,7 @@ public:
     void clearSessionData();
 
     std::optional<std::map<AppId, QString>> getNonSteamAppData(const SteamId& user_id) const;
+    std::optional<SteamId>                  getCurrentUserId() const;
 
 signals:
     void signalSteamClosed();

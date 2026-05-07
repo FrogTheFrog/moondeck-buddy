@@ -24,7 +24,7 @@ public:
 
     bool canExecuteCommands() const;
 
-    bool launchSteam(bool big_picture_mode, const QMap<QString, QString>& env_overrides);
+    bool launchSteam(bool big_picture_mode, const QString& username, const QMap<QString, QString>& env_overrides);
     bool launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides);
 
     bool close();

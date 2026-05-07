@@ -189,18 +189,16 @@ void setupHostInfo(server::HttpServer& server, const QString& mac_address_overri
                          qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
                      }
-                     else
-                     {
-                         static const QRegularExpression regex{
-                             R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
-                         if (!mac.contains(regex))
-                         {
-                             qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
-                             return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
-                         }
 
-                         mac.replace('-', ':');
+                     static const QRegularExpression regex{
+                         R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
+                     if (!mac.contains(regex))
+                     {
+                         qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
                      }
+
+                     mac.replace('-', ':');
 
 #if defined(Q_OS_WIN)
                      const QString os_type{"Windows"};
@@ -269,6 +267,23 @@ void setupSteam(server::HttpServer& server, PcControl& pc_control)
                          }()};
                  });
 
+    server.route("/currentUserId", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto user_id{pc_control.getCurrentUserId()};
+                     if (!user_id)
+                     {
+                         return QHttpServerResponse{QJsonObject{{"user_id", QJsonValue::Null}}};
+                     }
+
+                     return QHttpServerResponse{QJsonObject{{"user_id", user_id->toSteamId64()}}};
+                 });
+
     server.route("/launchSteam", QHttpServerRequest::Method::Post,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
@@ -289,7 +304,8 @@ void setupSteam(server::HttpServer& server, PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteam(*big_picture_mode)};
+                     const auto username{utils::getJsonValue<QString>(json, "username")};
+                     const bool result{pc_control.launchSteam(*big_picture_mode, username.value_or(QString{}))};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 

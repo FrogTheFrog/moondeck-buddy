@@ -25,7 +25,7 @@ public:
     explicit PcControl(const utils::AppSettings& app_settings);
     ~PcControl() override;
 
-    bool               launchSteam(bool big_picture_mode);
+    bool               launchSteam(bool big_picture_mode, const QString& username);
     enums::SteamUiMode getSteamUiMode() const;
     bool               closeSteam();
     bool               closeSteamBigPictureMode();
@@ -36,6 +36,7 @@ public:
     bool clearAppData();
 
     std::optional<std::map<steam::AppId, QString>> getNonSteamAppData(const steam::SteamId& user_id) const;
+    std::optional<steam::SteamId>                  getCurrentUserId() const;
 
     bool shutdownPC(uint delay_in_seconds);
     bool restartPC(uint delay_in_seconds);

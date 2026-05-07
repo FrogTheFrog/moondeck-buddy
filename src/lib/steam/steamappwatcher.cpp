@@ -40,7 +40,7 @@ std::optional<steam::AppId>
     {
         // The shortcuts VDF does not contain such an entry - fallback to the usual detection.
         qCWarning(lc::steam) << "shortcuts.vdf does not contain " << app_id.getGameId()
-                          << "game id! Falling back to normal detection.";
+                             << "game id! Falling back to normal detection.";
         return app_id;
     }
 
@@ -54,7 +54,7 @@ std::optional<steam::AppId>
     if (!file.open(QIODevice::ReadOnly))
     {
         qCWarning(lc::steam) << "file" << file.filesystemFileName().generic_string()
-                          << "could not be opened! Falling back to normal detection.";
+                             << "could not be opened! Falling back to normal detection.";
         return app_id;
     }
 
@@ -120,8 +120,8 @@ void SteamAppWatcher::slotCheckState()
             m_metadata = TrackingMetadata::fromAppId(*log_trackers, m_process_tracker.getSteamDir(), m_app_id);
             if (m_metadata && m_metadata->m_trackable_app_id != m_app_id)
             {
-                qCInfo(lc::steam) << "[TRACKING] AppID override detected for non-Steam game. Mapping" << m_app_id.getId()
-                               << "->" << m_metadata->m_trackable_app_id.getId();
+                qCInfo(lc::steam) << "[TRACKING] AppID override detected for non-Steam game. Mapping"
+                                  << m_app_id.getId() << "->" << m_metadata->m_trackable_app_id.getId();
             }
         }
 
@@ -140,8 +140,8 @@ void SteamAppWatcher::slotCheckState()
         }
 
         qCInfo(lc::steam) << "[TRACKING] New app state for AppID" << m_app_id.getId()
-                       << "detected:" << enums::qEnumToString(m_current_state) << "->"
-                       << enums::qEnumToString(new_state);
+                          << "detected:" << enums::qEnumToString(m_current_state) << "->"
+                          << enums::qEnumToString(new_state);
         m_current_state = new_state;
         m_delay_counter = 0;
     }

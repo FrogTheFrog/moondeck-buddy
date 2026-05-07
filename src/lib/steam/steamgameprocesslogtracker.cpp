@@ -83,7 +83,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             if (data_it == std::end(m_app_id_to_process_ids))
             {
                 qCWarning(lc::steam) << "Trying to remove PID" << pid << "from" << app_id->getId()
-                                  << "but AppID is not tracked!";
+                                     << "but AppID is not tracked!";
                 continue;
             }
 

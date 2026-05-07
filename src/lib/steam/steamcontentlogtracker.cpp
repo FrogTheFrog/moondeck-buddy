@@ -143,8 +143,8 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             }
 
             qCInfo(lc::steam) << "New app state for AppID" << app_id.getId()
-                           << "detected:" << enums::qEnumToString(AppState::Stopped) << "->"
-                           << enums::qEnumToString(app_state);
+                              << "detected:" << enums::qEnumToString(AppState::Stopped) << "->"
+                              << enums::qEnumToString(app_state);
             m_app_states[app_id] = app_state;
             continue;
         }
@@ -154,8 +154,8 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             continue;
         }
 
-        qCInfo(lc::steam) << "New app state for AppID" << app_id.getId() << "detected:" << enums::qEnumToString(it->second)
-                       << "->" << enums::qEnumToString(app_state);
+        qCInfo(lc::steam) << "New app state for AppID" << app_id.getId()
+                          << "detected:" << enums::qEnumToString(it->second) << "->" << enums::qEnumToString(app_state);
         if (app_state == AppState::Stopped)
         {
             m_app_states.erase(it);

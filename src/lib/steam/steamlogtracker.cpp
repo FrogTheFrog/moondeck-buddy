@@ -172,7 +172,7 @@ void SteamLogTracker::slotCheckLog()
     if (!m_initialized)
     {
         qCInfo(lc::steam) << "performing initial log read for files" << m_main_filename.generic_string() << "and"
-                       << m_backup_filename.generic_string();
+                          << m_backup_filename.generic_string();
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
@@ -184,7 +184,7 @@ void SteamLogTracker::slotCheckLog()
             }
 
             qCInfo(lc::steam) << "skipping file" << m_backup_filename.generic_string()
-                           << "for initial read, because it does not exist.";
+                              << "for initial read, because it does not exist.";
         }
 
         std::vector<QString> lines;
@@ -218,7 +218,7 @@ void SteamLogTracker::slotCheckLog()
     if (was_main_file_switched_with_backup)
     {
         qCDebug(lc::steam) << "file" << m_main_filename.generic_string() << "was switched with"
-                        << m_backup_filename.generic_string();
+                           << m_backup_filename.generic_string();
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))

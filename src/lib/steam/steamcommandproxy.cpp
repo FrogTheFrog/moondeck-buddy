@@ -36,7 +36,7 @@ bool setupProcess(const QString& exec, const QStringList& args, const QMap<QStri
     }
 
     qCInfo(lc::steam).nospace() << (env_overrides.empty() ? "" : "[WITH ENV OVERRIDES] ") << "Executing: " << exec
-                             << " with args: " << args;
+                                << " with args: " << args;
     return true;
 }
 
@@ -170,8 +170,10 @@ bool SteamCommandProxy::canExecuteCommands() const
     return !getSteamExecutableWithArgs(m_app_settings).isEmpty();
 }
 
-bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QMap<QString, QString>& env_overrides)
+bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QString& username,
+                                    const QMap<QString, QString>& env_overrides)
 {
+    Q_UNUSED(username)
     return executeSteamCommand(
         m_app_settings, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{}, env_overrides);
 }

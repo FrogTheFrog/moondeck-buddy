@@ -18,7 +18,8 @@ SteamHandler::SteamHandler(const utils::AppSettings& app_settings)
 
 SteamHandler::~SteamHandler() = default;
 
-bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, QString>& env_overrides)
+bool SteamHandler::launchSteam(const bool big_picture_mode, const QString& username,
+                               const QMap<QString, QString>& env_overrides)
 {
     if (!m_command_proxy.canExecuteCommands())
     {
@@ -30,7 +31,7 @@ bool SteamHandler::launchSteam(const bool big_picture_mode, const QMap<QString, 
     if (!m_steam_process_tracker.isRunning()
         || (big_picture_mode && getSteamUiMode() != enums::SteamUiMode::BigPicture))
     {
-        if (!m_command_proxy.launchSteam(big_picture_mode, env_overrides))
+        if (!m_command_proxy.launchSteam(big_picture_mode, username, env_overrides))
         {
             qCWarning(lc::steam) << "Failed to launch Steam!";
             return false;
@@ -211,12 +212,22 @@ std::optional<std::map<AppId, QString>> SteamHandler::getNonSteamAppData(const S
     return std::nullopt;
 }
 
+std::optional<SteamId> SteamHandler::getCurrentUserId() const
+{
+    if (const auto* log_trackers{m_steam_process_tracker.getLogTrackers()})
+    {
+        return log_trackers->m_connection_log.getCurrentSteamId();
+    }
+
+    return std::nullopt;
+}
+
 void SteamHandler::slotSteamProcessStateChanged()
 {
     if (m_steam_process_tracker.isRunning())
     {
         qCInfo(lc::steam) << "Steam is running! PID:" << m_steam_process_tracker.getPid()
-                       << "| START_TIME:" << m_steam_process_tracker.getStartTime();
+                          << "| START_TIME:" << m_steam_process_tracker.getStartTime();
     }
     else
     {
