@@ -25,4 +25,4 @@ protected:
 private:
     std::set<AppId> m_apps_with_compiling_shaders;
 };
-}  // namespace os
+}  // namespace steam
