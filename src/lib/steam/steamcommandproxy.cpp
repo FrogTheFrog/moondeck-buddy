@@ -173,9 +173,19 @@ bool SteamCommandProxy::canExecuteCommands() const
 bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QString& username,
                                     const QMap<QString, QString>& env_overrides)
 {
-    Q_UNUSED(username)
-    return executeSteamCommand(
-        m_app_settings, big_picture_mode ? QStringList{"steam://open/bigpicture"} : QStringList{}, env_overrides);
+    QStringList args;
+
+    if (big_picture_mode)
+    {
+        args += "-gamepadui";
+    }
+
+    if (!username.isEmpty())
+    {
+        args += {"-login", username};
+    }
+
+    return executeSteamCommand(m_app_settings, args, env_overrides);
 }
 
 bool SteamCommandProxy::launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides)
