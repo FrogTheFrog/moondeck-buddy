@@ -177,7 +177,7 @@ bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QString& 
 
     if (big_picture_mode)
     {
-        args += "-gamepadui";
+        args += "steam://open/bigpicture";
     }
 
     if (!username.isEmpty())

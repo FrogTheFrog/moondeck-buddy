@@ -267,7 +267,7 @@ void setupSteam(server::HttpServer& server, PcControl& pc_control)
                          }()};
                  });
 
-    server.route("/currentUserId", QHttpServerRequest::Method::Get,
+    server.route("/currentUser", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
                  {
                      if (!server.isAuthorized(request))
@@ -278,11 +278,12 @@ void setupSteam(server::HttpServer& server, PcControl& pc_control)
                      const auto user_id{pc_control.getCurrentUserId()};
                      if (!user_id)
                      {
-                         return QHttpServerResponse{QJsonObject{}};
+                         return QHttpServerResponse{QJsonObject{{"user", QJsonValue::Null}}};
                      }
 
                      return QHttpServerResponse{QJsonObject{
-                         {"user_id", user_id->isNull() ? QJsonValue{user_id->toSteamId64()} : QJsonValue::Null}}};
+                         {"user", QJsonObject{{"id", user_id->isNull() ? QJsonValue::Null
+                                                                       : QJsonValue{user_id->toSteamId64()}}}}}};
                  });
 
     server.route("/launchSteam", QHttpServerRequest::Method::Post,

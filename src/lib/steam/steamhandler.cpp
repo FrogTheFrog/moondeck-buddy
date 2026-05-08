@@ -62,22 +62,33 @@ bool SteamHandler::close()
     // Clear the session data as we are no longer interested in it
     clearSessionData();
 
-    // Try to shut down steam gracefully first
-    if (m_command_proxy.canExecuteCommands())
+    if (const auto current_steam_id{getCurrentUserId()}; current_steam_id && !current_steam_id->isNull())
     {
-        if (m_command_proxy.close())
+        // Try to shut down steam gracefully first
+        if (m_command_proxy.canExecuteCommands())
         {
-            return true;
+            if (m_command_proxy.close())
+            {
+                return true;
+            }
+
+            qCWarning(lc::steam) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
+        }
+        else
+        {
+            qCWarning(lc::steam) << "Steam commands cannot be executed yet, using other means of closing!";
         }
 
-        qCWarning(lc::steam) << "Failed to start Steam shutdown sequence! Using others means to close steam...";
-    }
-    else
-    {
-        qCWarning(lc::steam) << "Steam commands cannot be executed yet, using other means of closing!";
+        return true;
     }
 
+#if defined(Q_OS_WIN)
+    m_steam_process_tracker.terminate();
+#elif defined(Q_OS_LINUX)
     m_steam_process_tracker.close();
+#else
+    #error OS is not supported!
+#endif
     return true;
 }
 
@@ -149,7 +160,7 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     }
 
     const auto current_steam_id{log_trackers->m_connection_log.getCurrentSteamId()};
-    if (!current_steam_id)
+    if (!current_steam_id || current_steam_id->isNull())
     {
         qCWarning(lc::steam) << "User's SteamId is not available yet - cannot launch games until user logs in!";
         return false;
