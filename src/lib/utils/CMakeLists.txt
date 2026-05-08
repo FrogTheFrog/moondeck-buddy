@@ -23,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets sharedlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Widgets commonlib)
 target_include_directories(${LIBNAME} PUBLIC include)

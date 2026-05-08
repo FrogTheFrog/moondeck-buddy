@@ -5,7 +5,7 @@
 #include <QtDBus/QDBusReply>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
 
 namespace
 {

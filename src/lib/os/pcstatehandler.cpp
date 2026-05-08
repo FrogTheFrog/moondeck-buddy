@@ -4,9 +4,18 @@
 // system/Qt includes
 #include <QTimer>
 
+// os-specific includes
+#if defined(Q_OS_WIN)
+    #include "os/win/nativepcstatehandler.h"
+#elif defined(Q_OS_LINUX)
+    #include "os/linux/nativepcstatehandler.h"
+#else
+    #error OS is not supported!
+#endif
+
 // local includes
-#include "os/shared/nativepcstatehandlerinterface.h"
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
+#include "os/common/nativepcstatehandlerinterface.h"
 
 namespace
 {
@@ -20,10 +29,9 @@ int getTimeoutTime(uint grace_period_in_sec)
 
 namespace os
 {
-PcStateHandler::PcStateHandler(std::unique_ptr<NativePcStateHandlerInterface> native_handler)
-    : m_native_handler{std::move(native_handler)}
+PcStateHandler::PcStateHandler()
+    : m_native_handler{std::make_unique<NativePcStateHandler>()}
 {
-    Q_ASSERT(m_native_handler != nullptr);
 }
 
 PcStateHandler::~PcStateHandler() = default;
@@ -82,7 +90,7 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
 
                            constexpr int state_reset_time{5};
                            QTimer::singleShot(getTimeoutTime(state_reset_time), this,
-                                              [this, failed_to_do_entry, do_method]()
+                                              [this]()
                                               {
                                                   qCInfo(lc::os) << "Resetting PC state back to normal.";
                                                   m_state = enums::PcState::Normal;

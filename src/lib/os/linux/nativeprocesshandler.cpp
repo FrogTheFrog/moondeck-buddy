@@ -12,7 +12,7 @@
 #include <sys/types.h>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
 
 namespace
 {

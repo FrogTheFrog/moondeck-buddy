@@ -5,16 +5,16 @@
 #include <QMainWindow>
 
 // local includes
+#include "common/appmetadata.h"
+#include "common/loggingcategories.h"
 #include "os/autostarthandler.h"
-#include "os/pccontrol.h"
-#include "os/sunshineapps.h"
-#include "os/systemtray.h"
+#include "pccontrol.h"
 #include "routing.h"
 #include "server/clientids.h"
 #include "server/httpserver.h"
 #include "server/pairingmanager.h"
-#include "shared/appmetadata.h"
-#include "shared/loggingcategories.h"
+#include "sunshineapps.h"
+#include "systemtray.h"
 #include "utils/appsettings.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
@@ -24,7 +24,7 @@
 
 namespace
 {
-std::optional<int> parseArguments(int argc, char* argv[], const shared::AppMetadata& app_meta)
+std::optional<int> parseArguments(int argc, char* argv[], const common::AppMetadata& app_meta)
 {
     std::unique_ptr<QCoreApplication> app;
     if (QCoreApplication::instance() == nullptr)
@@ -91,8 +91,8 @@ std::optional<int> parseArguments(int argc, char* argv[], const shared::AppMetad
 
     if (parser.isSet(close_all_option))
     {
-        utils::Heartbeat buddy_heartbeat{app_meta.getAppName(shared::AppMetadata::App::Buddy)};
-        utils::Heartbeat stream_heartbeat{app_meta.getAppName(shared::AppMetadata::App::Stream)};
+        utils::Heartbeat buddy_heartbeat{app_meta.getAppName(common::AppMetadata::App::Buddy)};
+        utils::Heartbeat stream_heartbeat{app_meta.getAppName(common::AppMetadata::App::Stream)};
 
         buddy_heartbeat.startListening();
         stream_heartbeat.startListening();
@@ -136,9 +136,9 @@ std::optional<int> parseArguments(int argc, char* argv[], const shared::AppMetad
     return return_code;
 }
 
-std::tuple<int, bool> mainLoop(int argc, char* argv[], const shared::AppMetadata& app_meta, const bool gui_enabled)
+std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata& app_meta, const bool gui_enabled)
 {
-    constexpr int api_version{7};
+    constexpr int api_version{8};
     bool          restart_into_service{false};
 
     auto app{[&]() -> std::unique_ptr<QCoreApplication>
@@ -177,25 +177,24 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const shared::AppMetadata
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids, gui_enabled};
 
-    os::PcControl    pc_control{app_settings};
-    os::SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
+    PcControl    pc_control{app_settings};
+    SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
 
     std::unique_ptr<QIcon>               icon;
-    std::unique_ptr<os::SystemTray>      tray;
+    std::unique_ptr<SystemTray>          tray;
     std::unique_ptr<utils::PairingInput> pairing_input;
 
     if (gui_enabled)
     {
         icon          = std::make_unique<QIcon>(QIcon::fromTheme("moondeckbuddy", QIcon{":/icons/moondeckbuddy.ico"}));
-        tray          = std::make_unique<os::SystemTray>(*icon, app_meta.getAppName(), pc_control);
+        tray          = std::make_unique<SystemTray>(*icon, app_meta.getAppName(), pc_control);
         pairing_input = std::make_unique<utils::PairingInput>();
 
         // Tray + app
-        QObject::connect(tray.get(), &os::SystemTray::signalQuitApp, app.get(), &QCoreApplication::quit);
+        QObject::connect(tray.get(), &SystemTray::signalQuitApp, app.get(), &QCoreApplication::quit);
 
         // Tray + pc control
-        QObject::connect(&pc_control, &os::PcControl::signalShowTrayMessage, tray.get(),
-                         &os::SystemTray::slotShowTrayMessage);
+        QObject::connect(&pc_control, &PcControl::signalShowTrayMessage, tray.get(), &SystemTray::slotShowTrayMessage);
 
         // Pairing manager + pairing input
         QObject::connect(&pairing_manager, &server::PairingManager::signalRequestUserInputForPairing,
@@ -208,7 +207,7 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const shared::AppMetadata
                          &server::PairingManager::slotPairingRejected);
 
         // Service handling
-        QObject::connect(tray.get(), &os::SystemTray::signalRestartIntoService, app.get(),
+        QObject::connect(tray.get(), &SystemTray::signalRestartIntoService, app.get(),
                          [&restart_into_service]()
                          {
                              restart_into_service = true;
@@ -239,7 +238,7 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const shared::AppMetadata
 
 int main(int argc, char* argv[])
 {
-    const shared::AppMetadata app_meta{shared::AppMetadata::App::Buddy};
+    const common::AppMetadata app_meta{common::AppMetadata::App::Buddy};
     if (const auto result = parseArguments(argc, argv, app_meta); result)
     {
         return *result;

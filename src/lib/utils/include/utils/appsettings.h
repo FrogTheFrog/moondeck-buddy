@@ -6,7 +6,7 @@
 #include <QtNetwork/QSsl>
 
 // local includes
-#include "shared/appmetadata.h"
+#include "common/appmetadata.h"
 
 namespace utils
 {
@@ -15,10 +15,10 @@ class AppSettings
     Q_DISABLE_COPY(AppSettings)
 
 public:
-    explicit AppSettings(const shared::AppMetadata& app_metadata);
+    explicit AppSettings(const common::AppMetadata& app_metadata);
     virtual ~AppSettings() = default;
 
-    const shared::AppMetadata& getAppMetadata() const;
+    const common::AppMetadata& getAppMetadata() const;
     quint16                    getPort() const;
     const QString&             getLoggingRules() const;
     const QString&             getSunshineAppsFilepath() const;
@@ -33,7 +33,7 @@ private:
     bool parseSettingsFile(const QString& filepath);
     void saveDefaultFile(const QString& filepath) const;
 
-    const shared::AppMetadata& m_app_metadata;
+    const common::AppMetadata& m_app_metadata;
     quint16                    m_port;
     QString                    m_logging_rules;
     QString                    m_sunshine_apps_filepath;

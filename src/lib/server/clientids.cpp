@@ -9,7 +9,7 @@
 #include <QJsonDocument>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
 
 namespace server
 {

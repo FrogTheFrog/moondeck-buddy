@@ -22,8 +22,19 @@ if(WIN32)
     list(APPEND RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
 endif()
 
-add_executable(${EXEC_NAME} main.cpp routing.h routing.cpp ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network utilslib serverlib oslib osspecificlib sharedlib)
+#----------------------------------------------------------------------------------------------------------------------
+# Header/Source files
+#----------------------------------------------------------------------------------------------------------------------
+
+file(GLOB HEADERS CONFIGURE_DEPENDS "*.h")
+file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
+
+#----------------------------------------------------------------------------------------------------------------------
+# Target config
+#----------------------------------------------------------------------------------------------------------------------
+
+add_executable(${EXEC_NAME} ${HEADERS} ${SOURCES} ${RESOURCES})
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network utilslib serverlib oslib steamlib commonlib)
 target_compile_definitions(${EXEC_NAME} PRIVATE EXEC_VERSION="${PROJECT_VERSION}")
 
 if(NOT DEBUG_MODE)

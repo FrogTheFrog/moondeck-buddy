@@ -7,8 +7,8 @@
 #include <QSslServer>
 
 // local includes
+#include "common/loggingcategories.h"
 #include "server/clientids.h"
-#include "shared/loggingcategories.h"
 
 namespace server
 {

@@ -4,7 +4,7 @@
 #include <QString>
 
 // local includes
-#include "os/shared/nativesleepinhibitorinterface.h"
+#include "os/common/nativesleepinhibitorinterface.h"
 
 namespace os
 {

@@ -7,8 +7,8 @@
 #include <limits>
 
 // local includes
+#include "common/loggingcategories.h"
 #include "os/networkinfo.h"
-#include "shared/loggingcategories.h"
 #include "utils/jsonvalueconverter.h"
 
 namespace
@@ -121,7 +121,7 @@ void setupPairing(server::HttpServer& server, server::PairingManager& pairing_ma
                  });
 }
 
-void setupPcState(server::HttpServer& server, os::PcControl& pc_control)
+void setupPcState(server::HttpServer& server, PcControl& pc_control)
 {
     server.route("/pcState", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -189,18 +189,16 @@ void setupHostInfo(server::HttpServer& server, const QString& mac_address_overri
                          qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
                      }
-                     else
-                     {
-                         static const QRegularExpression regex{
-                             R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
-                         if (!mac.contains(regex))
-                         {
-                             qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
-                             return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
-                         }
 
-                         mac.replace('-', ':');
+                     static const QRegularExpression regex{
+                         R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
+                     if (!mac.contains(regex))
+                     {
+                         qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::InternalServerError};
                      }
+
+                     mac.replace('-', ':');
 
 #if defined(Q_OS_WIN)
                      const QString os_type{"Windows"};
@@ -214,7 +212,7 @@ void setupHostInfo(server::HttpServer& server, const QString& mac_address_overri
                  });
 }
 
-void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
+void setupSteam(server::HttpServer& server, PcControl& pc_control)
 {
     server.route("/steamUiMode", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -242,21 +240,17 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto user_id_opt{utils::getJsonValue<QString>(json, "user_id")};
-                     bool       user_id_ok{false};
-
-                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-                     const std::uint64_t user_id{user_id_opt ? user_id_opt->toULongLong(&user_id_ok) : 0};
-
-                     if (!user_id_ok)
+                     const auto user_id_opt{
+                         steam::SteamId::fromString(utils::getJsonValue<QString>(json, "user_id").value_or(QString{}))};
+                     if (!user_id_opt)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
                      return QHttpServerResponse{
-                         [&pc_control, user_id]()
+                         [&pc_control, &user_id_opt]()
                          {
-                             const auto data{pc_control.getNonSteamAppData(user_id)};
+                             const auto data{pc_control.getNonSteamAppData(*user_id_opt)};
                              if (!data)
                              {
                                  return QJsonObject{{"data", QJsonValue::Null}};
@@ -265,11 +259,31 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                              QJsonArray json_array;
                              for (const auto& [app_id, app_name] : *data)
                              {
-                                 json_array.push_back({{{"app_id", QString::number(app_id)}, {"app_name", app_name}}});
+                                 json_array.push_back(
+                                     {{{"app_id", QString::number(app_id.getGameId())}, {"app_name", app_name}}});
                              }
 
                              return QJsonObject{{"data", json_array}};
                          }()};
+                 });
+
+    server.route("/currentUser", QHttpServerRequest::Method::Get,
+                 [&server, &pc_control](const QHttpServerRequest& request)
+                 {
+                     if (!server.isAuthorized(request))
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
+                     }
+
+                     const auto user_id{pc_control.getCurrentUserId()};
+                     if (!user_id)
+                     {
+                         return QHttpServerResponse{QJsonObject{{"user", QJsonValue::Null}}};
+                     }
+
+                     return QHttpServerResponse{QJsonObject{
+                         {"user", QJsonObject{{"id", user_id->isNull() ? QJsonValue::Null
+                                                                       : QJsonValue{user_id->toSteamId64()}}}}}};
                  });
 
     server.route("/launchSteam", QHttpServerRequest::Method::Post,
@@ -292,7 +306,8 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteam(*big_picture_mode)};
+                     const auto username{utils::getJsonValue<QString>(json, "username")};
+                     const bool result{pc_control.launchSteam(*big_picture_mode, username.value_or(QString{}))};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -310,18 +325,19 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const auto app_id_opt{utils::getJsonValue<QString>(json, "app_id")};
-                     bool       app_id_ok{false};
-
-                     static_assert(sizeof(qulonglong) == sizeof(std::uint64_t));
-                     const std::uint64_t app_id{app_id_opt ? app_id_opt->toULongLong(&app_id_ok) : 0};
-
-                     if (!app_id_ok)
+                     const auto app_id_str{utils::getJsonValue<QString>(json, "app_id")};
+                     if (!app_id_str)
                      {
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
                      }
 
-                     const bool result{pc_control.launchSteamApp(app_id)};
+                     const auto app_id{steam::AppId::fromString(*app_id_str)};
+                     if (!app_id)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const bool result{pc_control.launchSteamApp(*app_id)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -333,7 +349,19 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const bool result{pc_control.closeSteam()};
+                     const auto json = requestToJsonObject(request);
+                     if (json.isEmpty())
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const auto keep_stream_alive{utils::getJsonValue<bool>(json, "keep_stream_alive")};
+                     if (!keep_stream_alive)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const bool result{pc_control.closeSteam(*keep_stream_alive)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
@@ -350,7 +378,7 @@ void setupSteam(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupStream(server::HttpServer& server, os::PcControl& pc_control)
+void setupStream(server::HttpServer& server, PcControl& pc_control)
 {
     server.route("/streamState", QHttpServerRequest::Method::Get,
                  [&server, &pc_control](const QHttpServerRequest& request)
@@ -383,7 +411,7 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
 
                              const auto& [app_id, app_state] = *data;
                              return QJsonObject{
-                                 {"data", QJsonObject{{{"app_id", QString::number(app_id)},
+                                 {"data", QJsonObject{{{"app_id", QString::number(app_id.getId())},
                                                        {"app_state", enums::qEnumToString(app_state)}}}}};
                          }()};
                  });
@@ -413,7 +441,7 @@ void setupStream(server::HttpServer& server, os::PcControl& pc_control)
                  });
 }
 
-void setupGameStreamApps(server::HttpServer& server, os::SunshineApps& sunshine_apps)
+void setupGameStreamApps(server::HttpServer& server, SunshineApps& sunshine_apps)
 {
     server.route(
         "/gameStreamAppNames", QHttpServerRequest::Method::Get,
@@ -447,8 +475,8 @@ void setupRouteLogging(server::HttpServer& server)
 }
 }  // namespace routing_internal
 
-void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, os::PcControl& pc_control,
-                 os::SunshineApps& sunshine_apps, const QString& mac_address_override)
+void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
+                 SunshineApps& sunshine_apps, const QString& mac_address_override)
 {
     routing_internal::setupApiVersion(server);
     routing_internal::setupPairing(server, pairing_manager);

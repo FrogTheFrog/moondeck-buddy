@@ -13,7 +13,7 @@
 #include <unordered_map>
 
 // local includes
-#include "shared/loggingcategories.h"
+#include "common/loggingcategories.h"
 
 namespace
 {
@@ -44,7 +44,7 @@ std::optional<QSsl::SslProtocol> protocolFromString(const QString& value)
 
 namespace utils
 {
-AppSettings::AppSettings(const shared::AppMetadata& app_metadata)
+AppSettings::AppSettings(const common::AppMetadata& app_metadata)
     : m_app_metadata{app_metadata}
     , m_port{DEFAULT_PORT}
     , m_prefer_hibernation{false}
@@ -64,7 +64,7 @@ AppSettings::AppSettings(const shared::AppMetadata& app_metadata)
     }
 }
 
-const shared::AppMetadata& AppSettings::getAppMetadata() const
+const common::AppMetadata& AppSettings::getAppMetadata() const
 {
     return m_app_metadata;
 }

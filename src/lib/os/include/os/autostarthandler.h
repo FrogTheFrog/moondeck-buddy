@@ -4,7 +4,7 @@
 #include <memory>
 
 // forward declarations
-namespace shared
+namespace common
 {
 class AppMetadata;
 }
@@ -18,7 +18,7 @@ namespace os
 class AutoStartHandler final
 {
 public:
-    explicit AutoStartHandler(const shared::AppMetadata& app_meta);
+    explicit AutoStartHandler(const common::AppMetadata& app_meta);
     ~AutoStartHandler();
 
     void setAutoStart(bool enable);
