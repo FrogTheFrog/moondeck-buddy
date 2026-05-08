@@ -32,9 +32,15 @@ enums::SteamUiMode PcControl::getSteamUiMode() const
     return m_steam_handler.getSteamUiMode();
 }
 
-bool PcControl::closeSteam()
+bool PcControl::closeSteam(const bool keep_stream_alive)
 {
-    return m_steam_handler.close();
+    const auto return_value{m_steam_handler.close()};
+    if (return_value)
+    {
+        m_keep_stream_alive = keep_stream_alive;
+    }
+
+    return return_value;
 }
 
 bool PcControl::closeSteamBigPictureMode()
@@ -73,7 +79,7 @@ bool PcControl::shutdownPC(const uint delay_in_seconds)
 {
     if (m_pc_state_handler.shutdownPC(delay_in_seconds))
     {
-        closeSteam();
+        closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Shutdown in progress",
                                    m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
@@ -88,7 +94,7 @@ bool PcControl::restartPC(const uint delay_in_seconds)
 {
     if (m_pc_state_handler.restartPC(delay_in_seconds))
     {
-        closeSteam();
+        closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Restart in progress",
                                    m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
@@ -108,7 +114,7 @@ bool PcControl::suspendOrHibernatePC(const uint delay_in_seconds)
     {
         if (m_app_settings.getCloseSteamBeforeSleep())
         {
-            closeSteam();
+            closeSteam(false);
         }
         endStream();
 
@@ -160,7 +166,10 @@ bool PcControl::restartIntoService()
 
 void PcControl::slotHandleSteamClosed()
 {
-    endStream();
+    if (!m_keep_stream_alive)
+    {
+        endStream();
+    }
 }
 
 void PcControl::slotHandleStreamStateChange()

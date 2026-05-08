@@ -138,7 +138,7 @@ std::optional<int> parseArguments(int argc, char* argv[], const common::AppMetad
 
 std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata& app_meta, const bool gui_enabled)
 {
-    constexpr int api_version{7};
+    constexpr int api_version{8};
     bool          restart_into_service{false};
 
     auto app{[&]() -> std::unique_ptr<QCoreApplication>

@@ -33,7 +33,6 @@ public:
     ~SteamProcessTracker() override;
 
     void close();
-    void terminate();
 
     bool                  isRunning() const;
     uint                  getPid() const;

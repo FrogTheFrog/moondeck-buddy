@@ -82,13 +82,7 @@ bool SteamHandler::close()
         return true;
     }
 
-#if defined(Q_OS_WIN)
-    m_steam_process_tracker.terminate();
-#elif defined(Q_OS_LINUX)
     m_steam_process_tracker.close();
-#else
-    #error OS is not supported!
-#endif
     return true;
 }
 

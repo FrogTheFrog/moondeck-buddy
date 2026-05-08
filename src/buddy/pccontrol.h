@@ -27,7 +27,7 @@ public:
 
     bool               launchSteam(bool big_picture_mode, const QString& username);
     enums::SteamUiMode getSteamUiMode() const;
-    bool               closeSteam();
+    bool               closeSteam(bool keep_stream_alive);
     bool               closeSteamBigPictureMode();
 
     bool launchSteamApp(const steam::AppId& app_id);
@@ -69,4 +69,6 @@ private:
 
     utils::ShmDeserializer m_shared_env_reader;
     QMap<QString, QString> m_cached_env;
+
+    bool m_keep_stream_alive{false};
 };

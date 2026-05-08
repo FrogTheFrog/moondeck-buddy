@@ -53,16 +53,13 @@ void SteamProcessTracker::close()
     slotCheckState();
     if (isRunning())
     {
-        m_process_handler.close(m_data.m_pid);
-    }
-}
-
-void SteamProcessTracker::terminate()
-{
-    slotCheckState();
-    if (isRunning())
-    {
+#if defined(Q_OS_WIN)
         m_process_handler.terminate(m_data.m_pid);
+#elif defined(Q_OS_LINUX)
+        m_process_handler.close(m_data.m_pid);
+#else
+    #error OS is not supported!
+#endif
     }
 }
 

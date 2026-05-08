@@ -349,7 +349,19 @@ void setupSteam(server::HttpServer& server, PcControl& pc_control)
                          return QHttpServerResponse{QHttpServerResponse::StatusCode::Unauthorized};
                      }
 
-                     const bool result{pc_control.closeSteam()};
+                     const auto json = requestToJsonObject(request);
+                     if (json.isEmpty())
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const auto keep_stream_alive{utils::getJsonValue<bool>(json, "keep_stream_alive")};
+                     if (!keep_stream_alive)
+                     {
+                         return QHttpServerResponse{QHttpServerResponse::StatusCode::BadRequest};
+                     }
+
+                     const bool result{pc_control.closeSteam(*keep_stream_alive)};
                      return QHttpServerResponse{QJsonObject{{"result", result}}};
                  });
 
