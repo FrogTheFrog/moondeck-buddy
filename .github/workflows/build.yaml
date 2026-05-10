@@ -14,12 +14,13 @@ jobs:
     needs: [Formatting, Filename]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
-      - name: Install MSCV
-        uses: ilammy/msvc-dev-cmd@v1
+#      - name: Install MSCV
+#        shell: cmd
+#        run: call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -33,11 +34,12 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup
 
-      - name: Configure
-        run: cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
-
-      - name: Build
-        run: cmake --build build
+      - name: Configure & Build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+          cmake --build build
 
       - name: Bundle
         run: cd build && cpack -C CPackConfig.cmake
@@ -51,7 +53,7 @@ jobs:
         run: mv MoonDeckBuddy*.exe ${{ needs.Filename.outputs.filename }}-win64.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moondeckbuddy-windows
           path: dist/*
@@ -65,7 +67,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install ninja-build libproc2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -81,13 +83,11 @@ jobs:
       - name: Configure
         run: mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
 
-      - name: Build
+      - name: Configure & Build
         working-directory: ./build
-        run: ninja
-
-      - name: Install
-        working-directory: ./build
-        run: DESTDIR=AppDir ninja install
+        run: |
+          ninja
+          DESTDIR=AppDir ninja install
 
       - name: Get linuxdeploy's AppImage
         working-directory: ./build
@@ -105,7 +105,7 @@ jobs:
         run: ./linuxdeploy-x86_64.AppImage --appdir ./AppDir --output appimage --plugin qt --custom-apprun="../resources/linux/AppRun" --library="/usr/lib/x86_64-linux-gnu/libssl.so.3" --library="/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moondeckbuddy-linux
           path: ./build/MoonDeckBuddy*AppImage
