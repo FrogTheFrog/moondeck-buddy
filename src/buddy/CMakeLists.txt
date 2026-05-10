@@ -34,7 +34,7 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_executable(${EXEC_NAME} ${HEADERS} ${SOURCES} ${RESOURCES})
-target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network utilslib serverlib oslib steamlib commonlib)
+target_link_libraries(${EXEC_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network utilslib serverlib oslib steamlib commonlib jsonlib)
 target_compile_definitions(${EXEC_NAME} PRIVATE EXEC_VERSION="${PROJECT_VERSION}")
 
 if(NOT DEBUG_MODE)
