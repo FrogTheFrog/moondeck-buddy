@@ -1,6 +1,7 @@
 #pragma once
 
 // system/Qt includes
+#include <QMetaEnum>
 #include <glaze/json.hpp>
 
 namespace glz
