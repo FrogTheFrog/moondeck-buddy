@@ -2,6 +2,7 @@
 
 // local includes
 #include "glaze_enum.h"
+#include "glaze_qregularexpression.h"
 #include "glaze_qstring.h"
 
 namespace glz
@@ -18,8 +19,16 @@ struct meta
 
 namespace json
 {
+namespace internal
+{
+QString tryPartialReadFromFile(const QString& filepath);
+void    saveToFile(const QString& filepath, const QString& value);
+}  // namespace internal
+
 struct FromJsonOpts
 {
+    bool m_allow_unknown_keys{false};
+    bool m_allow_missing_keys{false};
 };
 
 template<typename T, FromJsonOpts Opts = {}>
@@ -27,6 +36,11 @@ std::expected<T, QString> fromJson(const QString& json_string)
 {
     struct OptsProxy : glz::opts
     {
+        consteval OptsProxy()
+            : opts{.error_on_unknown_keys = !Opts.m_allow_unknown_keys,
+                   .error_on_missing_keys = !Opts.m_allow_missing_keys}
+        {
+        }
     };
 
     T          value{};
@@ -72,5 +86,36 @@ template<ToJsonOpts Opts, typename T>
 std::expected<QString, QString> toJson(const T& value)
 {
     return toJson<T, Opts>(value);
+}
+
+template<typename T>
+T tryPartialReadFromFile(const QString& filepath)
+{
+    if (const auto data{internal::tryPartialReadFromFile(filepath)}; !data.isEmpty())
+    {
+        const auto parsed{json::fromJson<T, {.m_allow_unknown_keys = true, .m_allow_missing_keys = true}>(data)};
+        if (!parsed)
+        {
+            qFatal("Failed to decode JSON data from \"%s\"! Reason:\n%s", qUtf8Printable(filepath),
+                   qUtf8Printable(parsed.error()));
+        }
+
+        return std::move(parsed.value());
+    }
+
+    return T{};
+}
+
+template<typename T>
+void saveToFile(const QString& filepath, const T& value)
+{
+    const auto serialized{json::toJson<{.m_indentation = 4}>(value)};
+    if (!serialized)
+    {
+        qFatal("Failed to encode JSON data for \"%s\"! Reason:\n%s", qUtf8Printable(filepath),
+               qUtf8Printable(serialized.error()));
+    }
+
+    internal::saveToFile(filepath, serialized.value());
 }
 }  // namespace json

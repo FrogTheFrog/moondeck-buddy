@@ -5,7 +5,7 @@
 #include <QMainWindow>
 
 // local includes
-#include "common/appmetadata.h"
+#include "common/appsettings.h"
 #include "common/loggingcategories.h"
 #include "os/autostarthandler.h"
 #include "pccontrol.h"
@@ -15,7 +15,6 @@
 #include "server/pairingmanager.h"
 #include "sunshineapps.h"
 #include "systemtray.h"
-#include "utils/appsettings.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
 #include "utils/pairinginput.h"
@@ -163,12 +162,12 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, app.get(), &QCoreApplication::quit);
     heartbeat.startBeating();
 
-    const utils::AppSettings app_settings{app_meta};
-    utils::LogSettings::getInstance().setLoggingRules(app_settings.getLoggingRules());
+    const auto user_settings{common::UserSettings::loadAndValidate(app_meta.getSettingsPath())};
+    utils::LogSettings::getInstance().setLoggingRules(user_settings.m_logging_rules);
 
     // Capture and store environment variable regex for Stream to save when it's started
     utils::ShmSerializer env_regex_serializer{app_meta.getSharedEnvRegexKey()};
-    if (!env_regex_serializer.write(app_settings.getEnvCaptureRegex()))
+    if (!env_regex_serializer.write(user_settings.m_env_capture_regex))
     {
         qCWarning(lc::buddyMain) << "Failed to write ENV regex to the shared memory, still continuing...";
     }
@@ -177,8 +176,9 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     server::HttpServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids, gui_enabled};
 
-    PcControl    pc_control{app_settings};
-    SunshineApps sunshine_apps{app_settings.getSunshineAppsFilepath()};
+    const common::AppSettings app_settings{.m_app_metadata = app_meta, .m_user_settings = user_settings};
+    PcControl                 pc_control{app_settings};
+    SunshineApps              sunshine_apps{user_settings.m_sunshine_apps_filepath};
 
     std::unique_ptr<QIcon>               icon;
     std::unique_ptr<SystemTray>          tray;
@@ -220,11 +220,28 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     }
 
     // HERE WE GO!!! (a.k.a. starting point)
-    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, app_settings.getMacAddressOverride());
+    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, user_settings.m_mac_address_override);
 
     client_ids.load();
-    if (!new_server.startServer(app_settings.getPort(), ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",
-                                app_settings.getSslProtocol()))
+    if (!new_server.startServer(user_settings.m_port, ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",
+                                [](const common::UserSettings::SslProtocol protocol)
+                                {
+                                    using enum common::UserSettings::SslProtocol;
+                                    switch (protocol)
+                                    {
+                                        case SecureProtocols:
+                                            return QSsl::SslProtocol::SecureProtocols;
+                                        case TlsV1_2:
+                                            return QSsl::SslProtocol::TlsV1_2;
+                                        case TlsV1_2OrLater:
+                                            return QSsl::SslProtocol::TlsV1_2OrLater;
+                                        case TlsV1_3:
+                                            return QSsl::SslProtocol::TlsV1_3;
+                                        case TlsV1_3OrLater:
+                                            return QSsl::SslProtocol::TlsV1_3OrLater;
+                                    }
+                                    Q_UNREACHABLE();
+                                }(user_settings.m_ssl_protocol)))
     {
         qFatal("Failed to start server!");
     }

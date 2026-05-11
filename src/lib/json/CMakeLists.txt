@@ -32,5 +32,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PUBLIC glaze::glaze)
+target_link_libraries(${LIBNAME} PUBLIC glaze::glaze PRIVATE Qt6::Core)
 target_include_directories(${LIBNAME} PUBLIC include)

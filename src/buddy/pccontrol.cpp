@@ -2,17 +2,17 @@
 #include "pccontrol.h"
 
 // local includes
+#include "common/appsettings.h"
 #include "common/loggingcategories.h"
 #include "steam/steamprocesstracker.h"
 #include "streamstatehandler.h"
-#include "utils/appsettings.h"
 
-PcControl::PcControl(const utils::AppSettings& app_settings)
+PcControl::PcControl(const common::AppSettings& app_settings)
     : m_app_settings{app_settings}
-    , m_auto_start_handler{m_app_settings.getAppMetadata()}
+    , m_auto_start_handler{m_app_settings.m_app_metadata}
     , m_steam_handler{m_app_settings}
-    , m_stream_state_handler{m_app_settings.getAppMetadata().getAppName(common::AppMetadata::App::Stream)}
-    , m_shared_env_reader{m_app_settings.getAppMetadata().getSharedEnvMapKey()}
+    , m_stream_state_handler{m_app_settings.m_app_metadata.getAppName(common::AppMetadata::App::Stream)}
+    , m_shared_env_reader{m_app_settings.m_app_metadata.getSharedEnvMapKey()}
 {
     connect(&m_steam_handler, &steam::SteamHandler::signalSteamClosed, this, &PcControl::slotHandleSteamClosed);
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
@@ -82,7 +82,7 @@ bool PcControl::shutdownPC(const uint delay_in_seconds)
         closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Shutdown in progress",
-                                   m_app_settings.getAppMetadata().getAppName() + " is putting you to sleep :)",
+                                   m_app_settings.m_app_metadata.getAppName() + " is putting you to sleep :)",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
@@ -97,7 +97,7 @@ bool PcControl::restartPC(const uint delay_in_seconds)
         closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Restart in progress",
-                                   m_app_settings.getAppMetadata().getAppName() + " is giving you new life :?",
+                                   m_app_settings.m_app_metadata.getAppName() + " is giving you new life :?",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
@@ -107,12 +107,12 @@ bool PcControl::restartPC(const uint delay_in_seconds)
 
 bool PcControl::suspendOrHibernatePC(const uint delay_in_seconds)
 {
-    const bool hibernation{m_app_settings.getPreferHibernation()};
+    const bool hibernation{m_app_settings.m_user_settings.m_prefer_hibernation};
     const bool result{hibernation ? m_pc_state_handler.hibernatePC(delay_in_seconds)
                                   : m_pc_state_handler.suspendPC(delay_in_seconds)};
     if (result)
     {
-        if (m_app_settings.getCloseSteamBeforeSleep())
+        if (m_app_settings.m_user_settings.m_close_steam_before_sleep)
         {
             closeSteam(false);
         }
@@ -120,7 +120,7 @@ bool PcControl::suspendOrHibernatePC(const uint delay_in_seconds)
 
         emit signalShowTrayMessage(
             hibernation ? "Hibernation in progress" : "Suspend in progress",
-            m_app_settings.getAppMetadata().getAppName()
+            m_app_settings.m_app_metadata.getAppName()
                 + (hibernation ? " is about to put you into hard sleep :O" : " is about to suspend you real hard :P"),
             QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;

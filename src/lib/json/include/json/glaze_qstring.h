@@ -1,6 +1,7 @@
 #pragma once
 
 // system/Qt includes
+#include <QString>
 #include <glaze/json.hpp>
 
 namespace glz
@@ -21,9 +22,9 @@ template<>
 struct to<JSON, QString>
 {
     template<auto Opts>
-    static void op(const QString& value, is_context auto&& ctx, auto&& buffer, auto&& ix) noexcept
+    static void op(const QString& value, is_context auto&& ctx, auto&& b, auto&& ix) noexcept
     {
-        serialize<JSON>::op<Opts>(value.toUtf8(), ctx, buffer, ix);
+        serialize<JSON>::op<Opts>(value.toUtf8(), ctx, b, ix);
     }
 };
 

@@ -8,8 +8,8 @@
 #include <QSettings>
 
 // local includes
+#include "common/appsettings.h"
 #include "common/loggingcategories.h"
-#include "utils/appsettings.h"
 
 namespace
 {
@@ -128,9 +128,9 @@ QStringList findSteamExecutable()
 #endif
 }
 
-QStringList getSteamExecutableWithArgs(const utils::AppSettings& app_settings)
+QStringList getSteamExecutableWithArgs(const common::AppSettings& app_settings)
 {
-    if (const auto& exec{app_settings.getSteamExecutablePath()}; !exec.isEmpty())
+    if (const auto& exec{app_settings.m_user_settings.m_steam_exec_override}; !exec.isEmpty())
     {
         if (QFileInfo::exists(exec))
         {
@@ -144,7 +144,7 @@ QStringList getSteamExecutableWithArgs(const utils::AppSettings& app_settings)
     return findSteamExecutable();
 }
 
-bool executeSteamCommand(const utils::AppSettings& app_settings, const QStringList& steam_args,
+bool executeSteamCommand(const common::AppSettings& app_settings, const QStringList& steam_args,
                          const QMap<QString, QString>& env_overrides = {})
 {
     auto exec_with_args{getSteamExecutableWithArgs(app_settings)};
@@ -160,7 +160,7 @@ bool executeSteamCommand(const utils::AppSettings& app_settings, const QStringLi
 
 namespace steam
 {
-SteamCommandProxy::SteamCommandProxy(const utils::AppSettings& app_settings)
+SteamCommandProxy::SteamCommandProxy(const common::AppSettings& app_settings)
     : m_app_settings{app_settings}
 {
 }
