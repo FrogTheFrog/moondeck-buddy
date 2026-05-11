@@ -5,11 +5,10 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QJsonArray>
-#include <QJsonDocument>
 
 // local includes
 #include "common/loggingcategories.h"
+#include "json/json.h"
 
 namespace server
 {
@@ -18,71 +17,40 @@ ClientIds::ClientIds(QString filepath)
 {
 }
 
-// NOLINTNEXTLINE(*-cognitive-complexity)
 void ClientIds::load()
 {
-    m_ids.clear();  // Clear the ids regardless of whether the file exists or not
+    // Clear the ids regardless of whether the file exists or not
+    m_ids.clear();
 
-    QFile ids_file{m_filepath};
-    if (ids_file.exists())
+    if (QFile ids_file{m_filepath}; ids_file.exists())
     {
         if (!ids_file.open(QFile::ReadOnly))
         {
             qFatal("File exists, but could not be opened: \"%s\"", qUtf8Printable(m_filepath));
         }
 
-        const QByteArray data = ids_file.readAll();
-
-        QJsonParseError     parser_error;
-        const QJsonDocument json_data{QJsonDocument::fromJson(data, &parser_error)};
-        if (json_data.isNull())
+        if (const auto data{ids_file.readAll()}; !data.isEmpty())
         {
-            qFatal("Failed to decode JSON data! Reason: %s. Read data: %s", qUtf8Printable(parser_error.errorString()),
-                   qUtf8Printable(data));
-        }
-        else if (!json_data.isEmpty())
-        {
-            if (!json_data.isArray())
+            const auto parsed_ids{json::fromJson<std::set<QString>>(data)};
+            if (!parsed_ids)
             {
-                qFatal("Client Ids file contains invalid JSON data!");
+                qFatal("Failed to decode JSON data from \"%s\"! Reason:\n%s", qUtf8Printable(m_filepath),
+                       qUtf8Printable(parsed_ids.error()));
             }
 
-            bool             some_ids_were_skipped{false};
-            const QJsonArray ids = json_data.array();
-            for (const auto& client_id : ids)
-            {
-                const QString client_id_string{client_id.isString() ? client_id.toString() : QString{}};
-                if (client_id_string.isEmpty())
-                {
-                    some_ids_were_skipped = true;
-                    continue;
-                }
-
-                m_ids.emplace(client_id_string);
-            }
-
-            if (some_ids_were_skipped)
-            {
-                qCWarning(lc::server) << "Client Ids file contained ids that were skipped!";
-            }
+            m_ids = parsed_ids.value();
+            m_ids.erase(QString{});
         }
     }
 }
 
-void ClientIds::save()
+void ClientIds::save() const
 {
-    QJsonArray json_data;
-    for (const auto& client_id : m_ids)
-    {
-        json_data.append(client_id);
-    }
-
     QFile file{m_filepath};
     if (!file.exists())
     {
         const QFileInfo info(m_filepath);
-        const QDir      dir;
-        if (!dir.mkpath(info.absolutePath()))
+        if (const QDir dir; !dir.mkpath(info.absolutePath()))
         {
             qFatal("Failed at mkpath: \"%s\".", qUtf8Printable(m_filepath));
         }
@@ -93,8 +61,13 @@ void ClientIds::save()
         qFatal("File could not be opened for writing: \"%s\".", qUtf8Printable(m_filepath));
     }
 
-    const QJsonDocument file_data{json_data};
-    file.write(file_data.toJson(QJsonDocument::Indented));
+    const auto serialized_ids{json::toJson<{.m_indentation = 4}>(m_ids)};
+    if (!serialized_ids)
+    {
+        qFatal("Failed to encode JSON data! Reason:\n%s", qUtf8Printable(serialized_ids.error()));
+    }
+
+    file.write(serialized_ids.value().toUtf8());
     qCInfo(lc::server) << "Finished saving:" << m_filepath;
 }
 

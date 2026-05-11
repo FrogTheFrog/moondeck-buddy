@@ -32,7 +32,7 @@ std::optional<T> fromRequest(const QHttpServerRequest& request)
 template<typename T>
 QHttpServerResponse toResponse(const T& value)
 {
-    auto result{json::toJson<T, {.skip_null_members = false}>(value)};
+    auto result{json::toJson<T>(value)};
     if (!result)
     {
         qCWarning(lc::buddyMain) << "Failed to encode JSON data! Reason:\n" << result.error();

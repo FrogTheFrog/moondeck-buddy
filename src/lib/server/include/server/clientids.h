@@ -15,7 +15,7 @@ public:
     virtual ~ClientIds() = default;
 
     void load();
-    void save();
+    void save() const;
 
     bool containsId(const QString& client_id) const;
     void addId(const QString& client_id);
