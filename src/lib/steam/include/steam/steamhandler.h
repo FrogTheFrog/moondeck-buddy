@@ -7,10 +7,6 @@
 #include "steamprocesstracker.h"
 
 // forward declarations
-namespace utils
-{
-class AppSettings;
-}  // namespace utils
 namespace steam
 {
 class SteamAppWatcher;
@@ -24,7 +20,7 @@ class SteamHandler : public QObject
     Q_DISABLE_COPY(SteamHandler)
 
 public:
-    explicit SteamHandler(const utils::AppSettings& app_settings);
+    explicit SteamHandler(const common::AppSettings& app_settings);
     ~SteamHandler() override;
 
     bool launchSteam(bool big_picture_mode, const QString& username, const QMap<QString, QString>& env_overrides);

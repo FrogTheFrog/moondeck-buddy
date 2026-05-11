@@ -1,16 +1,13 @@
 #pragma once
 
-// system/Qt includes
-#include <QObject>
-
 // local includes
 #include "appid.h"
 
 // forward declarations
-namespace utils
+namespace common
 {
-class AppSettings;
-}  // namespace utils
+struct AppSettings;
+}  // namespace common
 
 namespace steam
 {
@@ -19,7 +16,7 @@ class SteamCommandProxy final
     Q_DISABLE_COPY(SteamCommandProxy)
 
 public:
-    explicit SteamCommandProxy(const utils::AppSettings& app_settings);
+    explicit SteamCommandProxy(const common::AppSettings& app_settings);
     ~SteamCommandProxy() = default;
 
     bool canExecuteCommands() const;
@@ -31,6 +28,6 @@ public:
     bool closeBigPictureMode();
 
 private:
-    const utils::AppSettings& m_app_settings;
+    const common::AppSettings& m_app_settings;
 };
 }  // namespace steam

@@ -10,19 +10,13 @@
 #include "streamstatehandler.h"
 #include "utils/shmserialization.h"
 
-// forward declarations
-namespace utils
-{
-class AppSettings;
-}  // namespace utils
-
 class PcControl : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(PcControl)
 
 public:
-    explicit PcControl(const utils::AppSettings& app_settings);
+    explicit PcControl(const common::AppSettings& app_settings);
     ~PcControl() override;
 
     bool               launchSteam(bool big_picture_mode, const QString& username);
@@ -61,11 +55,11 @@ private slots:
     void slotHandleStreamStateChange();
 
 private:
-    const utils::AppSettings& m_app_settings;
-    os::AutoStartHandler      m_auto_start_handler;
-    os::PcStateHandler        m_pc_state_handler;
-    steam::SteamHandler       m_steam_handler;
-    StreamStateHandler        m_stream_state_handler;
+    const common::AppSettings& m_app_settings;
+    os::AutoStartHandler       m_auto_start_handler;
+    os::PcStateHandler         m_pc_state_handler;
+    steam::SteamHandler        m_steam_handler;
+    StreamStateHandler         m_stream_state_handler;
 
     utils::ShmDeserializer m_shared_env_reader;
     QMap<QString, QString> m_cached_env;

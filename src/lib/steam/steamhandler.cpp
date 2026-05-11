@@ -2,14 +2,14 @@
 #include "include/steam/steamhandler.h"
 
 // local includes
+#include "common/appsettings.h"
 #include "common/loggingcategories.h"
 #include "steam/shortcutsvdf.h"
 #include "steam/steamappwatcher.h"
-#include "utils/appsettings.h"
 
 namespace steam
 {
-SteamHandler::SteamHandler(const utils::AppSettings& app_settings)
+SteamHandler::SteamHandler(const common::AppSettings& app_settings)
     : m_command_proxy{app_settings}
 {
     connect(&m_steam_process_tracker, &SteamProcessTracker::signalProcessStateChanged, this,
