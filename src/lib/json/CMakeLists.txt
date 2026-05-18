@@ -18,7 +18,9 @@ FetchContent_Declare(
         GIT_TAG v7.5.0
         GIT_SHALLOW TRUE
 )
+set(CMAKE_SKIP_INSTALL_RULES TRUE)
 FetchContent_MakeAvailable(glaze)
+set(CMAKE_SKIP_INSTALL_RULES FALSE FORCE)
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header/Source files
