@@ -14,11 +14,10 @@ qt_standard_project_setup()
 include(FetchContent)
 FetchContent_Declare(
         glaze
-        GIT_REPOSITORY https://github.com/FrogTheFrog/glaze.git
-        GIT_TAG patch-1
+        GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+        GIT_TAG cmake-glaze-install-option
         GIT_SHALLOW TRUE
 )
-set(glaze_SKIP_INSTALL_RULES TRUE)
 FetchContent_MakeAvailable(glaze)
 
 #----------------------------------------------------------------------------------------------------------------------
