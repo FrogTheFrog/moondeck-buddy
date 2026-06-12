@@ -79,24 +79,33 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
                 continue;
             }
 
-            auto data_it = m_app_id_to_process_ids.find(*app_id);
-            if (data_it == std::end(m_app_id_to_process_ids))
+            if (!m_app_id_to_process_ids.contains(*app_id))
             {
                 qCWarning(lc::steam) << "Trying to remove PID" << pid << "from" << app_id->getId()
                                      << "but AppID is not tracked!";
-                continue;
             }
 
-            data_it->second.erase(pid);
-            if (data_it->second.empty())
-            {
-                m_app_id_to_process_ids.erase(data_it);
 
-                if (!added_app_ids.contains(*app_id))
+            qCDebug(lc::steam) << "Removing PID" << pid << "from all tracked AppIDs";
+            for (auto data_it = m_app_id_to_process_ids.begin(); data_it != m_app_id_to_process_ids.end(); )
+            {
+                data_it->second.erase(pid);
+                if (data_it->second.empty())
                 {
-                    removed_app_ids.insert(*app_id);
+                    const auto empty_app_id = data_it->first;
+
+                    data_it = m_app_id_to_process_ids.erase(data_it);
+
+                    if (!added_app_ids.contains(empty_app_id))
+                    {
+                        removed_app_ids.insert(empty_app_id);
+                    }
+                    added_app_ids.erase(empty_app_id);
                 }
-                added_app_ids.erase(*app_id);
+                else
+                {
+                    ++data_it;
+                }
             }
         }
     }
