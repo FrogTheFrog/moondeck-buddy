@@ -18,10 +18,6 @@ jobs:
         with:
           submodules: recursive
 
-#      - name: Install MSCV
-#        shell: cmd
-#        run: call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
@@ -37,7 +33,7 @@ jobs:
       - name: Configure & Build
         shell: cmd
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
           cmake --build build
 
