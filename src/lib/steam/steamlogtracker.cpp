@@ -144,6 +144,19 @@ qint64 readRemainingLines(std::vector<QString>& lines, QFile& file, QDateTime& f
 
     return stream.pos();
 }
+
+void tryWatchFileNatively(const QString& filename, QFileSystemWatcher& watcher)
+{
+    // The file needs to be re-added sometimes if it was deleted or moved (very OS-dependent)
+    if (!watcher.files().contains(filename))
+    {
+        // Adding path may fail sometimes. For example, inotify does not have enough resources on linux.
+        if (!watcher.addPath(filename))
+        {
+            qCDebug(lc::steam) << "could not use native file watcher for" << filename;
+        }
+    }
+}
 }  // namespace
 
 namespace steam
@@ -155,11 +168,20 @@ SteamLogTracker::SteamLogTracker(std::filesystem::path main_filename, std::files
     , m_first_entry_time_filter{std::move(first_entry_time_filter)}
     , m_time_format{time_format}
 {
+    connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this, &SteamLogTracker::slotCheckLog);
 }
 
 void SteamLogTracker::slotCheckLog()
 {
-    QFile main_file{m_main_filename};
+    QFile      main_file{m_main_filename};
+    const auto file_watcher_restart_guard{qScopeGuard(
+        [this, &main_file]()
+        {
+            // It should be enough to only monitor the main file as the backup changes very rarely, worst case there
+            // will be a delay of 1 second...
+            tryWatchFileNatively(main_file.fileName(), m_file_watcher);
+        })};
+
     if (!openForReading(main_file))
     {
         return;
