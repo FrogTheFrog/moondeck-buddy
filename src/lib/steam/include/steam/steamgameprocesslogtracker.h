@@ -1,8 +1,5 @@
 #pragma once
 
-// system/Qt includes
-#include <set>
-
 // local includes
 #include "appid.h"
 #include "steamlogtracker.h"
@@ -23,6 +20,6 @@ protected:
     void onLogChanged(const std::vector<QString>& new_lines) override;
 
 private:
-    std::map<AppId, std::set<uint>> m_app_id_to_process_ids;
+    std::map<AppId, QSet<uint>> m_app_id_to_process_ids;
 };
 }  // namespace steam
