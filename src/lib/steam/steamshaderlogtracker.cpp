@@ -41,6 +41,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
         }
     }
 
+    bool current_state_changed{false};
     for (const auto [app_id, state] : new_shader_states)
     {
         auto data_it{m_apps_with_compiling_shaders.find(app_id)};
@@ -50,6 +51,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             {
                 m_apps_with_compiling_shaders.insert(app_id);
                 qCInfo(lc::steam) << "Compiling shaders for AppID:" << app_id.getId();
+                current_state_changed = true;
             }
         }
         else
@@ -58,8 +60,14 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
             {
                 m_apps_with_compiling_shaders.erase(data_it);
                 qCInfo(lc::steam) << "Stopped compiling shaders for AppID:" << app_id.getId();
+                current_state_changed = true;
             }
         }
+    }
+
+    if (current_state_changed)
+    {
+        emit signalStateChanged();
     }
 }
 }  // namespace steam

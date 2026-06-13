@@ -43,9 +43,9 @@ bool SteamHandler::launchSteam(const bool big_picture_mode, const QString& usern
 
 enums::SteamUiMode SteamHandler::getSteamUiMode() const
 {
-    if (const auto* log_trackers{m_steam_process_tracker.getLogTrackers()})
+    if (const auto* log_trackers{m_steam_process_tracker.getSteamLogTrackers()})
     {
-        return log_trackers->m_web_helper.getSteamUiMode();
+        return log_trackers->getWebHelperLog().getSteamUiMode();
     }
 
     return enums::SteamUiMode::Unknown;
@@ -140,20 +140,20 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     }
 
     m_steam_process_tracker.slotCheckState();
-    const auto* log_trackers{m_steam_process_tracker.getLogTrackers()};
+    const auto* log_trackers{m_steam_process_tracker.getSteamLogTrackers()};
     if (log_trackers == nullptr)
     {
         qCWarning(lc::steam) << "Steam is not running or the log trackers have not been initialized yet!";
         return false;
     }
 
-    if (log_trackers->m_web_helper.getSteamUiMode() == enums::SteamUiMode::Unknown)
+    if (log_trackers->getWebHelperLog().getSteamUiMode() == enums::SteamUiMode::Unknown)
     {
         qCWarning(lc::steam) << "Steam has not reached a stable UI state yet!";
         return false;
     }
 
-    const auto current_steam_id{log_trackers->m_connection_log.getCurrentSteamId()};
+    const auto current_steam_id{log_trackers->getConnectionLog().getCurrentSteamId()};
     if (!current_steam_id || current_steam_id->isNull())
     {
         qCWarning(lc::steam) << "User's SteamId is not available yet - cannot launch games until user logs in!";
@@ -219,9 +219,9 @@ std::optional<std::map<AppId, QString>> SteamHandler::getNonSteamAppData(const S
 
 std::optional<SteamId> SteamHandler::getCurrentUserId() const
 {
-    if (const auto* log_trackers{m_steam_process_tracker.getLogTrackers()})
+    if (const auto* log_trackers{m_steam_process_tracker.getSteamLogTrackers()})
     {
-        return log_trackers->m_connection_log.getCurrentSteamId();
+        return log_trackers->getConnectionLog().getCurrentSteamId();
     }
 
     return std::nullopt;

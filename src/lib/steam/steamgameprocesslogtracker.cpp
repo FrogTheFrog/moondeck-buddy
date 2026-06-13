@@ -75,6 +75,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
         }
     }
 
+    bool current_state_changed{false};
     for (const auto& [app_id, initial_pids] : initial_entries)
     {
         auto data_it{m_app_id_to_process_ids.find(app_id)};
@@ -86,6 +87,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
         if (data_it->second != initial_pids)
         {
             qCDebug(lc::steam) << "Running processes changed for AppID:" << app_id.getId() << "->" << data_it->second;
+            current_state_changed = true;
 
             if (initial_pids.empty())
             {
@@ -101,6 +103,11 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
         {
             m_app_id_to_process_ids.erase(data_it);
         }
+    }
+
+    if (current_state_changed)
+    {
+        emit signalStateChanged();
     }
 }
 }  // namespace steam

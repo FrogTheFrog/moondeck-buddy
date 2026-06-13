@@ -30,12 +30,12 @@ private:
         // this into account.
         AppId m_trackable_app_id;
 
-        static std::optional<TrackingMetadata> fromAppId(const SteamProcessTracker::LogTrackers& log_trackers,
+        static std::optional<TrackingMetadata> fromAppId(const SteamLogTrackers&      log_trackers,
                                                          const std::filesystem::path& steam_dir, const AppId& app_id);
     };
 
-    static enums::AppState getAppState(const SteamProcessTracker::LogTrackers& log_trackers,
-                                       const TrackingMetadata& metadata, enums::AppState prev_state);
+    static enums::AppState getAppState(const SteamLogTrackers& log_trackers, const TrackingMetadata& metadata,
+                                       enums::AppState prev_state);
 
     const SteamProcessTracker&      m_process_tracker;
     AppId                           m_app_id;

@@ -24,6 +24,9 @@ public:
                              TimeFormat time_format = TimeFormat::YYYY_MM_DD_hh_mm_ss);
     ~SteamLogTracker() override = default;
 
+signals:
+    void signalStateChanged();
+
 public slots:
     void slotCheckLog();
 
