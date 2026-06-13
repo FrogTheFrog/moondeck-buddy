@@ -43,5 +43,6 @@ private:
 
     enums::AppState m_current_state{enums::AppState::Stopped};
     QTimer          m_check_timer;
+    uint            m_delay_counter{0};
 };
 }  // namespace steam
