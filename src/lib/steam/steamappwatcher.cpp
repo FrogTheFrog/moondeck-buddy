@@ -133,17 +133,10 @@ void SteamAppWatcher::slotCheckState()
 
     if (new_state != m_current_state)
     {
-        if (new_state == enums::AppState::Stopped && m_delay_counter < 5)
-        {
-            ++m_delay_counter;
-            return;
-        }
-
         qCInfo(lc::steam) << "[TRACKING] New app state for AppID" << m_app_id.getId()
                           << "detected:" << enums::qEnumToString(m_current_state) << "->"
                           << enums::qEnumToString(new_state);
         m_current_state = new_state;
-        m_delay_counter = 0;
     }
 }
 
