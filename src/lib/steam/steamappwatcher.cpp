@@ -11,9 +11,9 @@
 
 namespace
 {
-std::optional<steam::AppId>
-    tryFindAppIdOverrideForNonSteamGame(const steam::SteamProcessTracker::LogTrackers& log_trackers,
-                                        const std::filesystem::path& steam_dir, const steam::AppId& app_id)
+std::optional<steam::AppId> tryFindAppIdOverrideForNonSteamGame(const steam::SteamLogTrackers& log_trackers,
+                                                                const std::filesystem::path&   steam_dir,
+                                                                const steam::AppId&            app_id)
 {
     if (steam_dir.empty())
     {
@@ -21,7 +21,7 @@ std::optional<steam::AppId>
         return std::nullopt;
     }
 
-    const auto current_steam_id{log_trackers.m_connection_log.getCurrentSteamId()};
+    const auto current_steam_id{log_trackers.getConnectionLog().getCurrentSteamId()};
     if (!current_steam_id)
     {
         qCWarning(lc::steam) << "User's SteamId is not available yet - cannot launch games until user logs in!";
@@ -87,7 +87,7 @@ SteamAppWatcher::~SteamAppWatcher()
 std::optional<enums::AppState> SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker,
                                                             const AppId&               app_id)
 {
-    if (const auto* log_trackers{process_tracker.getLogTrackers()})
+    if (const auto* log_trackers{process_tracker.getSteamLogTrackers()})
     {
         if (const auto metadata{TrackingMetadata::fromAppId(*log_trackers, process_tracker.getSteamDir(), app_id)})
         {
@@ -110,11 +110,20 @@ const AppId& SteamAppWatcher::getAppId() const
 
 void SteamAppWatcher::slotCheckState()
 {
+    m_check_timer.stop();
     const auto auto_start_timer{qScopeGuard([this]() { m_check_timer.start(); })};
 
     auto new_state{enums::AppState::Stopped};
-    if (const auto* log_trackers{m_process_tracker.getLogTrackers()})
+    if (const auto* log_trackers{m_process_tracker.getSteamLogTrackers()})
     {
+        if (!m_connected_to_log_trackers)
+        {
+            m_connected_to_log_trackers = true;
+            connect(log_trackers, &SteamLogTrackers::signalStateChanged, this, &SteamAppWatcher::slotCheckState);
+            connect(log_trackers, &SteamLogTrackers::destroyed, this,
+                    [this]() { m_connected_to_log_trackers = false; });
+        }
+
         if (!m_metadata)
         {
             m_metadata = TrackingMetadata::fromAppId(*log_trackers, m_process_tracker.getSteamDir(), m_app_id);
@@ -141,7 +150,7 @@ void SteamAppWatcher::slotCheckState()
 }
 
 std::optional<SteamAppWatcher::TrackingMetadata>
-    SteamAppWatcher::TrackingMetadata::fromAppId(const SteamProcessTracker::LogTrackers& log_trackers,
+    SteamAppWatcher::TrackingMetadata::fromAppId(const SteamLogTrackers&      log_trackers,
                                                  const std::filesystem::path& steam_dir, const AppId& app_id)
 {
     if (!app_id.isGameId())
@@ -157,14 +166,14 @@ std::optional<SteamAppWatcher::TrackingMetadata>
     return std::nullopt;
 }
 
-enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker::LogTrackers& log_trackers,
-                                             const TrackingMetadata& metadata, const enums::AppState prev_state)
+enums::AppState SteamAppWatcher::getAppState(const SteamLogTrackers& log_trackers, const TrackingMetadata& metadata,
+                                             const enums::AppState prev_state)
 {
     auto       new_state{enums::AppState::Stopped};
-    const auto content_state{log_trackers.m_content_log.getAppState(metadata.m_trackable_app_id)};
+    const auto content_state{log_trackers.getContentLog().getAppState(metadata.m_trackable_app_id)};
 
     if (content_state == SteamContentLogTracker::AppState::Updating
-        || log_trackers.m_shader_log.isAppCompilingShaders(metadata.m_trackable_app_id))
+        || log_trackers.getShaderLog().isAppCompilingShaders(metadata.m_trackable_app_id))
     {
         new_state = enums::AppState::Updating;
     }
@@ -172,7 +181,7 @@ enums::AppState SteamAppWatcher::getAppState(const SteamProcessTracker::LogTrack
     {
         new_state = enums::AppState::Running;
     }
-    else if (log_trackers.m_gameprocess_log.isAnyProcessRunning(metadata.m_trackable_app_id))
+    else if (log_trackers.getGameProcessLog().isAnyProcessRunning(metadata.m_trackable_app_id))
     {
         // Try to preserve the latest state from other logs, unless this is the only data available
         new_state = prev_state == enums::AppState::Stopped ? enums::AppState::Running : prev_state;
