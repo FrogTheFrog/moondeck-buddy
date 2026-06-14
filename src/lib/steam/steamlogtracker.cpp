@@ -168,7 +168,22 @@ SteamLogTracker::SteamLogTracker(std::filesystem::path main_filename, std::files
     , m_first_entry_time_filter{std::move(first_entry_time_filter)}
     , m_time_format{time_format}
 {
-    connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this, &SteamLogTracker::slotCheckLog);
+    connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this,
+            [this]()
+            {
+                if (!m_pending_file_changed_check)
+                {
+                    constexpr auto debouce_time_ms{50};
+
+                    m_pending_file_changed_check = true;
+                    QTimer::singleShot(debouce_time_ms, this,
+                                       [this]()
+                                       {
+                                           m_pending_file_changed_check = false;
+                                           slotCheckLog();
+                                       });
+                }
+            });
 }
 
 void SteamLogTracker::slotCheckLog()
