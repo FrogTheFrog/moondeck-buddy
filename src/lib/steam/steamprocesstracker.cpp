@@ -78,7 +78,7 @@ QDateTime SteamProcessTracker::getStartTime() const
     return m_data.m_start_time;
 }
 
-const SteamProcessTracker::LogTrackers* SteamProcessTracker::getLogTrackers() const
+const SteamLogTrackers* SteamProcessTracker::getSteamLogTrackers() const
 {
     return m_data.m_log_trackers.get();
 }
@@ -153,36 +153,11 @@ void SteamProcessTracker::slotCheckState()
 
         cleanup.dismiss();
 
-        m_data.m_pid = pid;
-        m_data.m_log_trackers.reset(new LogTrackers{QTimer{},
-                                                    SteamWebHelperLogTracker{steam_log_dir, m_data.m_start_time},
-                                                    SteamContentLogTracker{steam_log_dir, m_data.m_start_time},
-                                                    SteamGameProcessLogTracker{steam_log_dir, m_data.m_start_time},
-                                                    SteamShaderLogTracker{steam_log_dir, m_data.m_start_time},
-                                                    SteamConnectionLogTracker{steam_log_dir, m_data.m_start_time}});
-
-        connect(&m_data.m_log_trackers->m_read_timer, &QTimer::timeout, this, &SteamProcessTracker::slotCheckLogs);
-        m_data.m_log_trackers->m_read_timer.setSingleShot(true);
-        m_data.m_log_trackers->m_read_timer.setInterval(1000);
-        slotCheckLogs();
+        m_data.m_pid          = pid;
+        m_data.m_log_trackers = std::make_unique<SteamLogTrackers>(steam_log_dir, m_data.m_start_time);
 
         emit signalProcessStateChanged();
         break;
-    }
-}
-
-void SteamProcessTracker::slotCheckLogs()
-{
-    if (m_data.m_log_trackers)
-    {
-        m_data.m_log_trackers->m_read_timer.stop();
-        const auto auto_start_timer{qScopeGuard([this]() { m_data.m_log_trackers->m_read_timer.start(); })};
-
-        m_data.m_log_trackers->m_web_helper.slotCheckLog();
-        m_data.m_log_trackers->m_content_log.slotCheckLog();
-        m_data.m_log_trackers->m_gameprocess_log.slotCheckLog();
-        m_data.m_log_trackers->m_shader_log.slotCheckLog();
-        m_data.m_log_trackers->m_connection_log.slotCheckLog();
     }
 }
 }  // namespace steam

@@ -24,6 +24,9 @@ public:
                              TimeFormat time_format = TimeFormat::YYYY_MM_DD_hh_mm_ss);
     ~SteamLogTracker() override = default;
 
+signals:
+    void signalStateChanged();
+
 public slots:
     void slotCheckLog();
 
@@ -39,5 +42,6 @@ private:
     qint64                m_last_prev_size{0};
     qint64                m_last_read_pos{0};
     bool                  m_initialized{false};
+    bool                  m_pending_file_changed_check{false};
 };
 }  // namespace steam
