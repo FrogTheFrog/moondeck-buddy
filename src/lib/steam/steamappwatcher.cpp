@@ -116,8 +116,13 @@ void SteamAppWatcher::slotCheckState()
     auto new_state{enums::AppState::Stopped};
     if (const auto* log_trackers{m_process_tracker.getSteamLogTrackers()})
     {
-        connect(log_trackers, &SteamLogTrackers::signalStateChanged, this, &SteamAppWatcher::slotCheckState,
-                Qt::UniqueConnection);
+        if (!m_connected_to_log_trackers)
+        {
+            m_connected_to_log_trackers = true;
+            connect(log_trackers, &SteamLogTrackers::signalStateChanged, this, &SteamAppWatcher::slotCheckState);
+            connect(log_trackers, &SteamLogTrackers::destroyed, this,
+                    [this]() { m_connected_to_log_trackers = false; });
+        }
 
         if (!m_metadata)
         {
