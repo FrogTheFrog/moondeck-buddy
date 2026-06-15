@@ -14,15 +14,13 @@ namespace server
 {
 QString RestServer::getAuthorizationId(const QHttpServerRequest& request)
 {
-    auto auth = request.value("authorization").simplified();
+    const auto auth = request.value("authorization").simplified();
 
-    const int id_start_index{6};
-    if (auth.size() > id_start_index && auth.first(id_start_index).toLower() == "basic ")
+    if (constexpr int id_start_index{6};
+        auth.size() > id_start_index && auth.first(id_start_index).toLower() == "basic ")
     {
-        auto token     = auth.sliced(id_start_index);
-        auto client_id = QByteArray::fromBase64(token);
-
-        if (!client_id.isEmpty())
+        const auto token = auth.sliced(id_start_index);
+        if (auto client_id = QByteArray::fromBase64(token); !client_id.isEmpty())
         {
             return client_id;
         }
@@ -31,15 +29,14 @@ QString RestServer::getAuthorizationId(const QHttpServerRequest& request)
     return {};
 }
 
-RestServer::RestServer(int api_version, ClientIds& client_ids)
+RestServer::RestServer(const int api_version, ClientIds& client_ids)
     : m_api_version{api_version}
     , m_client_ids{client_ids}
 {
-    Q_UNUSED(m_client_ids)
 }
 
-bool RestServer::startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
-                             QSsl::SslProtocol protocol)
+bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
+                             const QSsl::SslProtocol protocol)
 {
     auto ssl_server = std::make_unique<QSslServer>();
     {

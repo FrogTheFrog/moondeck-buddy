@@ -35,7 +35,7 @@ struct LambdaTraits<ReturnT (ObjT::*)() const>
 };
 }  // namespace internal
 
-class RestServer
+class RestServer final
 {
     Q_DISABLE_COPY(RestServer)
 
@@ -43,7 +43,7 @@ public:
     static QString getAuthorizationId(const QHttpServerRequest& request);
 
     explicit RestServer(int api_version, ClientIds& client_ids);
-    virtual ~RestServer() = default;
+    ~RestServer() = default;
 
     bool startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
                      QSsl::SslProtocol protocol);
