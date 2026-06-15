@@ -2,152 +2,8 @@
 #include "routing.h"
 
 // local includes
-#include "common/loggingcategories.h"
 #include "os/networkinfo.h"
 #include "server/httpserver.h"
-#include "json/json.h"
-
-namespace
-{
-template<typename T>
-std::optional<T> fromRequest(const QHttpServerRequest& request)
-{
-    const auto& body{request.body()};
-    if (body.isEmpty())
-    {
-        qCWarning(lc::buddyMain) << "Request is missing body!";
-        return std::nullopt;
-    }
-
-    auto result{json::fromJson<T>(body)};
-    if (!result)
-    {
-        qCWarning(lc::buddyMain) << "Failed to decode JSON data! Reason:\n" << result.error();
-        return std::nullopt;
-    }
-
-    return std::move(result.value());
-}
-
-template<typename T>
-QHttpServerResponse toResponse(const T& value)
-{
-    auto result{json::toJson<T>(value)};
-    if (!result)
-    {
-        qCWarning(lc::buddyMain) << "Failed to encode JSON data! Reason:\n" << result.error();
-        return QHttpServerResponse::StatusCode::InternalServerError;
-    }
-
-    return QHttpServerResponse{QByteArrayLiteral("application/json"), result.value().toUtf8()};
-}
-
-template<typename T>
-QHttpServerResponse toResponse(const std::variant<QHttpServerResponse::StatusCode, T>& value)
-{
-    if (const auto* status_code{std::get<QHttpServerResponse::StatusCode>(&value)})
-    {
-        return *status_code;
-    }
-
-    return toResponse<T>(std::get<T>(value));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-struct LambdaTraits;
-
-template<typename ObjT, typename ReturnT, typename Arg>
-struct LambdaTraits<ReturnT (ObjT::*)(Arg) const>
-{
-    using ArgType    = std::decay_t<Arg>;
-    using ReturnType = std::decay_t<ReturnT>;
-};
-
-template<typename ObjT, typename ReturnT>
-struct LambdaTraits<ReturnT (ObjT::*)() const>
-{
-    using ArgType    = void;
-    using ReturnType = std::decay_t<ReturnT>;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-
-template<typename FunctorT>
-auto reqRespFunctorWrapper(const server::RestServer* authentication_server, const FunctorT& functor)
-{
-    using Functor       = std::decay_t<FunctorT>;
-    using FunctorTraits = LambdaTraits<decltype(&Functor::operator())>;
-    using ArgType       = FunctorTraits::ArgType;
-    using ReturnType    = FunctorTraits::ReturnType;
-
-    const auto authenticator{[authentication_server](const auto& http_request) -> std::optional<QHttpServerResponse>
-                             {
-                                 if (authentication_server && !authentication_server->isAuthorized(http_request))
-                                 {
-                                     return QHttpServerResponse::StatusCode::Unauthorized;
-                                 }
-
-                                 return std::nullopt;
-                             }};
-
-    if constexpr (std::is_same_v<ArgType, void>)
-    {
-        return [authenticator, functor](const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toResponse<ReturnType>(functor())); };
-    }
-    else if constexpr (std::is_same_v<ArgType, QString>)
-    {
-        return [authenticator, functor](const QString& arg, const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toResponse<ReturnType>(functor(arg))); };
-    }
-    else if constexpr (std::is_same_v<ArgType, QHttpServerRequest>)
-    {
-        return [authenticator, functor](const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toResponse<ReturnType>(functor(http_request))); };
-    }
-    else
-    {
-        return [authenticator, functor](const QHttpServerRequest& http_request) -> QHttpServerResponse
-        {
-            if (const auto result{authenticator(http_request)})
-            {
-                return result->statusCode();
-            }
-
-            const auto request{fromRequest<ArgType>(http_request)};
-            if (!request)
-            {
-                return QHttpServerResponse::StatusCode::BadRequest;
-            }
-
-            return toResponse<ReturnType>(functor(*request));
-        };
-    }
-}
-
-template<typename FunctorT>
-void reqRespRouter(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
-                   const bool secure, const FunctorT& functor)
-{
-    server.httpRoute(path_pattern, method, reqRespFunctorWrapper(secure ? &server : nullptr, functor));
-}
-
-template<typename FunctorT>
-void openReqResp(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
-                 FunctorT&& functor)
-{
-    reqRespRouter(server, path_pattern, method, false, std::forward<FunctorT>(functor));
-}
-
-template<typename FunctorT>
-void secureReqResp(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
-                   FunctorT&& functor)
-{
-    reqRespRouter(server, path_pattern, method, true, std::forward<FunctorT>(functor));
-}
-}  // namespace
 
 namespace http_api
 {
@@ -165,8 +21,8 @@ struct VersionResponse
 
 void apiVersion(server::RestServer& server)
 {
-    openReqResp(server, "/apiVersion", QHttpServerRequest::Method::Get,
-                [&server]() { return VersionResponse{.m_version = server.getApiVersion()}; });
+    server.unauthenticatedHttpRoute("/apiVersion", QHttpServerRequest::Method::Get,
+                                    [&server]() { return VersionResponse{.m_version = server.getApiVersion()}; });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -189,16 +45,16 @@ public:
 
 void pairingState(server::RestServer& server, server::PairingManager& pairing_manager)
 {
-    openReqResp(server, "/pairingState/<arg>", QHttpServerRequest::Method::Get,
-                [&pairing_manager](const QString& user_id)
-                {
-                    using enum PairingStateResponse::PairingState;
+    server.unauthenticatedHttpRoute("/pairingState/<arg>", QHttpServerRequest::Method::Get,
+                                    [&pairing_manager](const QString& user_id)
+                                    {
+                                        using enum PairingStateResponse::PairingState;
 
-                    const auto state{pairing_manager.isPaired(user_id)    ? Paired
-                                     : pairing_manager.isPairing(user_id) ? Pairing
-                                                                          : NotPaired};
-                    return PairingStateResponse{.m_state = state};
-                });
+                                        const auto state{pairing_manager.isPaired(user_id)    ? Paired
+                                                         : pairing_manager.isPairing(user_id) ? Pairing
+                                                                                              : NotPaired};
+                                        return PairingStateResponse{.m_state = state};
+                                    });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -211,12 +67,13 @@ struct PairRequest
 
 void pair(server::RestServer& server, server::PairingManager& pairing_manager)
 {
-    openReqResp(server, "/pair", QHttpServerRequest::Method::Post,
-                [&pairing_manager](const PairRequest& request)
-                {
-                    const bool result{pairing_manager.startPairing(request.m_id, request.m_hashed_id)};
-                    return ResultResponse{.m_result = result};
-                });
+    server.unauthenticatedHttpRoute("/pair", QHttpServerRequest::Method::Post,
+                                    [&pairing_manager](const PairRequest& request)
+                                    {
+                                        const bool result{
+                                            pairing_manager.startPairing(request.m_id, request.m_hashed_id)};
+                                        return ResultResponse{.m_result = result};
+                                    });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -228,12 +85,12 @@ struct AbortPairingRequest
 
 void abortPairing(server::RestServer& server, server::PairingManager& pairing_manager)
 {
-    openReqResp(server, "/abortPairing", QHttpServerRequest::Method::Post,
-                [&pairing_manager](const AbortPairingRequest& request)
-                {
-                    const bool result{pairing_manager.abortPairing(request.m_id)};
-                    return ResultResponse{.m_result = result};
-                });
+    server.unauthenticatedHttpRoute("/abortPairing", QHttpServerRequest::Method::Post,
+                                    [&pairing_manager](const AbortPairingRequest& request)
+                                    {
+                                        const bool result{pairing_manager.abortPairing(request.m_id)};
+                                        return ResultResponse{.m_result = result};
+                                    });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -245,8 +102,8 @@ struct PcStateResponse
 
 void pcState(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/pcState", QHttpServerRequest::Method::Get,
-                  [&pc_control]() { return PcStateResponse{.m_state = pc_control.getPcState()}; });
+    server.httpRoute("/pcState", QHttpServerRequest::Method::Get,
+                     [&pc_control]() { return PcStateResponse{.m_state = pc_control.getPcState()}; });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -270,33 +127,33 @@ public:
 
 void changePcState(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/changePcState", QHttpServerRequest::Method::Post,
-                  [&pc_control](const ChangePcStateRequest& request)
-                      -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
-                  {
-                      using enum ChangePcStateRequest::ChangePcState;
+    server.httpRoute("/changePcState", QHttpServerRequest::Method::Post,
+                     [&pc_control](const ChangePcStateRequest& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+                     {
+                         using enum ChangePcStateRequest::ChangePcState;
 
-                      if (request.m_delay < 1 || 30 < request.m_delay)
-                      {
-                          qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                          return QHttpServerResponse::StatusCode::BadRequest;
-                      }
+                         if (request.m_delay < 1 || 30 < request.m_delay)
+                         {
+                             qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
+                             return QHttpServerResponse::StatusCode::BadRequest;
+                         }
 
-                      bool result{false};
-                      switch (request.m_state)
-                      {
-                          case Restart:
-                              result = pc_control.restartPC(request.m_delay);
-                              break;
-                          case Shutdown:
-                              result = pc_control.shutdownPC(request.m_delay);
-                              break;
-                          case Suspend:
-                              result = pc_control.suspendOrHibernatePC(request.m_delay);
-                              break;
-                      }
-                      return ResultResponse{.m_result = result};
-                  });
+                         bool result{false};
+                         switch (request.m_state)
+                         {
+                             case Restart:
+                                 result = pc_control.restartPC(request.m_delay);
+                                 break;
+                             case Shutdown:
+                                 result = pc_control.shutdownPC(request.m_delay);
+                                 break;
+                             case Suspend:
+                                 result = pc_control.suspendOrHibernatePC(request.m_delay);
+                                 break;
+                         }
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -309,38 +166,39 @@ struct HostInfoResponse
 
 void hostInfo(server::RestServer& server, const QString& mac_address_override)
 {
-    secureReqResp(server, "/hostInfo", QHttpServerRequest::Method::Get,
-                  [&mac_address_override](const QHttpServerRequest& request)
-                      -> std::variant<QHttpServerResponse::StatusCode, HostInfoResponse>
-                  {
-                      auto mac{mac_address_override.isEmpty() ? os::NetworkInfo::getMacAddress(request.localAddress())
-                                                              : mac_address_override};
-                      if (mac.isEmpty())
-                      {
-                          qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
-                          return QHttpServerResponse::StatusCode::InternalServerError;
-                      }
+    server.httpRoute(
+        "/hostInfo", QHttpServerRequest::Method::Get,
+        [&mac_address_override](
+            const QHttpServerRequest& request) -> std::variant<QHttpServerResponse::StatusCode, HostInfoResponse>
+        {
+            auto mac{mac_address_override.isEmpty() ? os::NetworkInfo::getMacAddress(request.localAddress())
+                                                    : mac_address_override};
+            if (mac.isEmpty())
+            {
+                qCWarning(lc::buddyMain) << "could not retrieve MAC address!";
+                return QHttpServerResponse::StatusCode::InternalServerError;
+            }
 
-                      static const QRegularExpression regex{
-                          R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
-                      if (!mac.contains(regex))
-                      {
-                          qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
-                          return QHttpServerResponse::StatusCode::InternalServerError;
-                      }
+            static const QRegularExpression regex{
+                R"(^(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}$)"};
+            if (!mac.contains(regex))
+            {
+                qCWarning(lc::buddyMain) << "MAC address is invalid:" << mac;
+                return QHttpServerResponse::StatusCode::InternalServerError;
+            }
 
-                      mac.replace('-', ':');
+            mac.replace('-', ':');
 
 #ifdef Q_OS_WIN
-                      const QString os_type{"Windows"};
+            const QString os_type{"Windows"};
 #elifdef Q_OS_LINUX
-                      const QString os_type{"Linux"};
+            const QString os_type{"Linux"};
 #else
-                      const QString os_type{"Other"};
+            const QString os_type{"Other"};
 #endif
 
-                      return HostInfoResponse{.m_mac = mac, .m_os = os_type};
-                  });
+            return HostInfoResponse{.m_mac = mac, .m_os = os_type};
+        });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -352,12 +210,12 @@ struct SteamUiModeResponse
 
 void steamUiMode(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/steamUiMode", QHttpServerRequest::Method::Get,
-                  [&pc_control]()
-                  {
-                      const auto mode{pc_control.getSteamUiMode()};
-                      return SteamUiModeResponse{.m_mode = mode};
-                  });
+    server.httpRoute("/steamUiMode", QHttpServerRequest::Method::Get,
+                     [&pc_control]()
+                     {
+                         const auto mode{pc_control.getSteamUiMode()};
+                         return SteamUiModeResponse{.m_mode = mode};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -380,30 +238,30 @@ struct NonSteamAppDataResponse
 
 void nonSteamAppData(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/nonSteamAppData", QHttpServerRequest::Method::Get,
-                  [&pc_control](const NonSteamAppDataRequest& request)
-                      -> std::variant<QHttpServerResponse::StatusCode, NonSteamAppDataResponse>
-                  {
-                      const auto steam_id{steam::SteamId::fromString(request.m_user_id)};
-                      if (!steam_id)
-                      {
-                          return QHttpServerResponse::StatusCode::BadRequest;
-                      }
+    server.httpRoute("/nonSteamAppData", QHttpServerRequest::Method::Get,
+                     [&pc_control](const NonSteamAppDataRequest& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, NonSteamAppDataResponse>
+                     {
+                         const auto steam_id{steam::SteamId::fromString(request.m_user_id)};
+                         if (!steam_id)
+                         {
+                             return QHttpServerResponse::StatusCode::BadRequest;
+                         }
 
-                      const auto data{pc_control.getNonSteamAppData(*steam_id)};
-                      if (!data)
-                      {
-                          return NonSteamAppDataResponse{.m_data = std::nullopt};
-                      }
+                         const auto data{pc_control.getNonSteamAppData(*steam_id)};
+                         if (!data)
+                         {
+                             return NonSteamAppDataResponse{.m_data = std::nullopt};
+                         }
 
-                      std::vector<NonSteamAppDataResponse::Entry> entries;
-                      for (const auto& [app_id, app_name] : *data)
-                      {
-                          entries.emplace_back(QString::number(app_id.getGameId()), app_name);
-                      }
+                         std::vector<NonSteamAppDataResponse::Entry> entries;
+                         for (const auto& [app_id, app_name] : *data)
+                         {
+                             entries.emplace_back(QString::number(app_id.getGameId()), app_name);
+                         }
 
-                      return NonSteamAppDataResponse{.m_data = std::move(entries)};
-                  });
+                         return NonSteamAppDataResponse{.m_data = std::move(entries)};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -420,19 +278,20 @@ struct CurrentUserResponse
 
 void currentUser(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/currentUser", QHttpServerRequest::Method::Get,
-                  [&pc_control]()
-                  {
-                      const auto user_id{pc_control.getCurrentUserId()};
-                      if (!user_id)
-                      {
-                          return CurrentUserResponse{.m_user = std::nullopt};
-                      }
+    server.httpRoute("/currentUser", QHttpServerRequest::Method::Get,
+                     [&pc_control]()
+                     {
+                         const auto user_id{pc_control.getCurrentUserId()};
+                         if (!user_id)
+                         {
+                             return CurrentUserResponse{.m_user = std::nullopt};
+                         }
 
-                      return CurrentUserResponse{
-                          .m_user = CurrentUserResponse::UserData{
-                              .m_id = user_id->isNull() ? std::nullopt : std::make_optional(user_id->toSteamId64())}};
-                  });
+                         return CurrentUserResponse{.m_user = CurrentUserResponse::UserData{
+                                                        .m_id = user_id->isNull()
+                                                                    ? std::nullopt
+                                                                    : std::make_optional(user_id->toSteamId64())}};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -445,13 +304,13 @@ struct LaunchSteamRequest
 
 void launchSteam(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/launchSteam", QHttpServerRequest::Method::Post,
-                  [&pc_control](const LaunchSteamRequest& request)
-                  {
-                      const bool result{
-                          pc_control.launchSteam(request.m_big_picture_mode, request.m_username.value_or(QString{}))};
-                      return ResultResponse{.m_result = result};
-                  });
+    server.httpRoute("/launchSteam", QHttpServerRequest::Method::Post,
+                     [&pc_control](const LaunchSteamRequest& request)
+                     {
+                         const bool result{pc_control.launchSteam(request.m_big_picture_mode,
+                                                                  request.m_username.value_or(QString{}))};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -463,19 +322,19 @@ struct LaunchSteamAppRequest
 
 void launchSteamApp(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/launchSteamApp", QHttpServerRequest::Method::Post,
-                  [&pc_control](const LaunchSteamAppRequest& request)
-                      -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
-                  {
-                      const auto app_id{steam::AppId::fromString(request.m_app_id)};
-                      if (!app_id)
-                      {
-                          return QHttpServerResponse::StatusCode::BadRequest;
-                      }
+    server.httpRoute("/launchSteamApp", QHttpServerRequest::Method::Post,
+                     [&pc_control](const LaunchSteamAppRequest& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+                     {
+                         const auto app_id{steam::AppId::fromString(request.m_app_id)};
+                         if (!app_id)
+                         {
+                             return QHttpServerResponse::StatusCode::BadRequest;
+                         }
 
-                      const bool result{pc_control.launchSteamApp(*app_id)};
-                      return ResultResponse{.m_result = result};
-                  });
+                         const bool result{pc_control.launchSteamApp(*app_id)};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -487,24 +346,24 @@ struct CloseSteamRequest
 
 void closeSteam(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/closeSteam", QHttpServerRequest::Method::Post,
-                  [&pc_control](const CloseSteamRequest& request)
-                  {
-                      const bool result{pc_control.closeSteam(request.m_keep_stream_alive)};
-                      return ResultResponse{.m_result = result};
-                  });
+    server.httpRoute("/closeSteam", QHttpServerRequest::Method::Post,
+                     [&pc_control](const CloseSteamRequest& request)
+                     {
+                         const bool result{pc_control.closeSteam(request.m_keep_stream_alive)};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 void closeSteamBigPictureMode(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/closeSteamBigPictureMode", QHttpServerRequest::Method::Post,
-                  [&pc_control]()
-                  {
-                      const bool result{pc_control.closeSteamBigPictureMode()};
-                      return ResultResponse{.m_result = result};
-                  });
+    server.httpRoute("/closeSteamBigPictureMode", QHttpServerRequest::Method::Post,
+                     [&pc_control]()
+                     {
+                         const bool result{pc_control.closeSteamBigPictureMode()};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -516,12 +375,12 @@ struct StreamStateResponse
 
 void streamState(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/streamState", QHttpServerRequest::Method::Get,
-                  [&pc_control]()
-                  {
-                      const auto state{pc_control.getStreamState()};
-                      return StreamStateResponse{.m_state = state};
-                  });
+    server.httpRoute("/streamState", QHttpServerRequest::Method::Get,
+                     [&pc_control]()
+                     {
+                         const auto state{pc_control.getStreamState()};
+                         return StreamStateResponse{.m_state = state};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -539,44 +398,44 @@ struct StreamedAppDataResponse
 
 void streamedAppData(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/streamedAppData", QHttpServerRequest::Method::Get,
-                  [&pc_control]()
-                  {
-                      const auto data{pc_control.getAppData(std::nullopt)};
-                      if (!data)
-                      {
-                          return StreamedAppDataResponse{.m_data = std::nullopt};
-                      }
+    server.httpRoute("/streamedAppData", QHttpServerRequest::Method::Get,
+                     [&pc_control]()
+                     {
+                         const auto data{pc_control.getAppData(std::nullopt)};
+                         if (!data)
+                         {
+                             return StreamedAppDataResponse{.m_data = std::nullopt};
+                         }
 
-                      const auto& [app_id, app_state] = *data;
-                      return StreamedAppDataResponse{
-                          .m_data = StreamedAppDataResponse::Data{.m_app_id    = QString::number(app_id.getId()),
-                                                                  .m_app_state = app_state}};
-                  });
+                         const auto& [app_id, app_state] = *data;
+                         return StreamedAppDataResponse{
+                             .m_data = StreamedAppDataResponse::Data{.m_app_id    = QString::number(app_id.getId()),
+                                                                     .m_app_state = app_state}};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 void clearStreamedAppData(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/clearStreamedAppData", QHttpServerRequest::Method::Post,
-                  [&pc_control]()
-                  {
-                      const auto result{pc_control.clearAppData()};
-                      return ResultResponse{.m_result = result};
-                  });
+    server.httpRoute("/clearStreamedAppData", QHttpServerRequest::Method::Post,
+                     [&pc_control]()
+                     {
+                         const auto result{pc_control.clearAppData()};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 void endStream(server::RestServer& server, PcControl& pc_control)
 {
-    secureReqResp(server, "/endStream", QHttpServerRequest::Method::Post,
-                  [&pc_control]()
-                  {
-                      const auto result{pc_control.endStream()};
-                      return ResultResponse{.m_result = result};
-                  });
+    server.httpRoute("/endStream", QHttpServerRequest::Method::Post,
+                     [&pc_control]()
+                     {
+                         const auto result{pc_control.endStream()};
+                         return ResultResponse{.m_result = result};
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -588,8 +447,8 @@ struct GameStreamAppNamesResponse
 
 void gameStreamAppNames(server::RestServer& server, SunshineApps& sunshine_apps)
 {
-    secureReqResp(server, "/gameStreamAppNames", QHttpServerRequest::Method::Get,
-                  [&sunshine_apps]() { return GameStreamAppNamesResponse{.m_app_names = sunshine_apps.load()}; });
+    server.httpRoute("/gameStreamAppNames", QHttpServerRequest::Method::Get,
+                     [&sunshine_apps]() { return GameStreamAppNamesResponse{.m_app_names = sunshine_apps.load()}; });
 }
 }  // namespace http_api
 
