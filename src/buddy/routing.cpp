@@ -75,7 +75,7 @@ struct LambdaTraits<ReturnT (ObjT::*)() const>
 //----------------------------------------------------------------------------------------------------------------------
 
 template<typename FunctorT>
-auto reqRespFunctorWrapper(const server::HttpServer* authentication_server, const FunctorT& functor)
+auto reqRespFunctorWrapper(const server::RestServer* authentication_server, const FunctorT& functor)
 {
     using Functor       = std::decay_t<FunctorT>;
     using FunctorTraits = LambdaTraits<decltype(&Functor::operator())>;
@@ -128,21 +128,21 @@ auto reqRespFunctorWrapper(const server::HttpServer* authentication_server, cons
 }
 
 template<typename FunctorT>
-void reqRespRouter(server::HttpServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
+void reqRespRouter(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
                    const bool secure, const FunctorT& functor)
 {
     server.route(path_pattern, method, reqRespFunctorWrapper(secure ? &server : nullptr, functor));
 }
 
 template<typename FunctorT>
-void openReqResp(server::HttpServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
+void openReqResp(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
                  FunctorT&& functor)
 {
     reqRespRouter(server, path_pattern, method, false, std::forward<FunctorT>(functor));
 }
 
 template<typename FunctorT>
-void secureReqResp(server::HttpServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
+void secureReqResp(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
                    FunctorT&& functor)
 {
     reqRespRouter(server, path_pattern, method, true, std::forward<FunctorT>(functor));
@@ -163,7 +163,7 @@ struct VersionResponse
     int m_version;
 };
 
-void apiVersion(server::HttpServer& server)
+void apiVersion(server::RestServer& server)
 {
     openReqResp(server, "/apiVersion", QHttpServerRequest::Method::Get,
                 [&server]() { return VersionResponse{.m_version = server.getApiVersion()}; });
@@ -187,7 +187,7 @@ public:
     PairingState m_state;
 };
 
-void pairingState(server::HttpServer& server, server::PairingManager& pairing_manager)
+void pairingState(server::RestServer& server, server::PairingManager& pairing_manager)
 {
     openReqResp(server, "/pairingState/<arg>", QHttpServerRequest::Method::Get,
                 [&pairing_manager](const QString& user_id)
@@ -209,7 +209,7 @@ struct PairRequest
     QString m_hashed_id;
 };
 
-void pair(server::HttpServer& server, server::PairingManager& pairing_manager)
+void pair(server::RestServer& server, server::PairingManager& pairing_manager)
 {
     openReqResp(server, "/pair", QHttpServerRequest::Method::Post,
                 [&pairing_manager](const PairRequest& request)
@@ -226,7 +226,7 @@ struct AbortPairingRequest
     QString m_id;
 };
 
-void abortPairing(server::HttpServer& server, server::PairingManager& pairing_manager)
+void abortPairing(server::RestServer& server, server::PairingManager& pairing_manager)
 {
     openReqResp(server, "/abortPairing", QHttpServerRequest::Method::Post,
                 [&pairing_manager](const AbortPairingRequest& request)
@@ -243,7 +243,7 @@ struct PcStateResponse
     enums::PcState m_state;
 };
 
-void pcState(server::HttpServer& server, PcControl& pc_control)
+void pcState(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/pcState", QHttpServerRequest::Method::Get,
                   [&pc_control]() { return PcStateResponse{.m_state = pc_control.getPcState()}; });
@@ -268,7 +268,7 @@ public:
     uint          m_delay;
 };
 
-void changePcState(server::HttpServer& server, PcControl& pc_control)
+void changePcState(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/changePcState", QHttpServerRequest::Method::Post,
                   [&pc_control](const ChangePcStateRequest& request)
@@ -307,7 +307,7 @@ struct HostInfoResponse
     QString m_os;
 };
 
-void hostInfo(server::HttpServer& server, const QString& mac_address_override)
+void hostInfo(server::RestServer& server, const QString& mac_address_override)
 {
     secureReqResp(server, "/hostInfo", QHttpServerRequest::Method::Get,
                   [&mac_address_override](const QHttpServerRequest& request)
@@ -350,7 +350,7 @@ struct SteamUiModeResponse
     enums::SteamUiMode m_mode;
 };
 
-void steamUiMode(server::HttpServer& server, PcControl& pc_control)
+void steamUiMode(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/steamUiMode", QHttpServerRequest::Method::Get,
                   [&pc_control]()
@@ -378,7 +378,7 @@ struct NonSteamAppDataResponse
     std::optional<std::vector<Entry>> m_data;
 };
 
-void nonSteamAppData(server::HttpServer& server, PcControl& pc_control)
+void nonSteamAppData(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/nonSteamAppData", QHttpServerRequest::Method::Get,
                   [&pc_control](const NonSteamAppDataRequest& request)
@@ -418,7 +418,7 @@ struct CurrentUserResponse
     std::optional<UserData> m_user;
 };
 
-void currentUser(server::HttpServer& server, PcControl& pc_control)
+void currentUser(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/currentUser", QHttpServerRequest::Method::Get,
                   [&pc_control]()
@@ -443,7 +443,7 @@ struct LaunchSteamRequest
     std::optional<QString> m_username;
 };
 
-void launchSteam(server::HttpServer& server, PcControl& pc_control)
+void launchSteam(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/launchSteam", QHttpServerRequest::Method::Post,
                   [&pc_control](const LaunchSteamRequest& request)
@@ -461,7 +461,7 @@ struct LaunchSteamAppRequest
     QString m_app_id;
 };
 
-void launchSteamApp(server::HttpServer& server, PcControl& pc_control)
+void launchSteamApp(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/launchSteamApp", QHttpServerRequest::Method::Post,
                   [&pc_control](const LaunchSteamAppRequest& request)
@@ -485,7 +485,7 @@ struct CloseSteamRequest
     bool m_keep_stream_alive;
 };
 
-void closeSteam(server::HttpServer& server, PcControl& pc_control)
+void closeSteam(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/closeSteam", QHttpServerRequest::Method::Post,
                   [&pc_control](const CloseSteamRequest& request)
@@ -497,7 +497,7 @@ void closeSteam(server::HttpServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void closeSteamBigPictureMode(server::HttpServer& server, PcControl& pc_control)
+void closeSteamBigPictureMode(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/closeSteamBigPictureMode", QHttpServerRequest::Method::Post,
                   [&pc_control]()
@@ -514,7 +514,7 @@ struct StreamStateResponse
     enums::StreamState m_state;
 };
 
-void streamState(server::HttpServer& server, PcControl& pc_control)
+void streamState(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/streamState", QHttpServerRequest::Method::Get,
                   [&pc_control]()
@@ -537,7 +537,7 @@ struct StreamedAppDataResponse
     std::optional<Data> m_data;
 };
 
-void streamedAppData(server::HttpServer& server, PcControl& pc_control)
+void streamedAppData(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/streamedAppData", QHttpServerRequest::Method::Get,
                   [&pc_control]()
@@ -557,7 +557,7 @@ void streamedAppData(server::HttpServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void clearStreamedAppData(server::HttpServer& server, PcControl& pc_control)
+void clearStreamedAppData(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/clearStreamedAppData", QHttpServerRequest::Method::Post,
                   [&pc_control]()
@@ -569,7 +569,7 @@ void clearStreamedAppData(server::HttpServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void endStream(server::HttpServer& server, PcControl& pc_control)
+void endStream(server::RestServer& server, PcControl& pc_control)
 {
     secureReqResp(server, "/endStream", QHttpServerRequest::Method::Post,
                   [&pc_control]()
@@ -586,14 +586,14 @@ struct GameStreamAppNamesResponse
     std::optional<std::set<QString>> m_app_names;
 };
 
-void gameStreamAppNames(server::HttpServer& server, SunshineApps& sunshine_apps)
+void gameStreamAppNames(server::RestServer& server, SunshineApps& sunshine_apps)
 {
     secureReqResp(server, "/gameStreamAppNames", QHttpServerRequest::Method::Get,
                   [&sunshine_apps]() { return GameStreamAppNamesResponse{.m_app_names = sunshine_apps.load()}; });
 }
 }  // namespace http_api
 
-void setupRoutes(server::HttpServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
+void setupRoutes(server::RestServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
                  SunshineApps& sunshine_apps, const QString& mac_address_override)
 {
     http_api::apiVersion(server);
