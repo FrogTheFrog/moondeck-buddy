@@ -35,15 +35,16 @@ struct LambdaTraits<ReturnT (ObjT::*)() const>
 };
 }  // namespace internal
 
-class RestServer final
+class RestServer final : public QObject
 {
+    Q_OBJECT
     Q_DISABLE_COPY(RestServer)
 
 public:
     static QString getAuthorizationId(const QHttpServerRequest& request);
 
     explicit RestServer(int api_version, ClientIds& client_ids);
-    ~RestServer() = default;
+    ~RestServer() override = default;
 
     bool startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
                      QSsl::SslProtocol protocol);
@@ -54,6 +55,9 @@ public:
     void unauthenticatedHttpRoute(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
     template<typename Functor>
     void httpRoute(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
+
+    template<typename Functor>
+    void websocketRoute(const QString& path_pattern, Functor&& functor);
 
     template<typename ViewHandler>
     void afterRequest(ViewHandler&& view_handler);
@@ -72,9 +76,12 @@ private:
     template<typename Functor>
     void httpRouteImpl(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
 
-    int         m_api_version;
-    ClientIds&  m_client_ids;
-    QHttpServer m_server;
+    void setupWebsocketSupport();
+
+    int                        m_api_version;
+    ClientIds&                 m_client_ids;
+    QHttpServer                m_server;
+    std::map<QString, QString> m_websocket_routes;
 };
 
 template<typename Functor>
@@ -88,6 +95,12 @@ template<typename Functor>
 void RestServer::httpRoute(const QString& path_pattern, const QHttpServerRequest::Methods method, Functor&& functor)
 {
     httpRouteImpl(path_pattern, method, httpRouteFunctorWrapper(true, std::forward<Functor>(functor)));
+}
+
+template<typename Functor>
+void RestServer::websocketRoute(const QString& path_pattern, Functor&&)
+{
+    m_websocket_routes[path_pattern] = path_pattern;
 }
 
 template<typename ViewHandler>

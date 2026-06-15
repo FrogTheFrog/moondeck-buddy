@@ -7,6 +7,7 @@
 #include <QSslServer>
 
 // local includes
+#include "common/enums.h"
 #include "common/loggingcategories.h"
 #include "server/clientids.h"
 
@@ -33,6 +34,7 @@ RestServer::RestServer(const int api_version, ClientIds& client_ids)
     : m_api_version{api_version}
     , m_client_ids{client_ids}
 {
+    setupWebsocketSupport();
 }
 
 bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
@@ -87,5 +89,50 @@ int RestServer::getApiVersion() const
 bool RestServer::isAuthorized(const QHttpServerRequest& request) const
 {
     return m_client_ids.containsId(getAuthorizationId(request));
+}
+
+void RestServer::setupWebsocketSupport()
+{
+    m_server.addWebSocketUpgradeVerifier(&m_server,
+                                         [this](const QHttpServerRequest& request)
+                                         {
+                                             if (!isAuthorized(request))
+                                             {
+                                                 constexpr auto status{QHttpServerResponse::StatusCode::Unauthorized};
+                                                 return QHttpServerWebSocketUpgradeResponse::deny(
+                                                     static_cast<int>(status), enums::qEnumToString(status).toUtf8());
+                                             }
+
+                                             if (!m_websocket_routes.contains(request.url().path()))
+                                             {
+                                                 constexpr auto status{QHttpServerResponse::StatusCode::NotFound};
+                                                 return QHttpServerWebSocketUpgradeResponse::deny(
+                                                     static_cast<int>(status), enums::qEnumToString(status).toUtf8());
+                                             }
+
+                                             qCDebug(lc::server) << "New WebSocket between:" << request.remoteAddress()
+                                                                 << "<->" << request.url();
+                                             return QHttpServerWebSocketUpgradeResponse::accept();
+                                         });
+
+    connect(&m_server, &QHttpServer::newWebSocketConnection, this,
+            [this]()
+            {
+                while (m_server.hasPendingWebSocketConnections())
+                {
+                    QWebSocket* socket{m_server.nextPendingWebSocketConnection().release()};
+                    socket->setParent(&m_server);
+
+                    connect(socket, &QWebSocket::textMessageReceived, socket,
+                            [socket](const QString& message)
+                            {
+                                qInfo() << "  received:" << message;
+                                socket->sendTextMessage("echo: " + message);
+                            });
+                    connect(socket, &QWebSocket::errorOccurred, socket, [](const QAbstractSocket::SocketError error)
+                            { qCWarning(lc::server) << "WebSocket error occurred:" << error; });
+                    connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
+                }
+            });
 }
 }  // namespace server
