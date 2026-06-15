@@ -334,9 +334,9 @@ void hostInfo(server::HttpServer& server, const QString& mac_address_override)
 #ifdef Q_OS_WIN
                       const QString os_type{"Windows"};
 #elifdef Q_OS_LINUX
-                     const QString os_type{"Linux"};
+                      const QString os_type{"Linux"};
 #else
-                     const QString os_type{"Other"};
+                      const QString os_type{"Other"};
 #endif
 
                       return HostInfoResponse{.m_mac = mac, .m_os = os_type};
