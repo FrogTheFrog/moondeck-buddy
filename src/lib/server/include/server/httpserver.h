@@ -28,7 +28,7 @@ public:
     bool isAuthorized(const QHttpServerRequest& request) const;
 
     template<typename Functor>
-    void route(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
+    void httpRoute(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
 
     template<typename ViewHandler>
     void afterRequest(ViewHandler&& view_handler);
@@ -40,12 +40,12 @@ private:
 };
 
 template<typename Functor>
-void RestServer::route(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor)
+void RestServer::httpRoute(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor)
 {
     static_assert(!std::is_member_function_pointer_v<Functor>, "Member function pointer are not allowed!");
     if (!m_server.route(path_pattern, method, std::forward<Functor>(functor)))
     {
-        qFatal("Failed to route path %s!", qPrintable(path_pattern));
+        qFatal("Failed to route HTTP path %s!", qPrintable(path_pattern));
     }
 }
 

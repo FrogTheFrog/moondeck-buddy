@@ -131,7 +131,7 @@ template<typename FunctorT>
 void reqRespRouter(server::RestServer& server, const QString& path_pattern, const QHttpServerRequest::Methods method,
                    const bool secure, const FunctorT& functor)
 {
-    server.route(path_pattern, method, reqRespFunctorWrapper(secure ? &server : nullptr, functor));
+    server.httpRoute(path_pattern, method, reqRespFunctorWrapper(secure ? &server : nullptr, functor));
 }
 
 template<typename FunctorT>
