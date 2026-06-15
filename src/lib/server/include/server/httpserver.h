@@ -176,9 +176,9 @@ auto RestServer::httpRouteFunctorWrapper(const bool secure, const Functor& funct
     {
         return [authenticator, functor](const QHttpServerRequest& http_request) -> QHttpServerResponse
         {
-            if (const auto result{authenticator(http_request)})
+            if (auto result{authenticator(http_request)})
             {
-                return result->statusCode();
+                return std::move(*result);
             }
 
             const auto request{fromHttpRequest<ArgType>(http_request)};
