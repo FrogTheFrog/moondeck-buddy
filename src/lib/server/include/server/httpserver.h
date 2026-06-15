@@ -48,8 +48,7 @@ public:
     bool startServer(quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
                      QSsl::SslProtocol protocol);
 
-    int  getApiVersion() const;
-    bool isAuthorized(const QHttpServerRequest& request) const;
+    int getApiVersion() const;
 
     template<typename Functor>
     void unauthenticatedHttpRoute(const QString& path_pattern, QHttpServerRequest::Methods method, Functor&& functor);
@@ -60,6 +59,8 @@ public:
     void afterRequest(ViewHandler&& view_handler);
 
 private:
+    bool isAuthorized(const QHttpServerRequest& request) const;
+
     template<typename T>
     static std::optional<T> fromHttpRequest(const QHttpServerRequest& request);
     template<typename T>
