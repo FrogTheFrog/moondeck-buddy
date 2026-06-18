@@ -11,9 +11,9 @@
 #include "common/loggingcategories.h"
 #include "server/clientids.h"
 
-namespace server
+namespace
 {
-QString RestServer::getAuthorizationId(const QHttpServerRequest& request)
+QString getAuthorizationId(const QHttpServerRequest& request)
 {
     const auto auth = request.value("authorization").simplified();
 
@@ -29,12 +29,32 @@ QString RestServer::getAuthorizationId(const QHttpServerRequest& request)
 
     return {};
 }
+}  // namespace
+
+namespace server
+{
+WebSocket::WebSocket(QWebSocket* socket)
+    : m_socket{socket}
+{
+    setParent(m_socket);
+}
+
+void WebSocket::close(const QWebSocketProtocol::CloseCode code)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState)
+    {
+        qCDebug(lc::server) << "Socket is already closed! New close code will not be used.";
+        return;
+    }
+
+    m_socket->close(code);
+}
 
 RestServer::RestServer(const int api_version, ClientIds& client_ids)
     : m_api_version{api_version}
     , m_client_ids{client_ids}
 {
-    setupWebsocketSupport();
+    setupWebSocketHandling();
 }
 
 bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
@@ -91,7 +111,7 @@ bool RestServer::isAuthorized(const QHttpServerRequest& request) const
     return m_client_ids.containsId(getAuthorizationId(request));
 }
 
-void RestServer::setupWebsocketSupport()
+void RestServer::setupWebSocketHandling()
 {
     m_server.addWebSocketUpgradeVerifier(&m_server,
                                          [this](const QHttpServerRequest& request)
@@ -123,15 +143,24 @@ void RestServer::setupWebsocketSupport()
                     QWebSocket* socket{m_server.nextPendingWebSocketConnection().release()};
                     socket->setParent(&m_server);
 
-                    connect(socket, &QWebSocket::textMessageReceived, socket,
-                            [socket](const QString& message)
-                            {
-                                qInfo() << "  received:" << message;
-                                socket->sendTextMessage("echo: " + message);
-                            });
+                    // WebSocket will be cleaned up by QWebSocket
+                    auto* socket_wrapper{new WebSocket{socket}};
+
+                    const auto url_path{socket->requestUrl().path()};
+                    if (!m_websocket_routes.contains(url_path))
+                    {
+                        qFatal("WebSocket route not found for %s!", qPrintable(url_path));
+                    }
+                    const auto& [initializer, responder] = m_websocket_routes.at(url_path);
+
+                    connect(socket, &QWebSocket::textMessageReceived, socket_wrapper,
+                            [socket_wrapper, responder](const QString& message)
+                            { responder(*socket_wrapper, message); });
                     connect(socket, &QWebSocket::errorOccurred, socket, [](const QAbstractSocket::SocketError error)
                             { qCWarning(lc::server) << "WebSocket error occurred:" << error; });
                     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
+
+                    initializer(*socket_wrapper);
                 }
             });
 }
