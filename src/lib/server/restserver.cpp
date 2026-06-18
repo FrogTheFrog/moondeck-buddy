@@ -1,5 +1,5 @@
 // header file include
-#include "server/httpserver.h"
+#include "server/restserver.h"
 
 // system/Qt includes
 #include <QFile>

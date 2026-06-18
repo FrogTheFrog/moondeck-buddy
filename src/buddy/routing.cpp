@@ -3,7 +3,7 @@
 
 // local includes
 #include "os/networkinfo.h"
-#include "server/httpserver.h"
+#include "server/restserver.h"
 
 namespace http_api
 {
