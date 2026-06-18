@@ -481,17 +481,6 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
 
     http_api::gameStreamAppNames(server, sunshine_apps);
 
-    server.webSocketRoute("/test1", []() {});
-    server.webSocketRoute("/test2",
-                          [](server::WebSocket& socket) { socket.sendJson(http_api::LaunchSteamAppRequest{"123"}); });
-    server.webSocketRoute("/test3", [](http_api::LaunchSteamAppRequest req) { return req; });
-    server.webSocketRoute("/test4",
-                          [](server::WebSocket& socket, http_api::LaunchSteamAppRequest req)
-                          {
-                              socket.sendJson(http_api::LaunchSteamAppRequest{"LOL"});
-                              return req;
-                          });
-
     server.afterRequest(
         [](const QHttpServerRequest& request, const QHttpServerResponse& resp)
         {
