@@ -17,6 +17,15 @@ SteamGameProcessLogTracker::SteamGameProcessLogTracker(const std::filesystem::pa
 {
 }
 
+SteamGameProcessLogTracker::~SteamGameProcessLogTracker()
+{
+    if (!m_app_id_to_process_ids.empty())
+    {
+        m_app_id_to_process_ids.clear();
+        emit signalStateChanged();
+    }
+}
+
 bool SteamGameProcessLogTracker::isAnyProcessRunning(const AppId& app_id) const
 {
     return m_app_id_to_process_ids.contains(app_id);

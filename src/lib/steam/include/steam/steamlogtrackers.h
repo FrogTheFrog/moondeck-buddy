@@ -26,9 +26,13 @@ public:
 
 signals:
     void signalStateChanged();
+    void signalSteamUiModeChanged();
+    void signalSteamCurrentUserChanged();
+
+public slots:
+    void slotCheckLogs();
 
 private slots:
-    void slotCheckLogs();
     void slotOnTrackerChanged();
 
 private:

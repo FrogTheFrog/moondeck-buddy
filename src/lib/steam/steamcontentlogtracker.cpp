@@ -75,6 +75,15 @@ SteamContentLogTracker::SteamContentLogTracker(const std::filesystem::path& logs
 {
 }
 
+SteamContentLogTracker::~SteamContentLogTracker()
+{
+    if (!m_app_states.empty())
+    {
+        m_app_states.clear();
+        emit signalStateChanged();
+    }
+}
+
 SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const AppId& app_id) const
 {
     const auto it = m_app_states.find(app_id);

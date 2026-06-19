@@ -156,6 +156,13 @@ void SteamProcessTracker::slotCheckState()
         m_data.m_pid          = pid;
         m_data.m_log_trackers = std::make_unique<SteamLogTrackers>(steam_log_dir, m_data.m_start_time);
 
+        connect(m_data.m_log_trackers.get(), &SteamLogTrackers::signalSteamUiModeChanged, this,
+                &SteamProcessTracker::signalSteamUiModeChanged);
+        connect(m_data.m_log_trackers.get(), &SteamLogTrackers::signalSteamCurrentUserChanged, this,
+                &SteamProcessTracker::signalSteamCurrentUserChanged);
+
+        m_data.m_log_trackers->slotCheckLogs();
+
         emit signalProcessStateChanged();
         break;
     }

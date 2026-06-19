@@ -481,6 +481,12 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
 
     http_api::gameStreamAppNames(server, sunshine_apps);
 
+    // TODO: react on:
+    // &PcControl::signalTrackedAppDataChanged;
+    // &PcControl::signalSteamUiModeChanged;
+    // &PcControl::signalSteamCurrentUserChanged;
+    // &PcControl::signalStreamStateChanged;
+
     server.afterRequest(
         [](const QHttpServerRequest& request, const QHttpServerResponse& resp)
         {

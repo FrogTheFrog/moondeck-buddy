@@ -15,9 +15,12 @@ class SteamConnectionLogTracker : public SteamLogTracker
 
 public:
     explicit SteamConnectionLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
-    ~SteamConnectionLogTracker() override = default;
+    ~SteamConnectionLogTracker() override;
 
     const std::optional<SteamId>& getCurrentSteamId() const;
+
+signals:
+    void signalSteamCurrentUserChanged();
 
 protected:
     void onLogChanged(const std::vector<QString>& new_lines) override;

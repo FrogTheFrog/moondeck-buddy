@@ -12,9 +12,12 @@ class SteamWebHelperLogTracker : public SteamLogTracker
 
 public:
     explicit SteamWebHelperLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
-    ~SteamWebHelperLogTracker() override = default;
+    ~SteamWebHelperLogTracker() override;
 
     enums::SteamUiMode getSteamUiMode() const;
+
+signals:
+    void signalSteamUiModeChanged();
 
 protected:
     void onLogChanged(const std::vector<QString>& new_lines) override;

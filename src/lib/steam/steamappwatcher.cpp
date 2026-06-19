@@ -74,14 +74,19 @@ SteamAppWatcher::SteamAppWatcher(const SteamProcessTracker& process_tracker, con
 
     m_check_timer.setInterval(500);
     m_check_timer.setSingleShot(true);
+    m_check_timer.start();
 
-    qCInfo(lc::steam) << "Started watching AppID:" << m_app_id.getId();
-    slotCheckState();
+    qCInfo(lc::steam) << "[TRACKING] Started watching AppID:" << m_app_id.getId();
 }
 
 SteamAppWatcher::~SteamAppWatcher()
 {
-    qCInfo(lc::steam) << "Stopped watching AppID:" << m_app_id.getId();
+    qCInfo(lc::steam) << "[TRACKING] Stopped watching AppID:" << m_app_id.getId();
+    if (m_current_state != enums::AppState::Stopped)
+    {
+        m_current_state = enums::AppState::Stopped;
+        emit signalTrackedAppDataChanged();
+    }
 }
 
 std::optional<enums::AppState> SteamAppWatcher::getAppState(const SteamProcessTracker& process_tracker,
@@ -146,6 +151,7 @@ void SteamAppWatcher::slotCheckState()
                           << "detected:" << enums::qEnumToString(m_current_state) << "->"
                           << enums::qEnumToString(new_state);
         m_current_state = new_state;
+        emit signalTrackedAppDataChanged();
     }
 }
 

@@ -28,6 +28,8 @@ public:
 
 signals:
     void signalProcessStateChanged();
+    void signalSteamUiModeChanged();
+    void signalSteamCurrentUserChanged();
 
 public slots:
     void slotCheckState();

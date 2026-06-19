@@ -20,10 +20,15 @@ SteamLogTrackers::SteamLogTrackers(const std::filesystem::path& logs_dir, const 
     connect(&m_shader_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
     connect(&m_connection_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
 
+    connect(&m_web_helper_log, &SteamWebHelperLogTracker::signalSteamUiModeChanged, this,
+            &SteamLogTrackers::signalSteamUiModeChanged);
+    connect(&m_connection_log, &SteamConnectionLogTracker::signalSteamCurrentUserChanged, this,
+            &SteamLogTrackers::signalSteamCurrentUserChanged);
+
     connect(&m_read_timer, &QTimer::timeout, this, &SteamLogTrackers::slotCheckLogs);
     m_read_timer.setSingleShot(true);
     m_read_timer.setInterval(500);
-    slotCheckLogs();
+    m_read_timer.start();
 }
 
 const SteamWebHelperLogTracker& SteamLogTrackers::getWebHelperLog() const
