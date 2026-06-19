@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QSslKey>
 #include <QSslServer>
+#include <QUuid>
 
 // local includes
 #include "common/enums.h"
@@ -35,8 +36,39 @@ namespace server
 {
 WebSocket::WebSocket(QWebSocket* socket)
     : m_socket{socket}
+    , m_id_string{"WebSocket" + QUuid::createUuid().toString()}
 {
+    if (m_socket == nullptr)
+    {
+        qFatal("QWebSocket is nullptr!");
+    }
+
     setParent(m_socket);
+}
+
+QString WebSocket::getRoutePath(const QHttpServerRequest& request)
+{
+    return request.url().path();
+}
+
+QString WebSocket::getRoutePath(const QWebSocket& socket)
+{
+    return socket.requestUrl().path();
+}
+
+QString WebSocket::getRoutePath() const
+{
+    return getRoutePath(*m_socket);
+}
+
+QHostAddress WebSocket::peerAddress() const
+{
+    return m_socket->peerAddress();
+}
+
+const QString& WebSocket::getIdString() const
+{
+    return m_id_string;
 }
 
 void WebSocket::close(const QWebSocketProtocol::CloseCode code)
@@ -123,15 +155,13 @@ void RestServer::setupWebSocketHandling()
                                                      static_cast<int>(status), enums::qEnumToString(status).toUtf8());
                                              }
 
-                                             if (!m_websocket_routes.contains(request.url().path()))
+                                             if (!m_websocket_routes.contains(WebSocket::getRoutePath(request)))
                                              {
                                                  constexpr auto status{QHttpServerResponse::StatusCode::NotFound};
                                                  return QHttpServerWebSocketUpgradeResponse::deny(
                                                      static_cast<int>(status), enums::qEnumToString(status).toUtf8());
                                              }
 
-                                             qCDebug(lc::server) << "New WebSocket between:" << request.remoteAddress()
-                                                                 << "<->" << request.url();
                                              return QHttpServerWebSocketUpgradeResponse::accept();
                                          });
 
@@ -153,11 +183,19 @@ void RestServer::setupWebSocketHandling()
                     }
                     const auto& [initializer, responder] = m_websocket_routes.at(url_path);
 
+                    qCDebug(lc::server) << "New" << socket_wrapper->getIdString()
+                                        << "between:" << socket_wrapper->peerAddress() << "<->"
+                                        << socket_wrapper->getRoutePath();
+
                     connect(socket, &QWebSocket::textMessageReceived, socket_wrapper,
                             [socket_wrapper, responder](const QString& message)
-                            { responder(*socket_wrapper, message); });
-                    connect(socket, &QWebSocket::errorOccurred, socket, [](const QAbstractSocket::SocketError error)
-                            { qCWarning(lc::server) << "WebSocket error occurred:" << error; });
+                            {
+                                qCDebug(lc::server) << socket_wrapper->getIdString() << "received:" << message;
+                                responder(*socket_wrapper, message);
+                            });
+                    connect(socket, &QWebSocket::errorOccurred, socket_wrapper,
+                            [socket_wrapper](const QAbstractSocket::SocketError error)
+                            { qCWarning(lc::server) << socket_wrapper->getIdString() << "error occurred:" << error; });
                     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 
                     initializer(*socket_wrapper);

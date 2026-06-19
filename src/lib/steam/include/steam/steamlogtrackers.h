@@ -1,6 +1,7 @@
 #pragma once
 
 // local includes
+#include "common/statelesssignaldebouncer.h"
 #include "steamconnectionlogtracker.h"
 #include "steamcontentlogtracker.h"
 #include "steamgameprocesslogtracker.h"
@@ -32,16 +33,14 @@ signals:
 public slots:
     void slotCheckLogs();
 
-private slots:
-    void slotOnTrackerChanged();
-
 private:
-    QTimer                     m_read_timer;
+    common::StatelessSignalDebouncer m_debouncer;
+    QTimer                           m_read_timer;
+
     SteamWebHelperLogTracker   m_web_helper_log;
     SteamContentLogTracker     m_content_log;
     SteamGameProcessLogTracker m_game_process_log;
     SteamShaderLogTracker      m_shader_log;
     SteamConnectionLogTracker  m_connection_log;
-    bool                       m_pending{false};
 };
 }  // namespace steam

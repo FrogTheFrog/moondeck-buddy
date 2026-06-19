@@ -84,13 +84,20 @@ class WebSocket final : public QObject
 public:
     explicit WebSocket(QWebSocket* socket);
 
-    void close(QWebSocketProtocol::CloseCode code = QWebSocketProtocol::CloseCodeNormal);
+    static QString getRoutePath(const QHttpServerRequest& request);
+    static QString getRoutePath(const QWebSocket& socket);
+    QString        getRoutePath() const;
+    QHostAddress   peerAddress() const;
+
+    const QString& getIdString() const;
 
     template<typename T>
     void sendJson(const T& value);
+    void close(QWebSocketProtocol::CloseCode code = QWebSocketProtocol::CloseCodeNormal);
 
 private:
     QWebSocket* m_socket;
+    QString     m_id_string;
 };
 
 template<typename T>
@@ -104,6 +111,7 @@ void WebSocket::sendJson(const T& value)
 
     if (const auto json_string{internal::toJson(value)})
     {
+        qCDebug(lc::server) << getIdString() << "sending:" << *json_string;
         m_socket->sendTextMessage(*json_string);
     }
     else

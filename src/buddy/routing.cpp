@@ -452,6 +452,21 @@ void gameStreamAppNames(server::RestServer& server, SunshineApps& sunshine_apps)
 }
 }  // namespace http_api
 
+namespace websocket_api
+{
+void notifyOnChanges(server::RestServer& server, PcControl& pc_control)
+{
+    Q_UNUSED(server);
+    Q_UNUSED(pc_control);
+
+    // TODO: react on:
+    // &PcControl::signalTrackedAppDataChanged;
+    // &PcControl::signalSteamUiModeChanged;
+    // &PcControl::signalSteamCurrentUserChanged;
+    // &PcControl::signalStreamStateChanged;
+}
+}  // namespace websocket_api
+
 void setupRoutes(server::RestServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
                  SunshineApps& sunshine_apps, const QString& mac_address_override)
 {
@@ -481,11 +496,7 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
 
     http_api::gameStreamAppNames(server, sunshine_apps);
 
-    // TODO: react on:
-    // &PcControl::signalTrackedAppDataChanged;
-    // &PcControl::signalSteamUiModeChanged;
-    // &PcControl::signalSteamCurrentUserChanged;
-    // &PcControl::signalStreamStateChanged;
+    websocket_api::notifyOnChanges(server, pc_control);
 
     server.afterRequest(
         [](const QHttpServerRequest& request, const QHttpServerResponse& resp)
