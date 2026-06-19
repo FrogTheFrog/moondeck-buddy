@@ -2,7 +2,7 @@
 
 // local includes
 #include "pccontrol.h"
-#include "server/httpserver.h"
+#include "server/restserver.h"
 #include "server/pairingmanager.h"
 #include "sunshineapps.h"
 
