@@ -36,7 +36,7 @@ namespace server
 {
 WebSocket::WebSocket(QWebSocket* socket)
     : m_socket{socket}
-    , m_id_string{"WebSocket" + QUuid::createUuid().toString()}
+    , m_id_string{"WebSocket(" + QUuid::createUuid().toString(QUuid::WithoutBraces) + ")"}
 {
     if (m_socket == nullptr)
     {
@@ -44,6 +44,13 @@ WebSocket::WebSocket(QWebSocket* socket)
     }
 
     setParent(m_socket);
+
+    qCDebug(lc::server).noquote() << "New" << getIdString() << "between" << peerAddress() << "<->" << getRoutePath();
+}
+
+WebSocket::~WebSocket()
+{
+    qCDebug(lc::server).noquote() << getIdString() << "disconnected.";
 }
 
 QString WebSocket::getRoutePath(const QHttpServerRequest& request)
@@ -71,11 +78,16 @@ const QString& WebSocket::getIdString() const
     return m_id_string;
 }
 
+bool WebSocket::isConnected() const
+{
+    return m_socket->state() == QAbstractSocket::ConnectedState;
+}
+
 void WebSocket::close(const QWebSocketProtocol::CloseCode code)
 {
-    if (m_socket->state() != QAbstractSocket::ConnectedState)
+    if (!isConnected())
     {
-        qCDebug(lc::server) << "Socket is already closed! New close code will not be used.";
+        qCDebug(lc::server).noquote() << getIdString() << "is already closed! New close code will not be used.";
         return;
     }
 
@@ -183,19 +195,27 @@ void RestServer::setupWebSocketHandling()
                     }
                     const auto& [initializer, responder] = m_websocket_routes.at(url_path);
 
-                    qCDebug(lc::server) << "New" << socket_wrapper->getIdString()
-                                        << "between:" << socket_wrapper->peerAddress() << "<->"
-                                        << socket_wrapper->getRoutePath();
-
                     connect(socket, &QWebSocket::textMessageReceived, socket_wrapper,
                             [socket_wrapper, responder](const QString& message)
                             {
-                                qCDebug(lc::server) << socket_wrapper->getIdString() << "received:" << message;
+                                // Even if the socket is already closed, it may receive leftover data.
+                                // This does not fit the MoonDeck use-case as at that point we do not care about this
+                                // socket.
+                                if (!socket_wrapper->isConnected())
+                                {
+                                    return;
+                                }
+
+                                qCDebug(lc::server).noquote()
+                                    << socket_wrapper->getIdString() << "received:" << message;
                                 responder(*socket_wrapper, message);
                             });
                     connect(socket, &QWebSocket::errorOccurred, socket_wrapper,
                             [socket_wrapper](const QAbstractSocket::SocketError error)
-                            { qCWarning(lc::server) << socket_wrapper->getIdString() << "error occurred:" << error; });
+                            {
+                                qCWarning(lc::server).noquote()
+                                    << socket_wrapper->getIdString() << "error occurred:" << error;
+                            });
                     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 
                     initializer(*socket_wrapper);

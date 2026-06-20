@@ -2,6 +2,7 @@
 #include "routing.h"
 
 // local includes
+#include "common/statelesssignaldebouncer.h"
 #include "os/networkinfo.h"
 #include "server/restserver.h"
 
@@ -205,17 +206,21 @@ void hostInfo(server::RestServer& server, const QString& mac_address_override)
 
 struct SteamUiModeResponse
 {
+    auto operator<=>(const SteamUiModeResponse&) const = default;
+
+    static SteamUiModeResponse makeInstance(const PcControl& pc_control)
+    {
+        const auto mode{pc_control.getSteamUiMode()};
+        return {.m_mode = mode};
+    }
+
     enums::SteamUiMode m_mode;
 };
 
 void steamUiMode(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute("/steamUiMode", QHttpServerRequest::Method::Get,
-                     [&pc_control]()
-                     {
-                         const auto mode{pc_control.getSteamUiMode()};
-                         return SteamUiModeResponse{.m_mode = mode};
-                     });
+                     [&pc_control]() { return SteamUiModeResponse::makeInstance(pc_control); });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -270,8 +275,24 @@ struct CurrentUserResponse
 {
     struct UserData
     {
+        auto operator<=>(const UserData&) const = default;
+
         std::optional<QString> m_id;
     };
+
+    auto operator<=>(const CurrentUserResponse&) const = default;
+
+    static CurrentUserResponse makeInstance(const PcControl& pc_control)
+    {
+        const auto user_id{pc_control.getCurrentUserId()};
+        if (!user_id)
+        {
+            return {.m_user = std::nullopt};
+        }
+
+        return {.m_user =
+                    UserData{.m_id = user_id->isNull() ? std::nullopt : std::make_optional(user_id->toSteamId64())}};
+    }
 
     std::optional<UserData> m_user;
 };
@@ -279,19 +300,7 @@ struct CurrentUserResponse
 void currentUser(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute("/currentUser", QHttpServerRequest::Method::Get,
-                     [&pc_control]()
-                     {
-                         const auto user_id{pc_control.getCurrentUserId()};
-                         if (!user_id)
-                         {
-                             return CurrentUserResponse{.m_user = std::nullopt};
-                         }
-
-                         return CurrentUserResponse{.m_user = CurrentUserResponse::UserData{
-                                                        .m_id = user_id->isNull()
-                                                                    ? std::nullopt
-                                                                    : std::make_optional(user_id->toSteamId64())}};
-                     });
+                     [&pc_control]() { return CurrentUserResponse::makeInstance(pc_control); });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -370,17 +379,21 @@ void closeSteamBigPictureMode(server::RestServer& server, PcControl& pc_control)
 
 struct StreamStateResponse
 {
+    auto operator<=>(const StreamStateResponse&) const = default;
+
+    static StreamStateResponse makeInstance(const PcControl& pc_control)
+    {
+        const auto state{pc_control.getStreamState()};
+        return {.m_state = state};
+    }
+
     enums::StreamState m_state;
 };
 
 void streamState(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute("/streamState", QHttpServerRequest::Method::Get,
-                     [&pc_control]()
-                     {
-                         const auto state{pc_control.getStreamState()};
-                         return StreamStateResponse{.m_state = state};
-                     });
+                     [&pc_control]() { return StreamStateResponse::makeInstance(pc_control); });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -389,9 +402,25 @@ struct StreamedAppDataResponse
 {
     struct Data
     {
+        auto operator<=>(const Data&) const = default;
+
         QString         m_app_id;
         enums::AppState m_app_state;
     };
+
+    auto operator<=>(const StreamedAppDataResponse&) const = default;
+
+    static StreamedAppDataResponse makeInstance(const PcControl& pc_control)
+    {
+        const auto data{pc_control.getAppData(std::nullopt)};
+        if (!data)
+        {
+            return {.m_data = std::nullopt};
+        }
+
+        const auto& [app_id, app_state] = *data;
+        return {.m_data = Data{.m_app_id = QString::number(app_id.getId()), .m_app_state = app_state}};
+    }
 
     std::optional<Data> m_data;
 };
@@ -399,19 +428,7 @@ struct StreamedAppDataResponse
 void streamedAppData(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute("/streamedAppData", QHttpServerRequest::Method::Get,
-                     [&pc_control]()
-                     {
-                         const auto data{pc_control.getAppData(std::nullopt)};
-                         if (!data)
-                         {
-                             return StreamedAppDataResponse{.m_data = std::nullopt};
-                         }
-
-                         const auto& [app_id, app_state] = *data;
-                         return StreamedAppDataResponse{
-                             .m_data = StreamedAppDataResponse::Data{.m_app_id    = QString::number(app_id.getId()),
-                                                                     .m_app_state = app_state}};
-                     });
+                     [&pc_control]() { return StreamedAppDataResponse::makeInstance(pc_control); });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -454,16 +471,135 @@ void gameStreamAppNames(server::RestServer& server, SunshineApps& sunshine_apps)
 
 namespace websocket_api
 {
+using ResultResponse = http_api::ResultResponse;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+using StreamedAppData  = http_api::StreamedAppDataResponse;
+using SteamUiMode      = http_api::SteamUiModeResponse;
+using CurrentUser      = http_api::CurrentUserResponse;
+using StreamState      = http_api::StreamStateResponse;
+using NotificationType = std::variant<StreamedAppData, SteamUiMode, CurrentUser, StreamState>;
+
+class NotificationTracker : public QObject
+{
+    Q_OBJECT
+
+public:
+    enum class NotificationTopic
+    {
+        StreamedAppData,
+        SteamUiMode,
+        CurrentUser,
+        StreamState
+    };
+    Q_ENUM(NotificationTopic)
+
+    explicit NotificationTracker(server::WebSocket& socket, PcControl& pc_control,
+                                 std::vector<NotificationTopic> topics)
+        : m_socket{socket}
+        , m_pc_control{pc_control}
+        , m_topics{std::move(topics)}
+    {
+        connect(&m_debouncer, &common::StatelessSignalDebouncer::signalOutput, this,
+                &NotificationTracker::slotSyncData);
+
+        for (const auto& topic : m_topics)
+        {
+            switch (topic)
+            {
+                case NotificationTopic::StreamedAppData:
+                    connect(&m_pc_control, &PcControl::signalTrackedAppDataChanged, &m_debouncer,
+                            &common::StatelessSignalDebouncer::signalInput);
+                    break;
+                case NotificationTopic::SteamUiMode:
+                    connect(&m_pc_control, &PcControl::signalSteamUiModeChanged, &m_debouncer,
+                            &common::StatelessSignalDebouncer::signalInput);
+                    break;
+                case NotificationTopic::CurrentUser:
+                    connect(&m_pc_control, &PcControl::signalSteamCurrentUserChanged, &m_debouncer,
+                            &common::StatelessSignalDebouncer::signalInput);
+                    break;
+                case NotificationTopic::StreamState:
+                    connect(&m_pc_control, &PcControl::signalStreamStateChanged, &m_debouncer,
+                            &common::StatelessSignalDebouncer::signalInput);
+                    break;
+            }
+        }
+    }
+    ~NotificationTracker() override = default;
+
+public slots:
+    void slotSyncData()
+    {
+        std::vector<NotificationType> new_data;
+        new_data.reserve(m_topics.size());
+
+        for (const auto& topic : m_topics)
+        {
+            switch (topic)
+            {
+                case NotificationTopic::StreamedAppData:
+                    new_data.emplace_back(StreamedAppData::makeInstance(m_pc_control));
+                    break;
+                case NotificationTopic::SteamUiMode:
+                    new_data.emplace_back(SteamUiMode::makeInstance(m_pc_control));
+                    break;
+                case NotificationTopic::CurrentUser:
+                    new_data.emplace_back(CurrentUser::makeInstance(m_pc_control));
+                    break;
+                case NotificationTopic::StreamState:
+                    new_data.emplace_back(StreamState::makeInstance(m_pc_control));
+                    break;
+            }
+        }
+
+        if (new_data != m_last_sent_data)
+        {
+            m_socket.sendJson(new_data);
+            m_last_sent_data = std::move(new_data);
+        }
+    }
+
+private:
+    server::WebSocket&             m_socket;
+    PcControl&                     m_pc_control;
+    std::vector<NotificationTopic> m_topics;
+
+    common::StatelessSignalDebouncer m_debouncer;
+    std::vector<NotificationType>    m_last_sent_data;
+};
+
 void notifyOnChanges(server::RestServer& server, PcControl& pc_control)
 {
-    Q_UNUSED(server);
-    Q_UNUSED(pc_control);
+    server.webSocketRoute(
+        "/notifyOnChanges",
+        [&pc_control](server::WebSocket&                                         socket,
+                      const std::vector<NotificationTracker::NotificationTopic>& topics) -> ResultResponse
+        {
+            if (topics.empty())
+            {
+                qCWarning(lc::buddyMain).noquote() << socket.getIdString() << "no notification topics provided!";
+                return {false};
+            }
 
-    // TODO: react on:
-    // &PcControl::signalTrackedAppDataChanged;
-    // &PcControl::signalSteamUiModeChanged;
-    // &PcControl::signalSteamCurrentUserChanged;
-    // &PcControl::signalStreamStateChanged;
+            // The vector item order must be preserved, but using set to at least verify uniqueness
+            {
+                if (const std::set<NotificationTracker::NotificationTopic> unique_notifications{std::begin(topics),
+                                                                                                std::end(topics)};
+                    unique_notifications.size() != topics.size())
+                {
+                    qCWarning(lc::buddyMain).noquote()
+                        << socket.getIdString() << "duplicates found in notification topics!";
+                    return {false};
+                }
+            }
+
+            const auto& tracker{socket.createOrOverrideStoredData<NotificationTracker>(socket, pc_control, topics)};
+            QTimer::singleShot(0, &tracker, &NotificationTracker::slotSyncData);
+
+            return {true};
+        });
 }
 }  // namespace websocket_api
 

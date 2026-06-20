@@ -3,6 +3,7 @@
 // system/Qt includes
 #include <QtHttpServer/QHttpServer>
 #include <QtWebSockets/QWebSocket>
+#include <typeindex>
 
 // local includes
 #include "common/loggingcategories.h"
@@ -55,7 +56,7 @@ std::optional<T> fromJson(const QString& value)
     auto result{json::fromJson<T>(value)};
     if (!result)
     {
-        qCWarning(lc::server) << "Failed to decode JSON data! Reason:\n" << result.error();
+        qCWarning(lc::server).noquote().nospace() << "Failed to decode JSON data! Reason:\n" << result.error();
         return std::nullopt;
     }
 
@@ -68,7 +69,7 @@ std::optional<QString> toJson(const T& value)
     auto result{json::toJson<T>(value)};
     if (!result)
     {
-        qCWarning(lc::server) << "Failed to encode JSON data! Reason:\n" << result.error();
+        qCWarning(lc::server).noquote().nospace() << "Failed to encode JSON data! Reason:\n" << result.error();
         return std::nullopt;
     }
 
@@ -83,6 +84,7 @@ class WebSocket final : public QObject
 
 public:
     explicit WebSocket(QWebSocket* socket);
+    ~WebSocket() override;
 
     static QString getRoutePath(const QHttpServerRequest& request);
     static QString getRoutePath(const QWebSocket& socket);
@@ -90,34 +92,89 @@ public:
     QHostAddress   peerAddress() const;
 
     const QString& getIdString() const;
+    bool           isConnected() const;
 
     template<typename T>
     void sendJson(const T& value);
     void close(QWebSocketProtocol::CloseCode code = QWebSocketProtocol::CloseCodeNormal);
 
+    template<typename T, typename... Args>
+    T& getOrCreateStoredData(Args&&... args);
+    template<typename T>
+    void clearStoredData();
+    template<typename T, typename... Args>
+    T& createOrOverrideStoredData(Args&&... args);
+
 private:
     QWebSocket* m_socket;
     QString     m_id_string;
+
+    using AnyPtr = std::unique_ptr<void, void (*)(void*)>;
+    std::map<std::type_index, AnyPtr> m_stored_data;
 };
 
 template<typename T>
 void WebSocket::sendJson(const T& value)
 {
-    if (m_socket->state() != QAbstractSocket::ConnectedState)
+    if (!isConnected())
     {
-        qCDebug(lc::server) << "Socket is already closed! Discarding leftover data...";
+        qCDebug(lc::server).noquote() << "Socket is already closed! Discarding leftover data...";
         return;
     }
 
     if (const auto json_string{internal::toJson(value)})
     {
-        qCDebug(lc::server) << getIdString() << "sending:" << *json_string;
+        qCDebug(lc::server).noquote() << getIdString() << "sending:" << *json_string;
         m_socket->sendTextMessage(*json_string);
     }
     else
     {
         m_socket->close(QWebSocketProtocol::CloseCodeBadOperation);
     }
+}
+
+template<typename T, typename... Args>
+T& WebSocket::getOrCreateStoredData(Args&&... args)
+{
+    using DataType = std::decay_t<T>;
+    const auto index{std::type_index(typeid(DataType))};
+
+    auto data_it{m_stored_data.find(index)};
+    if (data_it == std::end(m_stored_data))
+    {
+        data_it = m_stored_data
+                      .emplace(index, AnyPtr{new DataType{std::forward<Args>(args)...},
+                                             [](void* ptr) { delete static_cast<DataType*>(ptr); }})
+                      .first;
+        if (data_it == std::end(m_stored_data))
+        {
+            qFatal("Failed to instantiate stored data type %s!", index.name());
+        }
+    }
+
+    T* data_ptr{static_cast<DataType*>(data_it->second.get())};
+    if (data_ptr == nullptr)
+    {
+        qFatal("Failed to cast to data type %s!", index.name());
+    }
+
+    return *data_ptr;
+}
+
+template<typename T>
+void WebSocket::clearStoredData()
+{
+    using DataType = std::decay_t<T>;
+    const auto index{std::type_index(typeid(DataType))};
+
+    m_stored_data.erase(index);
+}
+
+template<typename T, typename... Args>
+T& WebSocket::createOrOverrideStoredData(Args&&... args)
+{
+    clearStoredData<T>();
+    return getOrCreateStoredData<T, Args...>(std::forward<Args>(args)...);
 }
 
 class RestServer final : public QObject
@@ -374,7 +431,7 @@ RestServer::ResponderFunctor RestServer::webSocketResponderFunctorWrapper(Functo
 
             if constexpr (std::is_same_v<FirstArgType, WebSocket&>)
             {
-                if (const auto parsed_input{internal::fromJson<std::decay_t<SecondArgType>>(input)})
+                if (auto parsed_input{internal::fromJson<std::decay_t<SecondArgType>>(input)})
                 {
                     close_socket_on_conversion_error.dismiss();
                     web_socket.sendJson<ReturnType>(functor(web_socket, std::move(*parsed_input)));
@@ -382,7 +439,7 @@ RestServer::ResponderFunctor RestServer::webSocketResponderFunctorWrapper(Functo
             }
             else
             {
-                if (const auto parsed_input{internal::fromJson<std::decay_t<FirstArgType>>(input)})
+                if (auto parsed_input{internal::fromJson<std::decay_t<FirstArgType>>(input)})
                 {
                     close_socket_on_conversion_error.dismiss();
                     web_socket.sendJson<ReturnType>(functor(std::move(*parsed_input)));
