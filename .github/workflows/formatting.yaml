@@ -7,5 +7,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Clang-format version
+        run: clang-format --version
+
       - name: Clang-format check
         run: find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} +
