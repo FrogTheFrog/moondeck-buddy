@@ -17,6 +17,16 @@ SteamConnectionLogTracker::SteamConnectionLogTracker(const std::filesystem::path
 {
 }
 
+SteamConnectionLogTracker::~SteamConnectionLogTracker()
+{
+    if (m_current_steam_id)
+    {
+        m_current_steam_id = std::nullopt;
+        emit signalStateChanged();
+        emit signalSteamCurrentUserChanged();
+    }
+}
+
 const std::optional<SteamId>& SteamConnectionLogTracker::getCurrentSteamId() const
 {
     return m_current_steam_id;
@@ -39,6 +49,7 @@ void SteamConnectionLogTracker::onLogChanged(const std::vector<QString>& new_lin
         qCInfo(lc::steam).noquote().nospace() << "User SteamId changed:\n" << new_steam_id->toString();
         m_current_steam_id = new_steam_id;
         emit signalStateChanged();
+        emit signalSteamCurrentUserChanged();
     }
 }
 }  // namespace steam

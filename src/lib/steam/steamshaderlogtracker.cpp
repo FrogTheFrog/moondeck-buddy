@@ -15,6 +15,15 @@ SteamShaderLogTracker::SteamShaderLogTracker(const std::filesystem::path& logs_d
 {
 }
 
+SteamShaderLogTracker::~SteamShaderLogTracker()
+{
+    if (!m_apps_with_compiling_shaders.empty())
+    {
+        m_apps_with_compiling_shaders.clear();
+        emit signalStateChanged();
+    }
+}
+
 bool SteamShaderLogTracker::isAppCompilingShaders(const AppId& app_id) const
 {
     return m_apps_with_compiling_shaders.contains(app_id);

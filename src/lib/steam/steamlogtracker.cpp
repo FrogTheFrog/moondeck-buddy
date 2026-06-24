@@ -163,27 +163,15 @@ namespace steam
 {
 SteamLogTracker::SteamLogTracker(std::filesystem::path main_filename, std::filesystem::path backup_filename,
                                  QDateTime first_entry_time_filter, TimeFormat time_format)
-    : m_main_filename{std::move(main_filename)}
+    : m_debouncer{50}
+    , m_main_filename{std::move(main_filename)}
     , m_backup_filename{std::move(backup_filename)}
     , m_first_entry_time_filter{std::move(first_entry_time_filter)}
     , m_time_format{time_format}
 {
-    connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, this,
-            [this]()
-            {
-                if (!m_pending_file_changed_check)
-                {
-                    constexpr auto debouce_time_ms{50};
-
-                    m_pending_file_changed_check = true;
-                    QTimer::singleShot(debouce_time_ms, this,
-                                       [this]()
-                                       {
-                                           m_pending_file_changed_check = false;
-                                           slotCheckLog();
-                                       });
-                }
-            });
+    connect(&m_debouncer, &common::StatelessSignalDebouncer::signalOutput, this, &SteamLogTracker::slotCheckLog);
+    connect(&m_file_watcher, &QFileSystemWatcher::fileChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
 }
 
 void SteamLogTracker::slotCheckLog()

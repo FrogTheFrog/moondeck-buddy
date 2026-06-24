@@ -49,6 +49,10 @@ public:
 signals:
     void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
                                int milliseconds_timeout_hint);
+    void signalTrackedAppDataChanged();
+    void signalSteamUiModeChanged();
+    void signalSteamCurrentUserChanged();
+    void signalStreamStateChanged();
 
 private slots:
     void slotHandleSteamClosed();

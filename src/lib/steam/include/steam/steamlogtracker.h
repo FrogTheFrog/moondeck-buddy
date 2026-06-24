@@ -6,6 +6,9 @@
 #include <QTimer>
 #include <filesystem>
 
+// local includes
+#include "common/statelesssignaldebouncer.h"
+
 namespace steam
 {
 class SteamLogTracker : public QObject
@@ -34,14 +37,15 @@ protected:
     virtual void onLogChanged(const std::vector<QString>& new_lines) = 0;
 
 private:
+    QFileSystemWatcher               m_file_watcher;
+    common::StatelessSignalDebouncer m_debouncer;
+
     std::filesystem::path m_main_filename;
     std::filesystem::path m_backup_filename;
     QDateTime             m_first_entry_time_filter;
     TimeFormat            m_time_format;
-    QFileSystemWatcher    m_file_watcher;
     qint64                m_last_prev_size{0};
     qint64                m_last_read_pos{0};
     bool                  m_initialized{false};
-    bool                  m_pending_file_changed_check{false};
 };
 }  // namespace steam

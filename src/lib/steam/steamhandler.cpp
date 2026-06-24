@@ -14,6 +14,14 @@ SteamHandler::SteamHandler(const common::AppSettings& app_settings)
 {
     connect(&m_steam_process_tracker, &SteamProcessTracker::signalProcessStateChanged, this,
             &SteamHandler::slotSteamProcessStateChanged);
+
+    // Due to the way the object lifetime is taken into account by the getters of this class, we must delay
+    // the signals just a little by queueing them so that the correct final state is reflected in the end.
+    // The transient state might be lost in between, but it does not matter in the end.
+    connect(&m_steam_process_tracker, &SteamProcessTracker::signalSteamUiModeChanged, this,
+            &SteamHandler::signalSteamUiModeChanged, Qt::QueuedConnection);
+    connect(&m_steam_process_tracker, &SteamProcessTracker::signalSteamCurrentUserChanged, this,
+            &SteamHandler::signalSteamCurrentUserChanged, Qt::QueuedConnection);
 }
 
 SteamHandler::~SteamHandler() = default;
@@ -111,8 +119,7 @@ std::optional<std::tuple<AppId, enums::AppState>> SteamHandler::getAppData(const
 {
     if (app_id)
     {
-        const auto app_state{SteamAppWatcher::getAppState(m_steam_process_tracker, *app_id)};
-        if (app_state)
+        if (const auto app_state{SteamAppWatcher::getAppState(m_steam_process_tracker, *app_id)})
         {
             return std::make_tuple(*app_id, *app_state);
         }
@@ -179,6 +186,10 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     }
 
     m_session_data = {.m_steam_app_watcher{std::make_unique<SteamAppWatcher>(m_steam_process_tracker, app_id)}};
+    // See comment in CTOR for why it's queued.
+    connect(m_session_data.m_steam_app_watcher.get(), &SteamAppWatcher::signalTrackedAppDataChanged, this,
+            &SteamHandler::signalTrackedAppDataChanged, Qt::QueuedConnection);
+    m_session_data.m_steam_app_watcher->slotCheckState();
     return true;
 }
 

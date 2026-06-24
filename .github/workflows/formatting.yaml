@@ -2,10 +2,13 @@ name: Formatting check
 on: [workflow_call]
 jobs:
   Formatting:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Clang-format version
+        run: clang-format --version
 
       - name: Clang-format check
         run: find $PWD/src -type f \( -name "*.h" -o -name "*.cpp" \) -exec clang-format -style=file --dry-run --Werror {} +

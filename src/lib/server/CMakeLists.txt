@@ -8,7 +8,7 @@ set(LIBNAME serverlib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core HttpServer REQUIRED)
+find_package(Qt6 COMPONENTS Core HttpServer WebSockets REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -23,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::HttpServer commonlib jsonlib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::HttpServer Qt6::WebSockets commonlib jsonlib)
 target_include_directories(${LIBNAME} PUBLIC include)

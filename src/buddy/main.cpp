@@ -11,8 +11,8 @@
 #include "pccontrol.h"
 #include "routing.h"
 #include "server/clientids.h"
-#include "server/httpserver.h"
 #include "server/pairingmanager.h"
+#include "server/restserver.h"
 #include "sunshineapps.h"
 #include "systemtray.h"
 #include "utils/heartbeat.h"
@@ -173,7 +173,7 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     }
 
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};
-    server::HttpServer     new_server{api_version, client_ids};
+    server::RestServer     new_server{api_version, client_ids};
     server::PairingManager pairing_manager{client_ids, gui_enabled};
 
     const common::AppSettings app_settings{.m_app_metadata = app_meta, .m_user_settings = user_settings};

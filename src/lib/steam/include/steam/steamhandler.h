@@ -37,6 +37,9 @@ public:
 
 signals:
     void signalSteamClosed();
+    void signalTrackedAppDataChanged();
+    void signalSteamUiModeChanged();
+    void signalSteamCurrentUserChanged();
 
 private slots:
     void slotSteamProcessStateChanged();

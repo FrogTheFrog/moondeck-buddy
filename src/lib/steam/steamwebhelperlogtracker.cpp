@@ -16,6 +16,16 @@ SteamWebHelperLogTracker::SteamWebHelperLogTracker(const std::filesystem::path& 
 {
 }
 
+SteamWebHelperLogTracker::~SteamWebHelperLogTracker()
+{
+    if (m_ui_mode != enums::SteamUiMode::Unknown)
+    {
+        m_ui_mode = enums::SteamUiMode::Unknown;
+        emit signalStateChanged();
+        emit signalSteamUiModeChanged();
+    }
+}
+
 enums::SteamUiMode SteamWebHelperLogTracker::getSteamUiMode() const
 {
     return m_ui_mode;
@@ -65,6 +75,7 @@ void SteamWebHelperLogTracker::onLogChanged(const std::vector<QString>& new_line
                           << enums::qEnumToString(new_ui_mode);
         m_ui_mode = new_ui_mode;
         emit signalStateChanged();
+        emit signalSteamUiModeChanged();
     }
 }
 }  // namespace steam

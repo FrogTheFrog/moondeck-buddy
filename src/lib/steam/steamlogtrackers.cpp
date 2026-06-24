@@ -6,7 +6,6 @@
 
 namespace steam
 {
-
 SteamLogTrackers::SteamLogTrackers(const std::filesystem::path& logs_dir, const QDateTime& start_time)
     : m_web_helper_log{logs_dir, start_time}
     , m_content_log{logs_dir, start_time}
@@ -14,16 +13,28 @@ SteamLogTrackers::SteamLogTrackers(const std::filesystem::path& logs_dir, const 
     , m_shader_log{logs_dir, start_time}
     , m_connection_log{logs_dir, start_time}
 {
-    connect(&m_web_helper_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
-    connect(&m_content_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
-    connect(&m_game_process_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
-    connect(&m_shader_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
-    connect(&m_connection_log, &SteamLogTracker::signalStateChanged, this, &SteamLogTrackers::slotOnTrackerChanged);
+    connect(&m_debouncer, &common::StatelessSignalDebouncer::signalOutput, this, &SteamLogTrackers::signalStateChanged);
+
+    connect(&m_web_helper_log, &SteamLogTracker::signalStateChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
+    connect(&m_content_log, &SteamLogTracker::signalStateChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
+    connect(&m_game_process_log, &SteamLogTracker::signalStateChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
+    connect(&m_shader_log, &SteamLogTracker::signalStateChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
+    connect(&m_connection_log, &SteamLogTracker::signalStateChanged, &m_debouncer,
+            &common::StatelessSignalDebouncer::signalInput);
+
+    connect(&m_web_helper_log, &SteamWebHelperLogTracker::signalSteamUiModeChanged, this,
+            &SteamLogTrackers::signalSteamUiModeChanged);
+    connect(&m_connection_log, &SteamConnectionLogTracker::signalSteamCurrentUserChanged, this,
+            &SteamLogTrackers::signalSteamCurrentUserChanged);
 
     connect(&m_read_timer, &QTimer::timeout, this, &SteamLogTrackers::slotCheckLogs);
     m_read_timer.setSingleShot(true);
     m_read_timer.setInterval(500);
-    slotCheckLogs();
+    m_read_timer.start();
 }
 
 const SteamWebHelperLogTracker& SteamLogTrackers::getWebHelperLog() const
@@ -61,19 +72,5 @@ void SteamLogTrackers::slotCheckLogs()
     m_game_process_log.slotCheckLog();
     m_shader_log.slotCheckLog();
     m_connection_log.slotCheckLog();
-}
-
-void SteamLogTrackers::slotOnTrackerChanged()
-{
-    if (!m_pending)
-    {
-        m_pending = true;
-        QTimer::singleShot(0, this,
-                           [this]()
-                           {
-                               m_pending = false;
-                               emit signalStateChanged();
-                           });
-    }
 }
 }  // namespace steam

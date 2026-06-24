@@ -15,6 +15,12 @@ PcControl::PcControl(const common::AppSettings& app_settings)
     , m_shared_env_reader{m_app_settings.m_app_metadata.getSharedEnvMapKey()}
 {
     connect(&m_steam_handler, &steam::SteamHandler::signalSteamClosed, this, &PcControl::slotHandleSteamClosed);
+    connect(&m_steam_handler, &steam::SteamHandler::signalTrackedAppDataChanged, this,
+            &PcControl::signalTrackedAppDataChanged);
+    connect(&m_steam_handler, &steam::SteamHandler::signalSteamUiModeChanged, this,
+            &PcControl::signalSteamUiModeChanged);
+    connect(&m_steam_handler, &steam::SteamHandler::signalSteamCurrentUserChanged, this,
+            &PcControl::signalSteamCurrentUserChanged);
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
 }
@@ -206,4 +212,6 @@ void PcControl::slotHandleStreamStateChange()
             break;
         }
     }
+
+    emit signalStreamStateChanged();
 }

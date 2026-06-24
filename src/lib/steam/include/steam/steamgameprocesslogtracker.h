@@ -12,7 +12,7 @@ class SteamGameProcessLogTracker : public SteamLogTracker
 
 public:
     explicit SteamGameProcessLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
-    ~SteamGameProcessLogTracker() override = default;
+    ~SteamGameProcessLogTracker() override;
 
     bool isAnyProcessRunning(const AppId& app_id) const;
 

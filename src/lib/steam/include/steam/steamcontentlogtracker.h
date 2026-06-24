@@ -39,7 +39,7 @@ public:
     Q_ENUM(AppStateChange)
 
     explicit SteamContentLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
-    ~SteamContentLogTracker() override = default;
+    ~SteamContentLogTracker() override;
 
     AppState getAppState(const AppId& app_id) const;
 

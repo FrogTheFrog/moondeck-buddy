@@ -15,7 +15,7 @@ class SteamShaderLogTracker : public SteamLogTracker
 
 public:
     explicit SteamShaderLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
-    ~SteamShaderLogTracker() override = default;
+    ~SteamShaderLogTracker() override;
 
     bool isAppCompilingShaders(const AppId& app_id) const;
 

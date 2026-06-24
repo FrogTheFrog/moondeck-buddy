@@ -20,7 +20,10 @@ public:
     enums::AppState getAppState() const;
     const AppId&    getAppId() const;
 
-private slots:
+signals:
+    void signalTrackedAppDataChanged();
+
+public slots:
     void slotCheckState();
 
 private:
