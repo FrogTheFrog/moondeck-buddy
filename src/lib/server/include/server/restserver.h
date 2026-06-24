@@ -393,6 +393,7 @@ RestServer::InitializerFunctor RestServer::webSocketInitializerFunctorWrapper(Fu
         if constexpr (std::is_same_v<std::decay_t<Functor>, std::nullopt_t>)
         {
             // No initializer set, which is fine...
+            Q_UNUSED(web_socket);
         }
         else
         {
@@ -421,6 +422,7 @@ RestServer::ResponderFunctor RestServer::webSocketResponderFunctorWrapper(Functo
         if constexpr (std::is_same_v<std::decay_t<Functor>, std::nullopt_t>)
         {
             qCWarning(lc::server) << "WebSocket route does not support Req/Resp pattern!";
+            Q_UNUSED(input);
         }
         else
         {
