@@ -2,8 +2,8 @@
 
 // local includes
 #include "pccontrol.h"
-#include "server/restserver.h"
 #include "server/pairingmanager.h"
+#include "server/restserver.h"
 #include "sunshineapps.h"
 
 void setupRoutes(server::RestServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
