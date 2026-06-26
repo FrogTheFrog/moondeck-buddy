@@ -109,50 +109,67 @@ void pcState(server::RestServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-struct ChangePcStateRequest
+struct HostStateRequest
 {
-    Q_GADGET
-
-public:
-    enum class ChangePcState
-    {
-        Restart,
-        Shutdown,
-        Suspend
-    };
-    Q_ENUM(ChangePcState)
-
-    ChangePcState m_state;
-    uint          m_delay;
+    uint m_delay;
 };
 
-void changePcState(server::RestServer& server, PcControl& pc_control)
+void restartHost(server::RestServer& server, PcControl& pc_control)
 {
-    server.httpRoute("/changePcState", QHttpServerRequest::Method::Post,
-                     [&pc_control](const ChangePcStateRequest& request)
+    server.httpRoute(
+        "/restartHost", QHttpServerRequest::Method::Post,
+        [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+        {
+            if (request.m_delay < 1 || 30 < request.m_delay)
+            {
+                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
+                return QHttpServerResponse::StatusCode::BadRequest;
+            }
+
+            return ResultResponse{.m_result = pc_control.restartPC(request.m_delay)};
+        });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void shutdownHost(server::RestServer& server, PcControl& pc_control)
+{
+    server.httpRoute(
+        "/shutdownHost", QHttpServerRequest::Method::Post,
+        [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+        {
+            if (request.m_delay < 1 || 30 < request.m_delay)
+            {
+                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
+                return QHttpServerResponse::StatusCode::BadRequest;
+            }
+
+            return ResultResponse{.m_result = pc_control.shutdownPC(request.m_delay)};
+        });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+struct SuspendHostRequest
+{
+    uint m_delay;
+    bool m_hibernate;
+};
+
+void suspendHost(server::RestServer& server, PcControl& pc_control)
+{
+    server.httpRoute("/suspendHost", QHttpServerRequest::Method::Post,
+                     [&pc_control](const SuspendHostRequest& request)
                          -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
                      {
-                         using enum ChangePcStateRequest::ChangePcState;
-
                          if (request.m_delay < 1 || 30 < request.m_delay)
                          {
                              qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
                              return QHttpServerResponse::StatusCode::BadRequest;
                          }
 
-                         bool result{false};
-                         switch (request.m_state)
-                         {
-                             case Restart:
-                                 result = pc_control.restartPC(request.m_delay);
-                                 break;
-                             case Shutdown:
-                                 result = pc_control.shutdownPC(request.m_delay);
-                                 break;
-                             case Suspend:
-                                 result = pc_control.suspendOrHibernatePC(request.m_delay);
-                                 break;
-                         }
+                         const bool result{request.m_hibernate ? pc_control.hibernatePC(request.m_delay)
+                                                               : pc_control.suspendPC(request.m_delay)};
                          return ResultResponse{.m_result = result};
                      });
 }
@@ -613,7 +630,9 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
     http_api::abortPairing(server, pairing_manager);
 
     http_api::pcState(server, pc_control);
-    http_api::changePcState(server, pc_control);
+    http_api::restartHost(server, pc_control);
+    http_api::shutdownHost(server, pc_control);
+    http_api::suspendHost(server, pc_control);
 
     http_api::hostInfo(server, mac_address_override);
 
