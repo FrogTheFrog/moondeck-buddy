@@ -88,7 +88,7 @@ bool PcControl::shutdownPC(const uint delay_in_seconds)
         closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Shutdown in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is putting you to sleep :)",
+                                   "Shutting down in " + QString::number(delay_in_seconds) + " second(s)",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
@@ -103,7 +103,7 @@ bool PcControl::restartPC(const uint delay_in_seconds)
         closeSteam(false);
         endStream();
         emit signalShowTrayMessage("Restart in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is giving you new life :?",
+                                   "Restarting in " + QString::number(delay_in_seconds) + " second(s)",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
@@ -122,7 +122,7 @@ bool PcControl::suspendPC(const uint delay_in_seconds)
         endStream();
 
         emit signalShowTrayMessage("Suspend in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is about to suspend you real hard :P",
+                                   "Suspending in " + QString::number(delay_in_seconds) + " second(s)",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
@@ -141,8 +141,7 @@ bool PcControl::hibernatePC(const uint delay_in_seconds)
         endStream();
 
         emit signalShowTrayMessage("Hibernation in progress",
-                                   m_app_settings.m_app_metadata.getAppName()
-                                       + " is about to put you into hard sleep :O",
+                                   "Hibernating in " + QString::number(delay_in_seconds) + " second(s)",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }

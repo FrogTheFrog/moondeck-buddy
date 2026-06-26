@@ -95,7 +95,7 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
 
     if (!(m_native_handler.get()->*can_do_method)())
     {
-        qCWarning(lc::os).nospace() << "PC cannot be " << cant_do_entry << "!";
+        qCWarning(lc::os).nospace().noquote() << "PC cannot be " << cant_do_entry << "!";
         return false;
     }
 
@@ -104,10 +104,10 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
         qCInfo(lc::os) << "Setting PC state to transient.";
         m_state = enums::PcState::Transient;
 
-        qCInfo(lc::os).nospace() << "Trying to " << failed_to_do_entry << " PC.";
+        qCInfo(lc::os).nospace().noquote() << "Trying to " << failed_to_do_entry << " PC.";
         if (!(m_native_handler.get()->*do_method)())
         {
-            qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
+            qCWarning(lc::os).nospace().noquote() << "Failed to " << failed_to_do_entry << " PC!";
             m_state = enums::PcState::Normal;
         }
     };
