@@ -141,7 +141,8 @@ bool PcControl::hibernatePC(const uint delay_in_seconds)
         endStream();
 
         emit signalShowTrayMessage("Hibernation in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is about to put you into hard sleep :O",
+                                   m_app_settings.m_app_metadata.getAppName()
+                                       + " is about to put you into hard sleep :O",
                                    QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
         return true;
     }
