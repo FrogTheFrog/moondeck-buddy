@@ -130,8 +130,6 @@ void restartHost(server::RestServer& server, PcControl& pc_control)
         });
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-
 void shutdownHost(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute(
@@ -148,30 +146,36 @@ void shutdownHost(server::RestServer& server, PcControl& pc_control)
         });
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-
-struct SuspendHostRequest
-{
-    uint m_delay;
-    bool m_hibernate;
-};
-
 void suspendHost(server::RestServer& server, PcControl& pc_control)
 {
-    server.httpRoute("/suspendHost", QHttpServerRequest::Method::Post,
-                     [&pc_control](const SuspendHostRequest& request)
-                         -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
-                     {
-                         if (request.m_delay < 1 || 30 < request.m_delay)
-                         {
-                             qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                             return QHttpServerResponse::StatusCode::BadRequest;
-                         }
+    server.httpRoute(
+        "/suspendHost", QHttpServerRequest::Method::Post,
+        [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+        {
+            if (request.m_delay < 1 || 30 < request.m_delay)
+            {
+                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
+                return QHttpServerResponse::StatusCode::BadRequest;
+            }
 
-                         const bool result{request.m_hibernate ? pc_control.hibernatePC(request.m_delay)
-                                                               : pc_control.suspendPC(request.m_delay)};
-                         return ResultResponse{.m_result = result};
-                     });
+            return ResultResponse{.m_result = pc_control.suspendPC(request.m_delay)};
+        });
+}
+
+void hibernateHost(server::RestServer& server, PcControl& pc_control)
+{
+    server.httpRoute(
+        "/hibernateHost", QHttpServerRequest::Method::Post,
+        [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+        {
+            if (request.m_delay < 1 || 30 < request.m_delay)
+            {
+                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
+                return QHttpServerResponse::StatusCode::BadRequest;
+            }
+
+            return ResultResponse{.m_result = pc_control.hibernatePC(request.m_delay)};
+        });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -633,6 +637,7 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
     http_api::restartHost(server, pc_control);
     http_api::shutdownHost(server, pc_control);
     http_api::suspendHost(server, pc_control);
+    http_api::hibernateHost(server, pc_control);
 
     http_api::hostInfo(server, mac_address_override);
 
