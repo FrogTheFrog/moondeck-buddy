@@ -1,5 +1,8 @@
 #pragma once
 
+// system/Qt includes
+#include <QTimer>
+
 // local includes
 #include "common/enums.h"
 
@@ -26,6 +29,7 @@ public:
     bool restartPC(uint grace_period_in_sec);
     bool suspendPC(uint grace_period_in_sec);
     bool hibernatePC(uint grace_period_in_sec);
+    bool abortStateChange();
 
 private:
     using NativeMethod = bool (NativePcStateHandlerInterface::*)();
@@ -33,6 +37,8 @@ private:
                        NativeMethod can_do_method, NativeMethod do_method, enums::PcState new_state);
 
     enums::PcState                                 m_state{enums::PcState::Normal};
+    QTimer                                         m_grace_timer;
+    std::function<void()>                          m_pending_change;
     std::unique_ptr<NativePcStateHandlerInterface> m_native_handler;
 };
 }  // namespace os

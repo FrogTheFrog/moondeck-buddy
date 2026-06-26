@@ -1,9 +1,6 @@
 // header file include
 #include "os/pcstatehandler.h"
 
-// system/Qt includes
-#include <QTimer>
-
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "os/win/nativepcstatehandler.h"
@@ -32,6 +29,15 @@ namespace os
 PcStateHandler::PcStateHandler()
     : m_native_handler{std::make_unique<NativePcStateHandler>()}
 {
+    m_grace_timer.setSingleShot(true);
+    connect(&m_grace_timer, &QTimer::timeout, this,
+            [this]()
+            {
+                if (const auto action{std::exchange(m_pending_change, {})})
+                {
+                    action();
+                }
+            });
 }
 
 PcStateHandler::~PcStateHandler() = default;
@@ -65,6 +71,17 @@ bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
                          &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
 }
 
+bool PcStateHandler::abortStateChange()
+{
+    m_grace_timer.stop();
+
+    m_pending_change = {};
+    m_state          = enums::PcState::Normal;
+
+    qCInfo(lc::os) << "State change aborted.";
+    return true;
+}
+
 bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)
                                    const QString& failed_to_do_entry, NativeMethod can_do_method,
@@ -82,26 +99,26 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
         return false;
     }
 
-    QTimer::singleShot(getTimeoutTime(grace_period_in_sec), this,
-                       [this, failed_to_do_entry, do_method]()
-                       {
-                           qCInfo(lc::os) << "Setting PC state to transient.";
-                           m_state = enums::PcState::Transient;
+    m_pending_change = [this, failed_to_do_entry, do_method]()
+    {
+        qCInfo(lc::os) << "Setting PC state to transient.";
+        m_state = enums::PcState::Transient;
 
-                           constexpr int state_reset_time{5};
-                           QTimer::singleShot(getTimeoutTime(state_reset_time), this,
-                                              [this]()
-                                              {
-                                                  qCInfo(lc::os) << "Resetting PC state back to normal.";
-                                                  m_state = enums::PcState::Normal;
-                                              });
-
-                           if (!(m_native_handler.get()->*do_method)())
+        constexpr int state_reset_time{5};
+        QTimer::singleShot(getTimeoutTime(state_reset_time), this,
+                           [this]()
                            {
-                               qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
+                               qCInfo(lc::os) << "Resetting PC state back to normal.";
                                m_state = enums::PcState::Normal;
-                           }
-                       });
+                           });
+
+        if (!(m_native_handler.get()->*do_method)())
+        {
+            qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
+            m_state = enums::PcState::Normal;
+        }
+    };
+    m_grace_timer.start(getTimeoutTime(grace_period_in_sec));
 
     m_state = new_state;
     return true;
