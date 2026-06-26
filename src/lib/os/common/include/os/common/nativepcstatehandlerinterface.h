@@ -1,11 +1,16 @@
 #pragma once
 
+// system/Qt includes
+#include <QObject>
+
 namespace os
 {
-class NativePcStateHandlerInterface
+class NativePcStateHandlerInterface : public QObject
 {
+    Q_OBJECT
+
 public:
-    virtual ~NativePcStateHandlerInterface() = default;
+    ~NativePcStateHandlerInterface() override = default;
 
     virtual bool canShutdownPC()  = 0;
     virtual bool canRestartPC()   = 0;
@@ -16,5 +21,8 @@ public:
     virtual bool restartPC()   = 0;
     virtual bool suspendPC()   = 0;
     virtual bool hibernatePC() = 0;
+
+signals:
+    void signalWokeUp();
 };
 }  // namespace os

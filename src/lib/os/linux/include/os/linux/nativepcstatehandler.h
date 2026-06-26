@@ -8,9 +8,7 @@
 
 namespace os
 {
-class NativePcStateHandler
-    : public QObject
-    , public NativePcStateHandlerInterface
+class NativePcStateHandler : public NativePcStateHandlerInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(NativePcStateHandler)
