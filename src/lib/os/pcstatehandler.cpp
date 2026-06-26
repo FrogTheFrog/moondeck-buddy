@@ -32,8 +32,11 @@ PcStateHandler::PcStateHandler()
     connect(m_native_handler.get(), &NativePcStateHandler::signalWokeUp, this,
             [this]()
             {
-                qCInfo(lc::os) << "PC woke up.";
-                m_state = enums::PcState::Normal;
+                if (m_state == enums::PcState::Transient)
+                {
+                    qCInfo(lc::os) << "PC woke up.";
+                    m_state = enums::PcState::Normal;
+                }
             });
 }
 
@@ -44,25 +47,25 @@ enums::PcState PcStateHandler::getState() const
     return m_state;
 }
 
-bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
+bool PcStateHandler::shutdownPC(const uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
                          &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown);
 }
 
-bool PcStateHandler::restartPC(uint grace_period_in_sec)
+bool PcStateHandler::restartPC(const uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
                          &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting);
 }
 
-bool PcStateHandler::suspendPC(uint grace_period_in_sec)
+bool PcStateHandler::suspendPC(const uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
                          &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending);
 }
 
-bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
+bool PcStateHandler::hibernatePC(const uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
                          &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
@@ -79,10 +82,10 @@ bool PcStateHandler::abortPcStateChange()
     return true;
 }
 
-bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
+bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)
-                                   const QString& failed_to_do_entry, NativeMethod can_do_method,
-                                   NativeMethod do_method, enums::PcState new_state)
+                                   const QString& failed_to_do_entry, const NativeMethod can_do_method,
+                                   const NativeMethod do_method, const enums::PcState new_state)
 {
     if (m_state != enums::PcState::Normal)
     {

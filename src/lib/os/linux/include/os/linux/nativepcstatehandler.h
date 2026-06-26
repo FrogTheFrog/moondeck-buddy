@@ -8,6 +8,21 @@
 
 namespace os
 {
+namespace internal
+{
+class Login1Manager : public QDBusInterface
+{
+    Q_OBJECT
+
+public:
+    explicit Login1Manager();
+    ~Login1Manager() override = default;
+
+signals:
+    void PrepareForSleep(bool going_to_sleep);
+};
+}  // namespace internal
+
 class NativePcStateHandler : public NativePcStateHandlerInterface
 {
     Q_OBJECT
@@ -28,6 +43,6 @@ public:
     bool hibernatePC() override;
 
 private:
-    QDBusInterface m_logind_bus;
+    internal::Login1Manager m_login1_bus;
 };
 }  // namespace os
