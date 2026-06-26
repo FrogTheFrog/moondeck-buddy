@@ -5,6 +5,7 @@
 #include <windows.h>
 
 // system/Qt includes
+#include <QTimer>
 #include <powrprof.h>
 
 // local includes
@@ -12,6 +13,30 @@
 
 namespace
 {
+namespace winapi_shim
+{
+using DeviceNotifyCallbackRoutine = ULONG(NTAPI*)(PVOID context, ULONG type, PVOID setting);
+
+struct DeviceNotifySubscribeParameters
+{
+    DeviceNotifyCallbackRoutine m_callback;
+    PVOID                       m_context;
+};
+
+constexpr DWORD DEVICE_NOTIFY_CALLBACK_FLAG{2};
+
+ULONG CALLBACK notifyCallback(PVOID const context, const ULONG type, PVOID /*setting*/)
+{
+    if (type == PBT_APMRESUMEAUTOMATIC)
+    {
+        const auto* handler{static_cast<const os::NativePcStateHandler*>(context)};
+        QTimer::singleShot(0, handler, &os::NativePcStateHandlerInterface::signalWokeUp);
+    }
+
+    return 0;
+}
+}  // namespace winapi_shim
+
 bool acquirePrivilege()
 {
     HANDLE           token_handle{nullptr};
@@ -55,28 +80,45 @@ NativePcStateHandler::NativePcStateHandler()
 {
     if (!m_privilege_acquired)
     {
-        qCWarning(lc::os) << "failed to acquire shutdown/restart/suspend privilege!";
+        qCWarning(lc::os) << "Failed to acquire shutdown/restart/suspend privilege!";
+        return;
+    }
+
+    winapi_shim::DeviceNotifySubscribeParameters params{.m_callback = winapi_shim::notifyCallback, .m_context = this};
+    m_notify_handle = RegisterSuspendResumeNotification(&params, winapi_shim::DEVICE_NOTIFY_CALLBACK_FLAG);
+    if (m_notify_handle == nullptr)
+    {
+        qCWarning(lc::os) << "Failed to register suspend/resume notification! Reason:"
+                          << lc::getErrorString(GetLastError());
+    }
+}
+
+NativePcStateHandler::~NativePcStateHandler()
+{
+    if (m_notify_handle)
+    {
+        UnregisterSuspendResumeNotification(m_notify_handle);
     }
 }
 
 bool NativePcStateHandler::canShutdownPC()
 {
-    return m_privilege_acquired;
+    return canHandlePc();
 }
 
 bool NativePcStateHandler::canRestartPC()
 {
-    return m_privilege_acquired;
+    return canHandlePc();
 }
 
 bool NativePcStateHandler::canSuspendPC()
 {
-    return m_privilege_acquired;
+    return canHandlePc();
 }
 
 bool NativePcStateHandler::canHibernatePC()
 {
-    return m_privilege_acquired;
+    return canHandlePc();
 }
 
 bool NativePcStateHandler::shutdownPC()
@@ -141,5 +183,10 @@ bool NativePcStateHandler::hibernatePC()
     }
 
     return true;
+}
+
+bool NativePcStateHandler::canHandlePc() const
+{
+    return m_privilege_acquired && m_notify_handle != nullptr;
 }
 }  // namespace os

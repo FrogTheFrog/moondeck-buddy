@@ -12,7 +12,7 @@ class NativePcStateHandler : public NativePcStateHandlerInterface
 
 public:
     explicit NativePcStateHandler();
-    ~NativePcStateHandler() override = default;
+    ~NativePcStateHandler() override;
 
     bool canShutdownPC() override;
     bool canRestartPC() override;
@@ -25,6 +25,9 @@ public:
     bool hibernatePC() override;
 
 private:
-    bool m_privilege_acquired;
+    bool canHandlePc() const;
+
+    bool  m_privilege_acquired;
+    void* m_notify_handle{nullptr};
 };
 }  // namespace os
