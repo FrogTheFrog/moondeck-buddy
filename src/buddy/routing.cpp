@@ -189,6 +189,12 @@ void hibernateHost(server::RestServer& server, PcControl& pc_control)
         });
 }
 
+void abortHostStateChange(server::RestServer& server, PcControl& pc_control)
+{
+    server.httpRoute("/abortHostStateChange", QHttpServerRequest::Method::Post,
+                     [&pc_control]() { return ResultResponse{.m_result = pc_control.abortPcStateChange()}; });
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 struct HostInfoResponse
@@ -649,6 +655,7 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
     http_api::shutdownHost(server, pc_control);
     http_api::suspendHost(server, pc_control);
     http_api::hibernateHost(server, pc_control);
+    http_api::abortHostStateChange(server, pc_control);
 
     http_api::hostInfo(server, mac_address_override);
 

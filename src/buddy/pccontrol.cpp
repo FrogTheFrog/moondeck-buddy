@@ -149,6 +149,11 @@ bool PcControl::hibernatePC(const uint delay_in_seconds)
     return false;
 }
 
+bool PcControl::abortPcStateChange()
+{
+    return m_pc_state_handler.abortPcStateChange();
+}
+
 bool PcControl::endStream()
 {
     return m_stream_state_handler.endStream();

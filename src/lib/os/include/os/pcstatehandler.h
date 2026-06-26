@@ -29,7 +29,7 @@ public:
     bool restartPC(uint grace_period_in_sec);
     bool suspendPC(uint grace_period_in_sec);
     bool hibernatePC(uint grace_period_in_sec);
-    bool abortStateChange();
+    bool abortPcStateChange();
 
 private:
     using NativeMethod = bool (NativePcStateHandlerInterface::*)();

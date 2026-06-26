@@ -36,6 +36,7 @@ public:
     bool restartPC(uint delay_in_seconds);
     bool suspendPC(uint delay_in_seconds);
     bool hibernatePC(uint delay_in_seconds);
+    bool abortPcStateChange();
     bool endStream();
 
     enums::StreamState getStreamState() const;

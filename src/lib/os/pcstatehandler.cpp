@@ -71,7 +71,7 @@ bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
                          &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
 }
 
-bool PcStateHandler::abortStateChange()
+bool PcStateHandler::abortPcStateChange()
 {
     m_grace_timer.stop();
 
