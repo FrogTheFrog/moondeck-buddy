@@ -38,6 +38,13 @@ PcStateHandler::PcStateHandler()
                     action();
                 }
             });
+
+    connect(m_native_handler.get(), &NativePcStateHandler::signalWokeUp, this,
+            [this]()
+            {
+                qCInfo(lc::os) << "PC woke up.";
+                m_state = enums::PcState::Normal;
+            });
 }
 
 PcStateHandler::~PcStateHandler() = default;
@@ -104,14 +111,7 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
         qCInfo(lc::os) << "Setting PC state to transient.";
         m_state = enums::PcState::Transient;
 
-        constexpr int state_reset_time{5};
-        QTimer::singleShot(getTimeoutTime(state_reset_time), this,
-                           [this]()
-                           {
-                               qCInfo(lc::os) << "Resetting PC state back to normal.";
-                               m_state = enums::PcState::Normal;
-                           });
-
+        qCInfo(lc::os).nospace() << "Trying to " << failed_to_do_entry << " PC.";
         if (!(m_native_handler.get()->*do_method)())
         {
             qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
