@@ -111,6 +111,21 @@ void pcState(server::RestServer& server, PcControl& pc_control)
 
 struct HostStateRequest
 {
+    std::optional<QHttpServerResponse::StatusCode> validate() const
+    {
+        constexpr uint min_delay{1};
+        constexpr uint max_delay{30};
+
+        if (m_delay < min_delay || max_delay < m_delay)
+        {
+            qCWarning(lc::buddyMain) << "Delay value is out of range [" << min_delay << ";" << max_delay
+                                     << "]:" << m_delay;
+            return QHttpServerResponse::StatusCode::BadRequest;
+        }
+
+        return std::nullopt;
+    }
+
     uint m_delay;
 };
 
@@ -120,10 +135,9 @@ void restartHost(server::RestServer& server, PcControl& pc_control)
         "/restartHost", QHttpServerRequest::Method::Post,
         [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
         {
-            if (request.m_delay < 1 || 30 < request.m_delay)
+            if (const auto err{request.validate()})
             {
-                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                return QHttpServerResponse::StatusCode::BadRequest;
+                return *err;
             }
 
             return ResultResponse{.m_result = pc_control.restartPC(request.m_delay)};
@@ -136,10 +150,9 @@ void shutdownHost(server::RestServer& server, PcControl& pc_control)
         "/shutdownHost", QHttpServerRequest::Method::Post,
         [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
         {
-            if (request.m_delay < 1 || 30 < request.m_delay)
+            if (const auto err{request.validate()})
             {
-                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                return QHttpServerResponse::StatusCode::BadRequest;
+                return *err;
             }
 
             return ResultResponse{.m_result = pc_control.shutdownPC(request.m_delay)};
@@ -152,10 +165,9 @@ void suspendHost(server::RestServer& server, PcControl& pc_control)
         "/suspendHost", QHttpServerRequest::Method::Post,
         [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
         {
-            if (request.m_delay < 1 || 30 < request.m_delay)
+            if (const auto err{request.validate()})
             {
-                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                return QHttpServerResponse::StatusCode::BadRequest;
+                return *err;
             }
 
             return ResultResponse{.m_result = pc_control.suspendPC(request.m_delay)};
@@ -168,10 +180,9 @@ void hibernateHost(server::RestServer& server, PcControl& pc_control)
         "/hibernateHost", QHttpServerRequest::Method::Post,
         [&pc_control](const HostStateRequest& request) -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
         {
-            if (request.m_delay < 1 || 30 < request.m_delay)
+            if (const auto err{request.validate()})
             {
-                qCWarning(lc::buddyMain) << "Delay value is out of range [1;30]:" << request.m_delay;
-                return QHttpServerResponse::StatusCode::BadRequest;
+                return *err;
             }
 
             return ResultResponse{.m_result = pc_control.hibernatePC(request.m_delay)};
