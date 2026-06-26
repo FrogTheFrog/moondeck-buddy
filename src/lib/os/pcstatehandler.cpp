@@ -14,16 +14,6 @@
 #include "common/loggingcategories.h"
 #include "os/common/nativepcstatehandlerinterface.h"
 
-namespace
-{
-const int SEC_TO_MS{1000};
-
-int getTimeoutTime(uint grace_period_in_sec)
-{
-    return static_cast<int>(grace_period_in_sec) * SEC_TO_MS;
-}
-}  // namespace
-
 namespace os
 {
 PcStateHandler::PcStateHandler()
@@ -118,7 +108,7 @@ bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant
             m_state = enums::PcState::Normal;
         }
     };
-    m_grace_timer.start(getTimeoutTime(grace_period_in_sec));
+    m_grace_timer.start(grace_period_in_sec * 1000);
 
     m_state = new_state;
     return true;
