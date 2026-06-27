@@ -30,6 +30,7 @@ enum class PcState
     Restarting,
     ShuttingDown,
     Suspending,
+    Hibernating,
     Transient
 };
 Q_ENUM_NS(PcState)

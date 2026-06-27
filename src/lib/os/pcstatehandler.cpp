@@ -68,7 +68,7 @@ bool PcStateHandler::suspendPC(const uint grace_period_in_sec)
 bool PcStateHandler::hibernatePC(const uint grace_period_in_sec)
 {
     return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
-                         &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
+                         &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Hibernating);
 }
 
 bool PcStateHandler::abortPcStateChange()
