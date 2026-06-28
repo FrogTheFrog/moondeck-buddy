@@ -1,6 +1,9 @@
 name: Build
 on: [pull_request,workflow_call]
 jobs:
+  Formatting:
+    uses: ./.github/workflows/formatting.yaml
+
   Filename:
     uses: ./.github/workflows/filename.yaml
     with:
@@ -8,7 +11,7 @@ jobs:
 
   Windows:
     runs-on: windows-latest
-    needs: [Filename]
+    needs: [Formatting, Filename]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -54,7 +57,7 @@ jobs:
 
   Linux:
     runs-on: ubuntu-24.04
-    needs: [Filename]
+    needs: [Formatting, Filename]
     steps:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install ninja-build libproc2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
