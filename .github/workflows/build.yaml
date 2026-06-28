@@ -34,7 +34,7 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Release -B build -G Ninja
+          cmake -DENABLE_CLANG_TIDY=True -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE:STRING=Debug -B build -G Ninja
           cmake --build build
 
       - name: Bundle
@@ -77,7 +77,7 @@ jobs:
           modules: 'qthttpserver qtwebsockets'
 
       - name: Configure
-        run: mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release -G Ninja
+        run: mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Debug -G Ninja
 
       - name: Configure & Build
         working-directory: ./build
