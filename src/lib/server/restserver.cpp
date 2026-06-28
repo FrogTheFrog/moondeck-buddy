@@ -126,6 +126,35 @@ bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, c
         ssl_conf.setProtocol(protocol);
 
         ssl_server->setSslConfiguration(ssl_conf);
+
+        connect(ssl_server.get(), &QSslServer::errorOccurred, this,
+                [](const QSslSocket* socket, const QAbstractSocket::SocketError err)
+                {
+                    qCDebug(lc::server) << "QSslServer error" << err << "from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->"
+                                        << (socket ? socket->errorString() : QString{});
+                });
+        connect(ssl_server.get(), &QSslServer::peerVerifyError,
+                [](const QSslSocket* socket, const QSslError& err)
+                {
+                    qCDebug(lc::server) << "QSslServer peer verify error from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                });
+        connect(ssl_server.get(), &QSslServer::sslErrors, this,
+                [](const QSslSocket* socket, const QList<QSslError>& errs)
+                {
+                    for (const auto& err : errs)
+                    {
+                        qCDebug(lc::server) << "QSslServer ssl error from"
+                                            << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                    }
+                });
+        connect(ssl_server.get(), &QSslServer::handshakeInterruptedOnError,
+                [](const QSslSocket* socket, const QSslError& err)
+                {
+                    qCDebug(lc::server) << "QSslServer handshake interrupted on error from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                });
     }
 
     if (!ssl_server->listen(QHostAddress::Any, port))
@@ -141,7 +170,7 @@ bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, c
     }
     ssl_server.release();  // m_server has taken over the ownership!
 
-    qCInfo(lc::server) << "Server started listening at port" << port;
+    qCInfo(lc::server) << "Server started listening at port" << port << "| TLS backend" << QSslSocket::activeBackend();
     return true;
 }
 
