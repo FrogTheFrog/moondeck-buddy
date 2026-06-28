@@ -101,31 +101,31 @@ RestServer::RestServer(const int api_version, ClientIds& client_ids)
     setupWebSocketHandling();
 }
 
-bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
-                             const QSsl::SslProtocol protocol)
+bool RestServer::startServer(const quint16 port, const QString& , const QString& ,
+                             const QSsl::SslProtocol )
 {
-    auto ssl_server = std::make_unique<QSslServer>();
+    auto ssl_server = std::make_unique<QTcpServer>();
     {
-        QFile cert_file{ssl_cert_file};
-        if (!cert_file.open(QFile::ReadOnly))
-        {
-            qCWarning(lc::server) << "Failed to load SSL certificate from" << ssl_cert_file;
-            return false;
-        }
-
-        QFile key_file{ssl_key_file};
-        if (!key_file.open(QFile::ReadOnly))
-        {
-            qCWarning(lc::server) << "Failed to load SSL key from" << ssl_key_file;
-            return false;
-        }
-
-        QSslConfiguration ssl_conf{QSslConfiguration::defaultConfiguration()};
-        ssl_conf.setLocalCertificate(QSslCertificate{cert_file.readAll()});
-        ssl_conf.setPrivateKey(QSslKey{key_file.readAll(), QSsl::Rsa});
-        ssl_conf.setProtocol(protocol);
-
-        ssl_server->setSslConfiguration(ssl_conf);
+        // QFile cert_file{ssl_cert_file};
+        // if (!cert_file.open(QFile::ReadOnly))
+        // {
+        //     qCWarning(lc::server) << "Failed to load SSL certificate from" << ssl_cert_file;
+        //     return false;
+        // }
+        //
+        // QFile key_file{ssl_key_file};
+        // if (!key_file.open(QFile::ReadOnly))
+        // {
+        //     qCWarning(lc::server) << "Failed to load SSL key from" << ssl_key_file;
+        //     return false;
+        // }
+        //
+        // QSslConfiguration ssl_conf{QSslConfiguration::defaultConfiguration()};
+        // ssl_conf.setLocalCertificate(QSslCertificate{cert_file.readAll()});
+        // ssl_conf.setPrivateKey(QSslKey{key_file.readAll(), QSsl::Rsa});
+        // ssl_conf.setProtocol(protocol);
+        //
+        // ssl_server->setSslConfiguration(ssl_conf);
     }
 
     if (!ssl_server->listen(QHostAddress::Any, port))
