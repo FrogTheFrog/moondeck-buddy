@@ -11,7 +11,7 @@ jobs:
 
   Windows:
     runs-on: windows-latest
-    needs: [Formatting, Filename]
+    needs: [Filename]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,7 +57,7 @@ jobs:
 
   Linux:
     runs-on: ubuntu-24.04
-    needs: [Formatting, Filename]
+    needs: [Filename]
     steps:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install ninja-build libproc2-dev libxrandr-dev libfuse2 libxcb-cursor-dev
