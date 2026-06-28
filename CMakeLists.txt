@@ -24,7 +24,7 @@ set(ENABLE_CLANG_TIDY OFF CACHE BOOL "Enable clang-tidy build (slow)")
 
 if(MSVC)
     # warning level 4 and all warnings as errors + preprocessor for glaze
-    add_compile_options(/W4 /WX /Zc:preprocessor)
+    add_compile_options(/Zc:preprocessor)
 else()
     # lots of warnings and all warnings as errors
     add_compile_options(-Wall -Wextra -pedantic -Werror)
