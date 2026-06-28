@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     utils::installSignalHandler();
-    qCInfo(lc::streamMain) << "Startup. Version:" << EXEC_VERSION;
+    qCInfo(lc::streamMain) << "Startup. Version:" << EXEC_VERSION << "| Qt version:" << QT_VERSION_STR;
 
     // Capture and store environment variables for Buddy to use when launching games
     utils::ShmSerializer env_map_serializer{app_meta.getSharedEnvMapKey()};

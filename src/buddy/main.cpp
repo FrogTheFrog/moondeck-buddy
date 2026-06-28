@@ -156,7 +156,7 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
 
     utils::LogSettings::getInstance().init(app_meta.getLogPath());
     utils::installSignalHandler();
-    qCInfo(lc::buddyMain) << "Startup. Version:" << EXEC_VERSION;
+    qCInfo(lc::buddyMain) << "Startup. Version:" << EXEC_VERSION << "| Qt version:" << QT_VERSION_STR;
 
     utils::Heartbeat heartbeat{app_meta.getAppName()};
     QObject::connect(&heartbeat, &utils::Heartbeat::signalShouldTerminate, app.get(), &QCoreApplication::quit);
