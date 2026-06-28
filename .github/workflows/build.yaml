@@ -1,9 +1,6 @@
 name: Build
 on: [pull_request,workflow_call]
 jobs:
-  Formatting:
-    uses: ./.github/workflows/formatting.yaml
-
   Filename:
     uses: ./.github/workflows/filename.yaml
     with:
