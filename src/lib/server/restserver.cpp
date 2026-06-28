@@ -170,7 +170,7 @@ bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, c
     }
     ssl_server.release();  // m_server has taken over the ownership!
 
-    qCInfo(lc::server) << "Server started listening at port" << port;
+    qCInfo(lc::server) << "Server started listening at port" << port << "| TLS backend" << QSslSocket::activeBackend();
     return true;
 }
 
