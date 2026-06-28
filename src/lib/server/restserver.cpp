@@ -101,31 +101,60 @@ RestServer::RestServer(const int api_version, ClientIds& client_ids)
     setupWebSocketHandling();
 }
 
-bool RestServer::startServer(const quint16 port, const QString& , const QString& ,
-                             const QSsl::SslProtocol )
+bool RestServer::startServer(const quint16 port, const QString& ssl_cert_file, const QString& ssl_key_file,
+                             const QSsl::SslProtocol protocol)
 {
-    auto ssl_server = std::make_unique<QTcpServer>();
+    auto ssl_server = std::make_unique<QSslServer>();
     {
-        // QFile cert_file{ssl_cert_file};
-        // if (!cert_file.open(QFile::ReadOnly))
-        // {
-        //     qCWarning(lc::server) << "Failed to load SSL certificate from" << ssl_cert_file;
-        //     return false;
-        // }
-        //
-        // QFile key_file{ssl_key_file};
-        // if (!key_file.open(QFile::ReadOnly))
-        // {
-        //     qCWarning(lc::server) << "Failed to load SSL key from" << ssl_key_file;
-        //     return false;
-        // }
-        //
-        // QSslConfiguration ssl_conf{QSslConfiguration::defaultConfiguration()};
-        // ssl_conf.setLocalCertificate(QSslCertificate{cert_file.readAll()});
-        // ssl_conf.setPrivateKey(QSslKey{key_file.readAll(), QSsl::Rsa});
-        // ssl_conf.setProtocol(protocol);
-        //
-        // ssl_server->setSslConfiguration(ssl_conf);
+        QFile cert_file{ssl_cert_file};
+        if (!cert_file.open(QFile::ReadOnly))
+        {
+            qCWarning(lc::server) << "Failed to load SSL certificate from" << ssl_cert_file;
+            return false;
+        }
+
+        QFile key_file{ssl_key_file};
+        if (!key_file.open(QFile::ReadOnly))
+        {
+            qCWarning(lc::server) << "Failed to load SSL key from" << ssl_key_file;
+            return false;
+        }
+
+        QSslConfiguration ssl_conf{QSslConfiguration::defaultConfiguration()};
+        ssl_conf.setLocalCertificate(QSslCertificate{cert_file.readAll()});
+        ssl_conf.setPrivateKey(QSslKey{key_file.readAll(), QSsl::Rsa});
+        ssl_conf.setProtocol(protocol);
+
+        ssl_server->setSslConfiguration(ssl_conf);
+
+        connect(ssl_server.get(), &QSslServer::errorOccurred, this,
+                [](const QSslSocket* socket, const QAbstractSocket::SocketError err)
+                {
+                    qCDebug(lc::server) << "QSslServer error" << err << "from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->"
+                                        << (socket ? socket->errorString() : QString{});
+                });
+        connect(ssl_server.get(), &QSslServer::peerVerifyError,
+                [](const QSslSocket* socket, const QSslError& err)
+                {
+                    qCDebug(lc::server) << "QSslServer peer verify error from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                });
+        connect(ssl_server.get(), &QSslServer::sslErrors, this,
+                [](const QSslSocket* socket, const QList<QSslError>& errs)
+                {
+                    for (const auto& err : errs)
+                    {
+                        qCDebug(lc::server) << "QSslServer ssl error from"
+                                            << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                    }
+                });
+        connect(ssl_server.get(), &QSslServer::handshakeInterruptedOnError,
+                [](const QSslSocket* socket, const QSslError& err)
+                {
+                    qCDebug(lc::server) << "QSslServer handshake interrupted on error from"
+                                        << (socket ? socket->peerAddress() : QHostAddress{}) << "->" << err;
+                });
     }
 
     if (!ssl_server->listen(QHostAddress::Any, port))
