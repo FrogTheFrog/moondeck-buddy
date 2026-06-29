@@ -49,26 +49,58 @@ enums::PcState PcStateHandler::getState() const
 
 bool PcStateHandler::shutdownPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
-                         &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown);
+    if (doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
+                      &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown))
+    {
+        emit signalShowTrayMessage(
+            "Shutdown in progress", "Shutting down in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
 bool PcStateHandler::restartPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
-                         &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting);
+    if (doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
+                      &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting))
+    {
+        emit signalShowTrayMessage(
+            "Restart in progress", "Restarting in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
 bool PcStateHandler::suspendPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
-                         &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending);
+    if (doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
+                      &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending))
+    {
+        emit signalShowTrayMessage(
+            "Suspend in progress", "Suspending in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
 bool PcStateHandler::hibernatePC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
-                         &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Hibernating);
+    if (doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
+                      &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Hibernating))
+    {
+        emit signalShowTrayMessage(
+            "Hibernation in progress", "Hibernating in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
 bool PcStateHandler::abortPcStateChange()

@@ -52,15 +52,15 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
     slotTryAttach();
 }
 
-void SystemTray::slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
-                                     int millisecondsTimeoutHint)
+void SystemTray::slotShowTrayMessage(const QString& title, const QString& message,
+                                     const QSystemTrayIcon::MessageIcon icon, const int milliseconds_timeout_hint)
 {
-    if (!m_tray_icon || millisecondsTimeoutHint <= 0)
+    if (!m_tray_icon || milliseconds_timeout_hint <= 0)
     {
         return;
     }
 
-    m_tray_icon->showMessage(title, message, icon, millisecondsTimeoutHint);
+    m_tray_icon->showMessage(title, message, icon, milliseconds_timeout_hint);
 }
 
 void SystemTray::slotTryAttach()

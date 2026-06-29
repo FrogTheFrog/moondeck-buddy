@@ -1,8 +1,5 @@
 #pragma once
 
-// system/Qt includes
-#include <QtWidgets/QSystemTrayIcon>
-
 // local includes
 #include "os/autostarthandler.h"
 #include "os/pcstatehandler.h"

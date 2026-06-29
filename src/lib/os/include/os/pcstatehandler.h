@@ -2,6 +2,7 @@
 
 // system/Qt includes
 #include <QTimer>
+#include <QtWidgets/QSystemTrayIcon>
 
 // local includes
 #include "common/enums.h"
@@ -30,6 +31,10 @@ public:
     bool suspendPC(uint grace_period_in_sec);
     bool hibernatePC(uint grace_period_in_sec);
     bool abortPcStateChange();
+
+signals:
+    void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
+                               int milliseconds_timeout_hint);
 
 private:
     using NativeMethod = bool (NativePcStateHandlerInterface::*)();
