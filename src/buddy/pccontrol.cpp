@@ -23,8 +23,7 @@ PcControl::PcControl(const common::AppSettings& app_settings)
             &PcControl::signalSteamCurrentUserChanged);
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
-    connect(&m_pc_state_handler, &os::PcStateHandler::signalShowTrayMessage, this,
-            &PcControl::signalShowTrayMessage);
+    connect(&m_pc_state_handler, &os::PcStateHandler::signalShowTrayMessage, this, &PcControl::signalShowTrayMessage);
 }
 
 // For forward declarations

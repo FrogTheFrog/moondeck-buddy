@@ -126,7 +126,7 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
 {
     if (m_state != enums::PcState::Normal)
     {
-        qCDebug(lc::os) << "PC is already changing state. Aborting request.";
+        qCWarning(lc::os) << "PC is already changing state. Aborting request.";
         return false;
     }
 
@@ -148,6 +148,9 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
             m_state = enums::PcState::Normal;
         }
     };
+
+    qCInfo(lc::os).nospace().noquote() << "Will " << failed_to_do_entry << " the PC in " << grace_period_in_sec
+                                       << " second(s).";
     m_grace_timer.start(grace_period_in_sec * 1000);
 
     m_state = new_state;
