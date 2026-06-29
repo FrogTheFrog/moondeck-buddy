@@ -26,7 +26,6 @@ public:
     QString            m_logging_rules;
     QString            m_sunshine_apps_filepath;
     SslProtocol        m_ssl_protocol{SslProtocol::SecureProtocols};
-    bool               m_close_steam_before_sleep{true};
     QString            m_steam_exec_override;
     QString            m_mac_address_override;
     QRegularExpression m_env_capture_regex{"^(?:SUNSHINE|APOLLO).*"};

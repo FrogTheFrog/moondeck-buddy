@@ -84,56 +84,22 @@ std::optional<steam::SteamId> PcControl::getCurrentUserId() const
 
 bool PcControl::shutdownPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.shutdownPC(delay_in_seconds))
-    {
-        closeSteam(false);
-        endStream();
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.shutdownPC(delay_in_seconds);
 }
 
 bool PcControl::restartPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.restartPC(delay_in_seconds))
-    {
-        closeSteam(false);
-        endStream();
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.restartPC(delay_in_seconds);
 }
 
 bool PcControl::suspendPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.suspendPC(delay_in_seconds))
-    {
-        if (m_app_settings.m_user_settings.m_close_steam_before_sleep)
-        {
-            closeSteam(false);
-        }
-        endStream();
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.suspendPC(delay_in_seconds);
 }
 
 bool PcControl::hibernatePC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.hibernatePC(delay_in_seconds))
-    {
-        if (m_app_settings.m_user_settings.m_close_steam_before_sleep)
-        {
-            closeSteam(false);
-        }
-        endStream();
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.hibernatePC(delay_in_seconds);
 }
 
 bool PcControl::abortPcStateChange()
