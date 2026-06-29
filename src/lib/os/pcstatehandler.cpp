@@ -107,10 +107,15 @@ bool PcStateHandler::abortPcStateChange()
 {
     m_grace_timer.stop();
 
+    if (m_pending_change)
+    {
+        qCInfo(lc::os) << "State change aborted.";
+        emit signalShowTrayMessage("Operation cancelled", "", QSystemTrayIcon::MessageIcon::Information, 3000);
+    }
+
     m_pending_change = {};
     m_state          = enums::PcState::Normal;
 
-    qCInfo(lc::os) << "State change aborted.";
     return true;
 }
 
