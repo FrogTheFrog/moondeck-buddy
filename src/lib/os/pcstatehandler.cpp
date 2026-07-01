@@ -107,16 +107,19 @@ bool PcStateHandler::abortPcStateChange()
 {
     m_grace_timer.stop();
 
+    // Only if it's not too late can we abort the change. Otherwise, we need to wait for the "woke up" notification.
     if (m_pending_change)
     {
         qCInfo(lc::os) << "State change aborted.";
         emit signalShowTrayMessage("Operation cancelled", "", QSystemTrayIcon::MessageIcon::Information, 3000);
+
+        m_pending_change = {};
+        m_state          = enums::PcState::Normal;
+
+        return true;
     }
 
-    m_pending_change = {};
-    m_state          = enums::PcState::Normal;
-
-    return true;
+    return false;
 }
 
 bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString& cant_do_entry,
