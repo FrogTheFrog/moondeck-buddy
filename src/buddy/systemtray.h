@@ -24,7 +24,7 @@ signals:
 
 public slots:
     void slotShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
-                             int millisecondsTimeoutHint);
+                             int milliseconds_timeout_hint);
 
 private slots:
     void slotTryAttach();

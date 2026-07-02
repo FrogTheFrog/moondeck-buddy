@@ -1,8 +1,5 @@
 #pragma once
 
-// system/Qt includes
-#include <QtWidgets/QSystemTrayIcon>
-
 // local includes
 #include "os/autostarthandler.h"
 #include "os/pcstatehandler.h"
@@ -34,7 +31,9 @@ public:
 
     bool shutdownPC(uint delay_in_seconds);
     bool restartPC(uint delay_in_seconds);
-    bool suspendOrHibernatePC(uint delay_in_seconds);
+    bool suspendPC(uint delay_in_seconds);
+    bool hibernatePC(uint delay_in_seconds);
+    bool abortPcStateChange();
     bool endStream();
 
     enums::StreamState getStreamState() const;

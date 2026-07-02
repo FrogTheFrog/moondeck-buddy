@@ -1,9 +1,6 @@
 // header file include
 #include "os/pcstatehandler.h"
 
-// system/Qt includes
-#include <QTimer>
-
 // os-specific includes
 #if defined(Q_OS_WIN)
     #include "os/win/nativepcstatehandler.h"
@@ -17,21 +14,30 @@
 #include "common/loggingcategories.h"
 #include "os/common/nativepcstatehandlerinterface.h"
 
-namespace
-{
-const int SEC_TO_MS{1000};
-
-int getTimeoutTime(uint grace_period_in_sec)
-{
-    return static_cast<int>(grace_period_in_sec) * SEC_TO_MS;
-}
-}  // namespace
-
 namespace os
 {
 PcStateHandler::PcStateHandler()
     : m_native_handler{std::make_unique<NativePcStateHandler>()}
 {
+    m_grace_timer.setSingleShot(true);
+    connect(&m_grace_timer, &QTimer::timeout, this,
+            [this]()
+            {
+                if (const auto action{std::exchange(m_pending_change, {})})
+                {
+                    action();
+                }
+            });
+
+    connect(m_native_handler.get(), &NativePcStateHandler::signalWokeUp, this,
+            [this]()
+            {
+                if (m_state == enums::PcState::Transient)
+                {
+                    qCInfo(lc::os) << "PC woke up.";
+                    m_state = enums::PcState::Normal;
+                }
+            });
 }
 
 PcStateHandler::~PcStateHandler() = default;
@@ -41,67 +47,114 @@ enums::PcState PcStateHandler::getState() const
     return m_state;
 }
 
-bool PcStateHandler::shutdownPC(uint grace_period_in_sec)
+bool PcStateHandler::shutdownPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
-                         &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown);
+    if (doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
+                      &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown))
+    {
+        emit signalShowTrayMessage(
+            "Shutdown in progress", "Shutting down in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
-bool PcStateHandler::restartPC(uint grace_period_in_sec)
+bool PcStateHandler::restartPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
-                         &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting);
+    if (doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
+                      &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting))
+    {
+        emit signalShowTrayMessage(
+            "Restart in progress", "Restarting in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
-bool PcStateHandler::suspendPC(uint grace_period_in_sec)
+bool PcStateHandler::suspendPC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
-                         &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending);
+    if (doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
+                      &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending))
+    {
+        emit signalShowTrayMessage(
+            "Suspend in progress", "Suspending in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
-bool PcStateHandler::hibernatePC(uint grace_period_in_sec)
+bool PcStateHandler::hibernatePC(const uint grace_period_in_sec)
 {
-    return doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
-                         &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Suspending);
+    if (doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
+                      &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Hibernating))
+    {
+        emit signalShowTrayMessage(
+            "Hibernation in progress", "Hibernating in " + QString::number(grace_period_in_sec) + " second(s)",
+            QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
+        return true;
+    }
+
+    return false;
 }
 
-bool PcStateHandler::doChangeState(uint grace_period_in_sec, const QString& cant_do_entry,
+bool PcStateHandler::abortPcStateChange()
+{
+    m_grace_timer.stop();
+
+    // Only if it's not too late can we abort the change. Otherwise, we need to wait for the "woke up" notification.
+    if (m_pending_change)
+    {
+        qCInfo(lc::os) << "State change aborted.";
+        emit signalShowTrayMessage("Operation cancelled", "", QSystemTrayIcon::MessageIcon::Information, 3000);
+
+        m_pending_change = {};
+        m_state          = enums::PcState::Normal;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString& cant_do_entry,
                                    // NOLINTNEXTLINE(*-swappable-parameters)
-                                   const QString& failed_to_do_entry, NativeMethod can_do_method,
-                                   NativeMethod do_method, enums::PcState new_state)
+                                   const QString& failed_to_do_entry, const NativeMethod can_do_method,
+                                   const NativeMethod do_method, const enums::PcState new_state)
 {
     if (m_state != enums::PcState::Normal)
     {
-        qCDebug(lc::os) << "PC is already changing state. Aborting request.";
+        qCWarning(lc::os) << "PC is already changing state. Aborting request.";
         return false;
     }
 
     if (!(m_native_handler.get()->*can_do_method)())
     {
-        qCWarning(lc::os).nospace() << "PC cannot be " << cant_do_entry << "!";
+        qCWarning(lc::os).nospace().noquote() << "PC cannot be " << cant_do_entry << "!";
         return false;
     }
 
-    QTimer::singleShot(getTimeoutTime(grace_period_in_sec), this,
-                       [this, failed_to_do_entry, do_method]()
-                       {
-                           qCInfo(lc::os) << "Setting PC state to transient.";
-                           m_state = enums::PcState::Transient;
+    m_pending_change = [this, failed_to_do_entry, do_method]()
+    {
+        qCInfo(lc::os) << "Setting PC state to transient.";
+        m_state = enums::PcState::Transient;
 
-                           constexpr int state_reset_time{5};
-                           QTimer::singleShot(getTimeoutTime(state_reset_time), this,
-                                              [this]()
-                                              {
-                                                  qCInfo(lc::os) << "Resetting PC state back to normal.";
-                                                  m_state = enums::PcState::Normal;
-                                              });
+        qCInfo(lc::os).nospace().noquote() << "Trying to " << failed_to_do_entry << " PC.";
+        if (!(m_native_handler.get()->*do_method)())
+        {
+            qCWarning(lc::os).nospace().noquote() << "Failed to " << failed_to_do_entry << " PC!";
+            m_state = enums::PcState::Normal;
+        }
+    };
 
-                           if (!(m_native_handler.get()->*do_method)())
-                           {
-                               qCWarning(lc::os).nospace() << "Failed to " << failed_to_do_entry << " PC!";
-                               m_state = enums::PcState::Normal;
-                           }
-                       });
+    qCInfo(lc::os).nospace().noquote() << "Will " << failed_to_do_entry << " the PC in " << grace_period_in_sec
+                                       << " second(s).";
+    m_grace_timer.start(grace_period_in_sec * 1000);
 
     m_state = new_state;
     return true;

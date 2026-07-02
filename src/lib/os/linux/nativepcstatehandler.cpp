@@ -43,9 +43,8 @@ bool doQuery(QDBusInterface& bus, const QString& log_entry, const QString& query
         return false;
     }
 
-    const bool             polkit_interactive{true};
-    const QDBusReply<void> reply{bus.call(QDBus::Block, query, polkit_interactive)};
-    if (!reply.isValid())
+    constexpr bool polkit_interactive{true};
+    if (const QDBusReply<void> reply{bus.call(QDBus::Block, query, polkit_interactive)}; !reply.isValid())
     {
         qCWarning(lc::os).nospace() << "got invalid reply for " << log_entry << " (" << query << "): " << reply.error();
         return false;
@@ -57,53 +56,69 @@ bool doQuery(QDBusInterface& bus, const QString& log_entry, const QString& query
 
 namespace os
 {
-NativePcStateHandler::NativePcStateHandler()
-    : m_logind_bus{"org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager",
-                   QDBusConnection::systemBus()}
+namespace internal
 {
-    if (!m_logind_bus.isValid())
+Login1Manager::Login1Manager()
+    : QDBusInterface{"org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager",
+                     QDBusConnection::systemBus()}
+{
+}
+}  // namespace internal
+
+NativePcStateHandler::NativePcStateHandler()
+{
+    if (!m_login1_bus.isValid())
     {
         qCWarning(lc::os) << "logind bus is invalid!";
     }
+
+    connect(&m_login1_bus, &internal::Login1Manager::PrepareForSleep, this,
+            [this](const bool going_to_sleep)
+            {
+                if (!going_to_sleep)
+                {
+                    emit signalWokeUp();
+                }
+            });
 }
 
 bool NativePcStateHandler::canShutdownPC()
 {
-    return canDoQuery(m_logind_bus, "shutdown", "PowerOff");
+    return canDoQuery(m_login1_bus, "shutdown", "PowerOff");
 }
 
 bool NativePcStateHandler::canRestartPC()
 {
-    return canDoQuery(m_logind_bus, "restart", "Reboot");
+    return canDoQuery(m_login1_bus, "restart", "Reboot");
 }
 
 bool NativePcStateHandler::canSuspendPC()
 {
-    return canDoQuery(m_logind_bus, "suspend", "Suspend");
+    return canDoQuery(m_login1_bus, "suspend", "Suspend");
 }
 
 bool NativePcStateHandler::canHibernatePC()
 {
-    return canDoQuery(m_logind_bus, "hibernate", "Hibernate");
+    return canDoQuery(m_login1_bus, "hibernate", "Hibernate");
 }
 
 bool NativePcStateHandler::shutdownPC()
 {
-    return doQuery(m_logind_bus, "shutdown", "PowerOff");
+    return doQuery(m_login1_bus, "shutdown", "PowerOff");
 }
 
 bool NativePcStateHandler::restartPC()
 {
-    return doQuery(m_logind_bus, "restart", "Reboot");
+    return doQuery(m_login1_bus, "restart", "Reboot");
 }
 
 bool NativePcStateHandler::suspendPC()
 {
-    return doQuery(m_logind_bus, "suspend", "Suspend");
+    return doQuery(m_login1_bus, "suspend", "Suspend");
 }
 
 bool NativePcStateHandler::hibernatePC()
 {
-    return doQuery(m_logind_bus, "hibernate", "Hibernate");
+    return doQuery(m_login1_bus, "hibernate", "Hibernate");
 }
 }  // namespace os

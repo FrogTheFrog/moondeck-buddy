@@ -23,6 +23,7 @@ PcControl::PcControl(const common::AppSettings& app_settings)
             &PcControl::signalSteamCurrentUserChanged);
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
+    connect(&m_pc_state_handler, &os::PcStateHandler::signalShowTrayMessage, this, &PcControl::signalShowTrayMessage);
 }
 
 // For forward declarations
@@ -83,56 +84,27 @@ std::optional<steam::SteamId> PcControl::getCurrentUserId() const
 
 bool PcControl::shutdownPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.shutdownPC(delay_in_seconds))
-    {
-        closeSteam(false);
-        endStream();
-        emit signalShowTrayMessage("Shutdown in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is putting you to sleep :)",
-                                   QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.shutdownPC(delay_in_seconds);
 }
 
 bool PcControl::restartPC(const uint delay_in_seconds)
 {
-    if (m_pc_state_handler.restartPC(delay_in_seconds))
-    {
-        closeSteam(false);
-        endStream();
-        emit signalShowTrayMessage("Restart in progress",
-                                   m_app_settings.m_app_metadata.getAppName() + " is giving you new life :?",
-                                   QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
-        return true;
-    }
-
-    return false;
+    return m_pc_state_handler.restartPC(delay_in_seconds);
 }
 
-bool PcControl::suspendOrHibernatePC(const uint delay_in_seconds)
+bool PcControl::suspendPC(const uint delay_in_seconds)
 {
-    const bool hibernation{m_app_settings.m_user_settings.m_prefer_hibernation};
-    const bool result{hibernation ? m_pc_state_handler.hibernatePC(delay_in_seconds)
-                                  : m_pc_state_handler.suspendPC(delay_in_seconds)};
-    if (result)
-    {
-        if (m_app_settings.m_user_settings.m_close_steam_before_sleep)
-        {
-            closeSteam(false);
-        }
-        endStream();
+    return m_pc_state_handler.suspendPC(delay_in_seconds);
+}
 
-        emit signalShowTrayMessage(
-            hibernation ? "Hibernation in progress" : "Suspend in progress",
-            m_app_settings.m_app_metadata.getAppName()
-                + (hibernation ? " is about to put you into hard sleep :O" : " is about to suspend you real hard :P"),
-            QSystemTrayIcon::MessageIcon::Information, delay_in_seconds * 1000);
-        return true;
-    }
+bool PcControl::hibernatePC(const uint delay_in_seconds)
+{
+    return m_pc_state_handler.hibernatePC(delay_in_seconds);
+}
 
-    return false;
+bool PcControl::abortPcStateChange()
+{
+    return m_pc_state_handler.abortPcStateChange();
 }
 
 bool PcControl::endStream()

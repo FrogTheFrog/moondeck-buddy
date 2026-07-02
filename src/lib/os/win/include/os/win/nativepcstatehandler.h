@@ -1,23 +1,18 @@
 #pragma once
 
-// system/Qt includes
-#include <QObject>
-
 // local includes
 #include "os/common/nativepcstatehandlerinterface.h"
 
 namespace os
 {
-class NativePcStateHandler
-    : public QObject
-    , public NativePcStateHandlerInterface
+class NativePcStateHandler : public NativePcStateHandlerInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(NativePcStateHandler)
 
 public:
     explicit NativePcStateHandler();
-    ~NativePcStateHandler() override = default;
+    ~NativePcStateHandler() override;
 
     bool canShutdownPC() override;
     bool canRestartPC() override;
@@ -30,6 +25,9 @@ public:
     bool hibernatePC() override;
 
 private:
-    bool m_privilege_acquired;
+    bool canHandlePc() const;
+
+    bool  m_privilege_acquired;
+    void* m_notify_handle{nullptr};
 };
 }  // namespace os
