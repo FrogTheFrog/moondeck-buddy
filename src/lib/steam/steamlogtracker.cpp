@@ -229,7 +229,7 @@ void SteamLogTracker::slotCheckLog()
 
     if (was_main_file_appended)
     {
-        qCDebug(lc::steam) << "file" << m_main_filename.generic_string() << "was appended.";
+        qCDebug(lc::steamVerbose) << "file" << m_main_filename.generic_string() << "was appended.";
 
         std::vector<QString> lines;
         m_last_read_pos =
@@ -242,8 +242,8 @@ void SteamLogTracker::slotCheckLog()
 
     if (was_main_file_switched_with_backup)
     {
-        qCDebug(lc::steam) << "file" << m_main_filename.generic_string() << "was switched with"
-                           << m_backup_filename.generic_string();
+        qCDebug(lc::steamVerbose) << "file" << m_main_filename.generic_string() << "was switched with"
+                                  << m_backup_filename.generic_string();
 
         QFile backup_file{m_backup_filename};
         if (!openForReading(backup_file))
@@ -260,6 +260,6 @@ void SteamLogTracker::slotCheckLog()
         return;
     }
 
-    qCDebug(lc::steam) << "file" << m_main_filename.generic_string() << "did not change.";
+    qCDebug(lc::steamVerbose) << "file" << m_main_filename.generic_string() << "did not change.";
 }
 }  // namespace steam

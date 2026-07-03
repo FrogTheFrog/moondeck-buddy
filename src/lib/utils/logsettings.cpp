@@ -144,8 +144,9 @@ void LogSettings::logSignalBeforeExit(const int code)
 }
 
 // NOLINTNEXTLINE(*-to-static)
-void LogSettings::setLoggingRules(const QString& rules)
+void LogSettings::setLoggingRules(QString rules)
 {
+    rules.replace(';', '\n');
     if (!rules.isEmpty())
     {
         QLoggingCategory::setFilterRules(rules);

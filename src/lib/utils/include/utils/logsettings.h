@@ -18,7 +18,7 @@ public:
     void writeToFile(QStringView view);
 
     void logSignalBeforeExit(int code);
-    void setLoggingRules(const QString& rules);
+    void setLoggingRules(QString rules);
 
 private:
     explicit LogSettings() = default;
