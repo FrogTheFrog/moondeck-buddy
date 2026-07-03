@@ -26,6 +26,12 @@ enums::StreamState StreamStateHandler::getCurrentState() const
     return m_state;
 }
 
+void StreamStateHandler::slotTransientPcState()
+{
+    // Allow MoonDeckStream (if it's still waking up) to have enough time to update heartbeat
+    m_helper_heartbeat.skipTransientBeats(20);
+}
+
 void StreamStateHandler::slotHandleProcessStateChanges()
 {
     switch (m_state)

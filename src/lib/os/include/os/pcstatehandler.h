@@ -33,6 +33,7 @@ public:
     bool abortPcStateChange();
 
 signals:
+    void signalTransientPcState();
     void signalShowTrayMessage(const QString& title, const QString& message, QSystemTrayIcon::MessageIcon icon,
                                int milliseconds_timeout_hint);
 

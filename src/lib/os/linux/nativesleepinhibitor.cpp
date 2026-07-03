@@ -21,7 +21,7 @@ NativeSleepInhibitor::NativeSleepInhibitor(const QString& app_name)
     }
 
     const auto method{QStringLiteral("Inhibit")};
-    const auto what{QStringLiteral("idle:sleep")};
+    const auto what{QStringLiteral("idle")};
     const auto who{app_name};
     const auto why{QStringLiteral("Gaming Session")};
     const auto mode{QStringLiteral("block")};
@@ -29,10 +29,11 @@ NativeSleepInhibitor::NativeSleepInhibitor(const QString& app_name)
     const QDBusReply<QDBusUnixFileDescriptor> reply{manager_bus.call(QDBus::Block, method, what, who, why, mode)};
     if (!reply.isValid())
     {
-        qCWarning(lc::os).nospace() << "got invalid reply for " << method << " request: " << reply.error();
+        qCWarning(lc::os).nospace() << "Got invalid reply for " << method << " request: " << reply.error();
         return;
     }
 
+    qCInfo(lc::os) << "Inhibiting idle suspend or hibernation.";
     m_file_descriptor = reply.value();
 }
 }  // namespace os

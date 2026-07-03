@@ -143,6 +143,7 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
     {
         qCInfo(lc::os) << "Setting PC state to transient.";
         m_state = enums::PcState::Transient;
+        emit signalTransientPcState();
 
         qCInfo(lc::os).nospace().noquote() << "Trying to " << failed_to_do_entry << " PC.";
         if (!(m_native_handler.get()->*do_method)())

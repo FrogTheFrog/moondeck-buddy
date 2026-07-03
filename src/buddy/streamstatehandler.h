@@ -19,6 +19,9 @@ public:
 signals:
     void signalStreamStateChanged();
 
+public slots:
+    void slotTransientPcState();
+
 private slots:
     void slotHandleProcessStateChanges();
 

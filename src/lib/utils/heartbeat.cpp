@@ -178,6 +178,11 @@ void Heartbeat::startListening()
     }
 }
 
+void Heartbeat::skipTransientBeats(const uint beats_to_skip)
+{
+    m_transient_beats_to_skip = beats_to_skip;
+}
+
 void Heartbeat::terminate()
 {
     HeartbeatAccessor memory{m_shared_mem};
@@ -189,26 +194,33 @@ bool Heartbeat::isAlive() const
     return m_is_beating || m_is_alive;
 }
 
-void Heartbeat::slotBeating(bool fresh_start)
+void Heartbeat::slotBeating(const bool fresh_start)
 {
     m_timer.stop();
+    auto restart_timer{qScopeGuard([this]() { m_timer.start(); })};
 
     HeartbeatAccessor memory{m_shared_mem};
     if (!fresh_start && memory.getShouldTerminate())
     {
+        restart_timer.dismiss();
         emit signalShouldTerminate();
         return;
     }
 
     memory.setShouldTerminate(false);
     memory.setTime(QDateTime::currentDateTimeUtc());
-
-    m_timer.start();
 }
 
 void Heartbeat::slotListening()
 {
     m_timer.stop();
+    const auto restart_timer{qScopeGuard([this]() { m_timer.start(); })};
+
+    if (m_transient_beats_to_skip > 0)
+    {
+        --m_transient_beats_to_skip;
+        return;
+    }
 
     const HeartbeatAccessor memory{m_shared_mem};
     const QDateTime         last_beat{memory.getTime()};
@@ -219,7 +231,5 @@ void Heartbeat::slotListening()
         m_is_alive = is_alive;
         emit signalStateChanged();
     }
-
-    m_timer.start();
 }
 }  // namespace utils

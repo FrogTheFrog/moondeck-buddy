@@ -24,6 +24,8 @@ PcControl::PcControl(const common::AppSettings& app_settings)
     connect(&m_stream_state_handler, &StreamStateHandler::signalStreamStateChanged, this,
             &PcControl::slotHandleStreamStateChange);
     connect(&m_pc_state_handler, &os::PcStateHandler::signalShowTrayMessage, this, &PcControl::signalShowTrayMessage);
+    connect(&m_pc_state_handler, &os::PcStateHandler::signalTransientPcState, &m_stream_state_handler,
+            &StreamStateHandler::slotTransientPcState);
 }
 
 // For forward declarations
