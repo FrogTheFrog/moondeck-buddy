@@ -22,8 +22,6 @@ public:
 
     std::vector<uint> getPids() const;
     QString           getExecPath(uint pid) const;
-    QString           getPackageFamilyName(uint pid) const;
-    bool              isInCurrentSession(uint pid) const;
     QDateTime         getStartTime(uint pid) const;
     void              close(uint pid) const;
     void              terminate(uint pid) const;

@@ -182,26 +182,7 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
         != enums::AppState::Stopped};
     if (!is_app_running)
     {
-        bool launcher_relaunched{false};
-        if (app_id.isGameId() && log_trackers->getGameProcessLog().isAnyProcessRunning(app_id))
-        {
-            if (const auto entries{
-                    ShortcutsVdfEntry::scrapeShortcutsVdf(m_steam_process_tracker.getSteamDir(), *current_steam_id)})
-            {
-                const auto entry{std::ranges::find_if(*entries, [&app_id](const auto& item)
-                                                      { return item.m_app_id.getGameId() == app_id.getGameId(); })};
-                if (entry != entries->end())
-                {
-                    launcher_relaunched = m_command_proxy.relaunchLauncherShortcut(*entry, env_overrides);
-                    if (launcher_relaunched)
-                    {
-                        qCInfo(lc::steam)
-                            << "Relaunched game through the retained launcher for AppID:" << app_id.getId();
-                    }
-                }
-            }
-        }
-        if (!launcher_relaunched && !m_command_proxy.launchApp(app_id, env_overrides))
+        if (!m_command_proxy.launchApp(app_id, env_overrides))
         {
             qCWarning(lc::steam) << "Failed to perform app launch for AppID: " << app_id.getId();
             return false;
@@ -229,26 +210,8 @@ bool SteamHandler::stopApp(const AppId& app_id)
         // Do not report a pending launch as successfully stopped.
         return watcher->hasRun();
     }
-    const auto* logs{m_steam_process_tracker.getSteamLogTrackers()};
-    if (!logs)
-    {
-        return false;
-    }
-
     std::map<uint, QDateTime> targets;
-    const auto                non_steam_processes{watcher->getNonSteamProcesses()};
-    if (app_id.getIdType() != AppId::IdType::SteamApp)
-    {
-        if (!non_steam_processes)
-        {
-            qCWarning(lc::steam) << "No safe process identity for non-Steam AppID:" << app_id.getId();
-            return false;
-        }
-        targets = *non_steam_processes;
-    }
-    for (const auto& [pid, added_at] :
-         (app_id.getIdType() == AppId::IdType::SteamApp ? logs->getGameProcessLog().getTrackedProcesses(app_id)
-                                                        : std::map<uint, QDateTime>{}))
+    for (const auto& [pid, added_at] : watcher->getTrackedProcesses())
     {
         const auto started_at{m_app_process_handler.getStartTime(pid)};
         const auto executable{QFileInfo(m_app_process_handler.getExecPath(pid)).fileName().toLower()};

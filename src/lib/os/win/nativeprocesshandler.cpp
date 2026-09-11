@@ -6,7 +6,6 @@
 
 // system/Qt includes
 #include <QTimeZone>
-#include <appmodel.h>
 #include <psapi.h>
 
 // local includes
@@ -108,34 +107,6 @@ QString NativeProcessHandler::getExecPath(uint pid) const
 
             return QString{};
         });
-}
-
-QString NativeProcessHandler::getPackageFamilyName(uint pid) const
-{
-    return useProcHandle(pid,
-                         [](HANDLE handle)
-                         {
-                             UINT32 length{0};
-                             if (!handle
-                                 || ::GetPackageFamilyName(handle, &length, nullptr) != ERROR_INSUFFICIENT_BUFFER)
-                             {
-                                 return QString{};
-                             }
-                             std::vector<wchar_t> buffer(length);
-                             if (::GetPackageFamilyName(handle, &length, buffer.data()) != ERROR_SUCCESS)
-                             {
-                                 return QString{};
-                             }
-                             return QString::fromWCharArray(buffer.data());
-                         });
-}
-
-bool NativeProcessHandler::isInCurrentSession(uint pid) const
-{
-    DWORD current_session{0};
-    DWORD target_session{0};
-    return ProcessIdToSessionId(GetCurrentProcessId(), &current_session) && ProcessIdToSessionId(pid, &target_session)
-           && current_session == target_session;
 }
 
 QDateTime NativeProcessHandler::getStartTime(uint pid) const

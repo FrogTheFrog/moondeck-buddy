@@ -11,7 +11,6 @@ struct AppSettings;
 
 namespace steam
 {
-struct ShortcutsVdfEntry;
 class SteamCommandProxy final
 {
     Q_DISABLE_COPY(SteamCommandProxy)
@@ -24,7 +23,6 @@ public:
 
     bool launchSteam(bool big_picture_mode, const QString& username, const QMap<QString, QString>& env_overrides);
     bool launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides);
-    bool relaunchLauncherShortcut(const ShortcutsVdfEntry& shortcut, const QMap<QString, QString>& env_overrides);
 
     bool close();
     bool closeBigPictureMode();

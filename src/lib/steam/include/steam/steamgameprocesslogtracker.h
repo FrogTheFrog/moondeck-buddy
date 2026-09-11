@@ -21,7 +21,7 @@ protected:
     void onLogChanged(const std::vector<QString>& new_lines) override;
 
 private:
-    std::map<AppId, QSet<uint>> m_app_id_to_process_ids;
-    std::map<uint, QDateTime>   m_process_added_at;
+    std::map<AppId, QSet<uint>>                 m_app_id_to_process_ids;
+    std::map<std::pair<AppId, uint>, QDateTime> m_process_added_at;
 };
 }  // namespace steam

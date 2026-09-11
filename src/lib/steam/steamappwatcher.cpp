@@ -118,13 +118,16 @@ const AppId& SteamAppWatcher::getAppId() const
     return m_app_id;
 }
 
-std::optional<std::map<uint, QDateTime>> SteamAppWatcher::getNonSteamProcesses() const
+std::map<uint, QDateTime> SteamAppWatcher::getTrackedProcesses() const
 {
-    if (m_metadata && m_metadata->m_process_target)
+    if (m_metadata)
     {
-        return m_metadata->m_process_target->getProcesses();
+        if (const auto* logs{m_process_tracker.getSteamLogTrackers()})
+        {
+            return logs->getGameProcessLog().getTrackedProcesses(m_metadata->m_trackable_app_id);
+        }
     }
-    return std::nullopt;
+    return {};
 }
 
 void SteamAppWatcher::slotCheckState()
@@ -176,29 +179,12 @@ std::optional<SteamAppWatcher::TrackingMetadata>
 {
     if (!app_id.isGameId())
     {
-        return TrackingMetadata{app_id, std::nullopt};
-    }
-
-    const auto user_id{log_trackers.getConnectionLog().getCurrentSteamId()};
-    if (user_id)
-    {
-        if (const auto entries{ShortcutsVdfEntry::scrapeShortcutsVdf(steam_dir, *user_id)})
-        {
-            const auto entry{std::ranges::find_if(*entries, [&app_id](const auto& item)
-                                                  { return item.m_app_id.getGameId() == app_id.getGameId(); })};
-            if (entry != entries->end())
-            {
-                if (auto target{NonSteamProcessTarget::fromShortcut(*entry)})
-                {
-                    return TrackingMetadata{app_id, std::move(target)};
-                }
-            }
-        }
+        return TrackingMetadata{app_id};
     }
 
     if (const auto non_steam_app_id{tryFindAppIdOverrideForNonSteamGame(log_trackers, steam_dir, app_id)})
     {
-        return TrackingMetadata{*non_steam_app_id, std::nullopt};
+        return TrackingMetadata{*non_steam_app_id};
     }
 
     return std::nullopt;
@@ -207,10 +193,6 @@ std::optional<SteamAppWatcher::TrackingMetadata>
 enums::AppState SteamAppWatcher::getAppState(const SteamLogTrackers& log_trackers, const TrackingMetadata& metadata,
                                              const enums::AppState prev_state)
 {
-    if (metadata.m_process_target)
-    {
-        return metadata.m_process_target->getProcesses().empty() ? enums::AppState::Stopped : enums::AppState::Running;
-    }
     auto       new_state{enums::AppState::Stopped};
     const auto content_state{log_trackers.getContentLog().getAppState(metadata.m_trackable_app_id)};
 

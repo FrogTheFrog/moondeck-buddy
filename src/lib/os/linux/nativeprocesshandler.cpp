@@ -176,17 +176,6 @@ QString NativeProcessHandler::getExecPath(uint pid) const
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
 }
 
-QString NativeProcessHandler::getPackageFamilyName(uint /*pid*/) const
-{
-    return {};
-}
-
-bool NativeProcessHandler::isInCurrentSession(uint /*pid*/) const
-{
-    // Windows shortcut process matching is not enabled on Linux.
-    return true;
-}
-
 QDateTime NativeProcessHandler::getStartTime(uint pid) const
 {
     return ::getStartTime(pid);

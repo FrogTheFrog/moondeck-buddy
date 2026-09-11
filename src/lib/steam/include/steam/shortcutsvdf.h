@@ -15,8 +15,6 @@ struct ShortcutsVdfEntry
     AppId   m_app_id;
     QString m_app_name;
     QString m_start_dir;
-    QString m_executable;
-    QString m_launch_options;
 
     static std::optional<std::vector<ShortcutsVdfEntry>> scrapeShortcutsVdf(const QByteArray& contents);
     static std::optional<std::vector<ShortcutsVdfEntry>> scrapeShortcutsVdf(const std::filesystem::path& steam_dir,
