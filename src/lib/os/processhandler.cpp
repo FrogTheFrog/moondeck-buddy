@@ -34,6 +34,16 @@ QString ProcessHandler::getExecPath(uint pid) const
     return m_native_handler->getExecPath(pid);
 }
 
+QString ProcessHandler::getPackageFamilyName(uint pid) const
+{
+    return m_native_handler->getPackageFamilyName(pid);
+}
+
+bool ProcessHandler::isInCurrentSession(uint pid) const
+{
+    return m_native_handler->isInCurrentSession(pid);
+}
+
 QDateTime ProcessHandler::getStartTime(uint pid) const
 {
     return m_native_handler->getStartTime(pid);

@@ -200,9 +200,9 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
 bool SteamHandler::stopApp(const AppId& app_id)
 {
     QPointer<SteamAppWatcher> watcher{m_session_data.m_steam_app_watcher.get()};
-    if (!watcher || watcher->getAppId() != app_id || app_id.getIdType() != AppId::IdType::SteamApp)
+    if (!watcher || watcher->getAppId() != app_id)
     {
-        qCWarning(lc::steam) << "Refusing stop request for an untracked native Steam app:" << app_id.getId();
+        qCWarning(lc::steam) << "Refusing stop request for an untracked Steam app:" << app_id.getId();
         return false;
     }
     if (watcher->getAppState() == enums::AppState::Stopped)
@@ -217,7 +217,19 @@ bool SteamHandler::stopApp(const AppId& app_id)
     }
 
     std::map<uint, QDateTime> targets;
-    for (const auto& [pid, added_at] : logs->getGameProcessLog().getTrackedProcesses(app_id))
+    const auto                non_steam_processes{watcher->getNonSteamProcesses()};
+    if (app_id.getIdType() != AppId::IdType::SteamApp)
+    {
+        if (!non_steam_processes)
+        {
+            qCWarning(lc::steam) << "No safe process identity for non-Steam AppID:" << app_id.getId();
+            return false;
+        }
+        targets = *non_steam_processes;
+    }
+    for (const auto& [pid, added_at] :
+         (app_id.getIdType() == AppId::IdType::SteamApp ? logs->getGameProcessLog().getTrackedProcesses(app_id)
+                                                        : std::map<uint, QDateTime>{}))
     {
         const auto started_at{m_app_process_handler.getStartTime(pid)};
         const auto executable{QFileInfo(m_app_process_handler.getExecPath(pid)).fileName().toLower()};

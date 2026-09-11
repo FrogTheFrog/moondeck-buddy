@@ -125,6 +125,24 @@ std::optional<std::vector<QString>> scrapeStartDirs(const QByteArray& contents)
     }
     return app_names;
 }
+std::optional<std::vector<QString>> scrapeStringFields(const QByteArray& contents, const QByteArray& key)
+{
+    const QByteArray     marker{QByteArray(1, '\x01') + key + QByteArray(1, '\0')};
+    std::vector<QString> values;
+    qsizetype            from{0};
+    while ((from = indexOfInsensitive(contents, marker, from)) != -1)
+    {
+        from += marker.size();
+        const auto end{contents.indexOf('\0', from)};
+        if (end == -1)
+        {
+            return std::nullopt;
+        }
+        values.push_back(QString::fromUtf8(contents.data() + from, end - from));
+        from = end + 1;
+    }
+    return values;
+}
 }  // namespace
 
 namespace steam
@@ -135,13 +153,16 @@ std::optional<std::vector<ShortcutsVdfEntry>> ShortcutsVdfEntry::scrapeShortcuts
     const auto app_ids{scrapeAppIds(contents)};
     const auto app_names{scrapeAppNames(contents)};
     const auto start_dirs{scrapeStartDirs(contents)};
+    const auto executables{scrapeStringFields(contents, "exe")};
+    const auto launch_options{scrapeStringFields(contents, "launchoptions")};
 
-    if (!app_ids || !app_names || !start_dirs)
+    if (!app_ids || !app_names || !start_dirs || !executables || !launch_options)
     {
         return std::nullopt;
     }
 
-    if (app_names->size() != app_ids->size() || app_ids->size() != start_dirs->size())
+    if (app_names->size() != app_ids->size() || app_ids->size() != start_dirs->size()
+        || app_ids->size() != executables->size() || app_ids->size() != launch_options->size())
     {
         qCWarning(lc::steam) << "Failed to scrape shortcuts.vdf - list size mismatch!";
         return std::nullopt;
@@ -150,7 +171,8 @@ std::optional<std::vector<ShortcutsVdfEntry>> ShortcutsVdfEntry::scrapeShortcuts
     std::vector<ShortcutsVdfEntry> data;
     for (std::size_t i{0}; i < app_ids->size(); ++i)
     {
-        data.emplace_back(AppId{(*app_ids)[i]}, (*app_names)[i], (*start_dirs)[i]);
+        data.emplace_back(AppId{(*app_ids)[i]}, (*app_names)[i], (*start_dirs)[i], (*executables)[i],
+                          (*launch_options)[i]);
     }
 
     return data;

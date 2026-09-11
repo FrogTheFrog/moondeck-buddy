@@ -3,6 +3,7 @@
 // local includes
 #include "appid.h"
 #include "common/enums.h"
+#include "nonsteamprocesstarget.h"
 #include "steamprocesstracker.h"
 
 namespace steam
@@ -17,9 +18,10 @@ public:
 
     static std::optional<enums::AppState> getAppState(const SteamProcessTracker& process_tracker, const AppId& app_id);
 
-    enums::AppState getAppState() const;
-    const AppId&    getAppId() const;
-    bool            hasRun() const;
+    enums::AppState                          getAppState() const;
+    const AppId&                             getAppId() const;
+    bool                                     hasRun() const;
+    std::optional<std::map<uint, QDateTime>> getNonSteamProcesses() const;
 
 signals:
     void signalTrackedAppDataChanged();
@@ -32,7 +34,8 @@ private:
     {
         // It is possible that the `steam_appid.txt` can override the AppId for non-Steam game, we need to take
         // this into account.
-        AppId m_trackable_app_id;
+        AppId                                m_trackable_app_id;
+        std::optional<NonSteamProcessTarget> m_process_target;
 
         static std::optional<TrackingMetadata> fromAppId(const SteamLogTrackers&      log_trackers,
                                                          const std::filesystem::path& steam_dir, const AppId& app_id);
