@@ -22,6 +22,13 @@ public:
     };
     Q_ENUM(TimeFormat)
 
+    struct LogLine
+    {
+        QDateTime parseTimestamp(const TimeFormat& time_format) const;
+
+        QString m_text;
+    };
+
     explicit SteamLogTracker(std::filesystem::path main_filename, std::filesystem::path backup_filename,
                              QDateTime  first_entry_time_filter,
                              TimeFormat time_format = TimeFormat::YYYY_MM_DD_hh_mm_ss);
@@ -34,7 +41,8 @@ public slots:
     void slotCheckLog();
 
 protected:
-    virtual void onLogChanged(const std::vector<QString>& new_lines) = 0;
+    virtual void onLogChanged(const std::vector<LogLine>& new_lines) = 0;
+    TimeFormat   getDefaultTimeFormat() const;
 
 private:
     QFileSystemWatcher               m_file_watcher;

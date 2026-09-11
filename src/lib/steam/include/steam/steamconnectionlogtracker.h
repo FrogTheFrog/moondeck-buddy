@@ -23,7 +23,7 @@ signals:
     void signalSteamCurrentUserChanged();
 
 protected:
-    void onLogChanged(const std::vector<QString>& new_lines) override;
+    void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
     std::optional<SteamId> m_current_steam_id;

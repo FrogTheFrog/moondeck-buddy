@@ -17,7 +17,7 @@ public:
     bool isAnyProcessRunning(const AppId& app_id) const;
 
 protected:
-    void onLogChanged(const std::vector<QString>& new_lines) override;
+    void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
     std::map<AppId, QSet<uint>> m_app_id_to_process_ids;

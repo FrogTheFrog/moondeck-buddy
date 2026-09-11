@@ -20,7 +20,7 @@ signals:
     void signalSteamUiModeChanged();
 
 protected:
-    void onLogChanged(const std::vector<QString>& new_lines) override;
+    void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
     enums::SteamUiMode m_ui_mode{enums::SteamUiMode::Unknown};

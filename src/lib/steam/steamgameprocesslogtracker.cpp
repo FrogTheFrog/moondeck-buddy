@@ -31,29 +31,29 @@ bool SteamGameProcessLogTracker::isAnyProcessRunning(const AppId& app_id) const
     return m_app_id_to_process_ids.contains(app_id);
 }
 
-void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_lines)
+void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 {
     const auto try_emplace_pid_list{[](std::map<AppId, QSet<uint>>& container, const AppId& app_id,
                                        const QSet<uint>& default_list = {}) -> QSet<uint>&
                                     { return container.try_emplace(app_id, default_list).first->second; }};
 
     std::map<AppId, QSet<uint>> initial_entries;
-    for (const QString& line : new_lines)
+    for (const auto& line : new_lines)
     {
         static const QRegularExpression add_regex{R"(AppID (\d+) adding PID (\d+))"};
-        if (const auto match{add_regex.match(line)}; match.hasMatch())
+        if (const auto match{add_regex.match(line.m_text)}; match.hasMatch())
         {
             const auto app_id{AppId::fromString(match.captured(1))};
             if (!app_id)
             {
-                qCWarning(lc::steam) << "Failed to get AppID from" << line;
+                qCWarning(lc::steam) << "Failed to get AppID from" << line.m_text;
                 continue;
             }
 
             const auto pid{match.captured(2).toUInt()};
             if (pid == 0)
             {
-                qCWarning(lc::steam) << "Failed to get PID from" << line;
+                qCWarning(lc::steam) << "Failed to get PID from" << line.m_text;
                 continue;
             }
 
@@ -66,12 +66,12 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
 
         static const QRegularExpression remove_regex{
             R"((?:Game \d+ going away.* PID (\d+))|(?:AppID \d+ no longer.* PID (\d+)))"};
-        if (const auto match{remove_regex.match(line)}; match.hasMatch())
+        if (const auto match{remove_regex.match(line.m_text)}; match.hasMatch())
         {
             const auto pid{(match.hasCaptured(1) ? match.captured(1) : match.captured(2)).toUInt()};
             if (pid == 0)
             {
-                qCWarning(lc::steam) << "Failed to get PID from" << line;
+                qCWarning(lc::steam) << "Failed to get PID from" << line.m_text;
                 continue;
             }
 

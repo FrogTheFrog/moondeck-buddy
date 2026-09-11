@@ -32,13 +32,13 @@ const std::optional<SteamId>& SteamConnectionLogTracker::getCurrentSteamId() con
     return m_current_steam_id;
 }
 
-void SteamConnectionLogTracker::onLogChanged(const std::vector<QString>& new_lines)
+void SteamConnectionLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 {
     std::optional<SteamId> new_steam_id;
-    for (const QString& line : new_lines)
+    for (const auto& line : new_lines)
     {
         static const QRegularExpression regex{R"(^(?:\[[^\]]*\]\s*){2}\[([^\]]+)\])"};
-        if (const auto match{regex.match(line)}; match.hasMatch())
+        if (const auto match{regex.match(line.m_text)}; match.hasMatch())
         {
             new_steam_id = SteamId::fromString(match.captured(1));
         }

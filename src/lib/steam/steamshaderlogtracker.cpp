@@ -29,20 +29,20 @@ bool SteamShaderLogTracker::isAppCompilingShaders(const AppId& app_id) const
     return m_apps_with_compiling_shaders.contains(app_id);
 }
 
-void SteamShaderLogTracker::onLogChanged(const std::vector<QString>& new_lines)
+void SteamShaderLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 {
     std::map<AppId, bool> new_shader_states;
-    for (const QString& line : new_lines)
+    for (const auto& line : new_lines)
     {
         static const QRegularExpression regex{
             R"((?:Starting processing job for app (\d+))|(?:Destroyed compile job (\d+)))"};
-        if (const auto match{regex.match(line)}; match.hasMatch())
+        if (const auto match{regex.match(line.m_text)}; match.hasMatch())
         {
             const bool started{match.hasCaptured(1)};
             const auto app_id{AppId::fromString(started ? match.captured(1) : match.captured(2))};
             if (!app_id)
             {
-                qCWarning(lc::steam) << "Failed to get AppID from" << line;
+                qCWarning(lc::steam) << "Failed to get AppID from" << line.m_text;
                 continue;
             }
 
