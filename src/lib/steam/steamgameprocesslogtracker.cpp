@@ -4,6 +4,7 @@
 // system/Qt includes
 #include <QDebug>
 #include <QRegularExpression>
+#include <ranges>
 
 // local includes
 #include "common/loggingcategories.h"
@@ -26,16 +27,26 @@ SteamGameProcessLogTracker::~SteamGameProcessLogTracker()
     }
 }
 
-bool SteamGameProcessLogTracker::isAnyProcessRunning(const AppId& app_id) const
+const SteamGameProcessLogTracker::AppIdToPidDataMap& SteamGameProcessLogTracker::getAppIdData() const
 {
-    return m_app_id_to_process_ids.contains(app_id);
+    return m_app_id_to_process_ids;
 }
 
 void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 {
-    const auto try_emplace_pid_list{[](std::map<AppId, QSet<uint>>& container, const AppId& app_id,
-                                       const QSet<uint>& default_list = {}) -> QSet<uint>&
-                                    { return container.try_emplace(app_id, default_list).first->second; }};
+    static const auto get_or_create_pid_data{[](AppIdToPidDataMap& container, const AppId& app_id) -> PidDataMap&
+                                             { return container.try_emplace(app_id, PidDataMap{}).first->second; }};
+    static const auto get_pids{
+        [](const PidDataMap& pid_data)
+        { return pid_data.asKeyValueRange() | std::views::keys | std::ranges::to<QSet<uint>>(); }};
+    static const auto try_emplace_pid_list{[](auto& container, const AppId& app_id, const PidDataMap& pid_data)
+                                           {
+                                               // Small optimization to avoid getting keys from data
+                                               if (!container.contains(app_id))
+                                               {
+                                                   container[app_id] = get_pids(pid_data);
+                                               }
+                                           }};
 
     std::map<AppId, QSet<uint>> initial_entries;
     for (const auto& line : new_lines)
@@ -57,10 +68,16 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_li
                 continue;
             }
 
-            auto& current_pids{try_emplace_pid_list(m_app_id_to_process_ids, *app_id)};
-
+            auto& current_pids{get_or_create_pid_data(m_app_id_to_process_ids, *app_id)};
             try_emplace_pid_list(initial_entries, *app_id, current_pids);
-            current_pids.insert(pid);
+
+            const auto timestamp{line.parseTimestamp(getDefaultTimeFormat())};
+            if (!timestamp.isValid())
+            {
+                qCWarning(lc::steam) << "PID contains invalid timestamp (still storing the PID)" << line.m_text;
+            }
+
+            current_pids[pid] = timestamp;
             continue;
         }
 
@@ -93,9 +110,11 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_li
             qFatal(lc::steam) << "AppID not found: " << app_id.getId();
         }
 
-        if (data_it->second != initial_pids)
+        // We are ignoring the timestamp here for now. They should not change and even if they do - we do not care about
+        // the timestamp diff for now...
+        if (const auto current_pids{get_pids(data_it->second)}; current_pids != initial_pids)
         {
-            qCDebug(lc::steam) << "Running processes changed for AppID:" << app_id.getId() << "->" << data_it->second;
+            qCDebug(lc::steam) << "Running processes changed for AppID:" << app_id.getId() << "->" << current_pids;
             current_state_changed = true;
 
             if (initial_pids.empty())

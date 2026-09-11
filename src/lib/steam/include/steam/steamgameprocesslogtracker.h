@@ -11,15 +11,18 @@ class SteamGameProcessLogTracker : public SteamLogTracker
     Q_OBJECT
 
 public:
+    using PidDataMap        = QMap<uint, QDateTime>;
+    using AppIdToPidDataMap = std::map<AppId, PidDataMap>;
+
     explicit SteamGameProcessLogTracker(const std::filesystem::path& logs_dir, QDateTime first_entry_time_filter);
     ~SteamGameProcessLogTracker() override;
 
-    bool isAnyProcessRunning(const AppId& app_id) const;
+    const AppIdToPidDataMap& getAppIdData() const;
 
 protected:
     void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
-    std::map<AppId, QSet<uint>> m_app_id_to_process_ids;
+    AppIdToPidDataMap m_app_id_to_process_ids;
 };
 }  // namespace steam

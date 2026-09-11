@@ -187,7 +187,7 @@ enums::AppState SteamAppWatcher::getAppState(const SteamLogTrackers& log_tracker
     {
         new_state = enums::AppState::Running;
     }
-    else if (log_trackers.getGameProcessLog().isAnyProcessRunning(metadata.m_trackable_app_id))
+    else if (log_trackers.getGameProcessLog().getAppIdData().contains(metadata.m_trackable_app_id))
     {
         // Try to preserve the latest state from other logs, unless this is the only data available
         new_state = prev_state == enums::AppState::Stopped ? enums::AppState::Running : prev_state;
