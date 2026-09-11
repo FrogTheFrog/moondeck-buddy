@@ -30,6 +30,7 @@ public:
 
     std::optional<std::tuple<AppId, enums::AppState>> getAppData(const std::optional<AppId>& app_id) const;
     bool launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides);
+    bool closeApp(const AppId& app_id);
     void clearSessionData();
 
     std::optional<std::map<AppId, QString>> getNonSteamAppData(const SteamId& user_id) const;

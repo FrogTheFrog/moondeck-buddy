@@ -193,6 +193,41 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     return true;
 }
 
+bool SteamHandler::closeApp(const AppId& app_id)
+{
+    if (app_id.getId() == 0)
+    {
+        qCWarning(lc::steam) << "Will not close app with 0 ID!";
+        return false;
+    }
+
+    m_steam_process_tracker.slotCheckState();
+    const auto* log_trackers{m_steam_process_tracker.getSteamLogTrackers()};
+    if (log_trackers == nullptr)
+    {
+        qCWarning(lc::steam) << "Steam is not running or the log trackers have not been initialized yet!";
+        return false;
+    }
+
+    if (const auto app_state{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)};
+        !app_state || *app_state == enums::AppState::Stopped)
+    {
+        qCWarning(lc::steam) << "Steam app is not running:" << app_id.getId();
+        return false;
+    }
+
+    const auto& app_id_data{log_trackers->getGameProcessLog().getAppIdData()};
+    const auto& pids_data_it{app_id_data.find(app_id)};
+    if (pids_data_it == std::end(app_id_data))
+    {
+        qCWarning(lc::steam) << "Steam app does not have PIDS:" << app_id.getId();
+        return false;
+    }
+
+    // TODO
+    return true;
+}
+
 void SteamHandler::clearSessionData()
 {
     qCInfo(lc::steam) << "Clearing session data...";

@@ -13,10 +13,10 @@ public:
     explicit NativeProcessHandler()  = default;
     ~NativeProcessHandler() override = default;
 
-    std::vector<uint> getPids() const override;
-    QString           getExecPath(uint pid) const override;
-    QDateTime         getStartTime(uint pid) const override;
-    void              close(uint pid) const override;
-    void              terminate(uint pid) const override;
+    std::vector<uint>        getPids() const override;
+    std::optional<QString>   getExecPath(uint pid) const override;
+    std::optional<QDateTime> getStartTime(uint pid) const override;
+    std::optional<bool>      close(uint pid) const override;
+    std::optional<bool>      terminate(uint pid) const override;
 };
 }  // namespace os

@@ -67,17 +67,17 @@ std::vector<uint> NativeProcessHandler::getPids() const
     return {};
 }
 
-QString NativeProcessHandler::getExecPath(uint pid) const
+std::optional<QString> NativeProcessHandler::getExecPath(uint pid) const
 {
     return useProcHandle(
         pid,
-        [pid](HANDLE handle)
+        [pid](HANDLE handle) -> std::optional<QString>
         {
             static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
 
             if (!handle)
             {
-                return QString{};
+                return std::nullopt;
             }
 
             DWORD                          data_written{MAX_PATH};
@@ -109,16 +109,16 @@ QString NativeProcessHandler::getExecPath(uint pid) const
         });
 }
 
-QDateTime NativeProcessHandler::getStartTime(uint pid) const
+std::optional<QDateTime> NativeProcessHandler::getStartTime(uint pid) const
 {
     return useProcHandle(pid,
-                         [pid](HANDLE handle)
+                         [pid](HANDLE handle) -> std::optional<QDateTime>
                          {
                              static_assert(sizeof(wchar_t) == sizeof(char16_t), "Wide char is not 2 bytes :/");
 
                              if (!handle)
                              {
-                                 return QDateTime{};
+                                 return std::nullopt;
                              }
 
                              FILETIME start_time{};
@@ -156,7 +156,7 @@ QDateTime NativeProcessHandler::getStartTime(uint pid) const
                          });
 }
 
-void NativeProcessHandler::close(uint pid) const
+std::optional<bool> NativeProcessHandler::close(uint pid) const
 {
     std::vector<HWND> hwnds;
     {
@@ -175,17 +175,25 @@ void NativeProcessHandler::close(uint pid) const
         } while (hwnd != nullptr);
     }
 
+    if (hwnds.empty())
+    {
+        return std::nullopt;
+    }
+
+    bool complete_success{true};
     for (const auto& hwnd : hwnds)
     {
         if (PostMessageW(hwnd, WM_CLOSE, 0, 0) == FALSE)
         {
             qCDebug(lc::os).nospace() << "Failed to post message to process (pid: " << pid
                                       << ")! Reason: " << lc::getErrorString(GetLastError());
+            complete_success = false;
         }
     }
+    return complete_success;
 }
 
-void NativeProcessHandler::terminate(uint pid) const
+std::optional<bool> NativeProcessHandler::terminate(uint pid) const
 {
     HANDLE proc_handle = OpenProcess(PROCESS_TERMINATE, FALSE, static_cast<DWORD>(pid));
     auto   cleanup     = qScopeGuard(
@@ -197,10 +205,17 @@ void NativeProcessHandler::terminate(uint pid) const
             }
         });
 
-    if (proc_handle == nullptr || TerminateProcess(proc_handle, 1) == FALSE)
+    if (proc_handle == nullptr)
+    {
+        return std::nullopt;
+    }
+
+    if (TerminateProcess(proc_handle, 1) == FALSE)
     {
         qCWarning(lc::os).nospace() << "Failed to terminate process (pid: " << pid
                                     << ")! Reason: " << lc::getErrorString(GetLastError());
+        return false;
     }
+    return true;
 }
 }  // namespace os

@@ -108,7 +108,7 @@ void SteamProcessTracker::slotCheckState()
     const auto pids{m_process_handler.getPids()};
     for (const auto pid : pids)
     {
-        const QString exec_path{m_process_handler.getExecPath(pid)};
+        const QString exec_path{m_process_handler.getExecPath(pid).value_or(QString{})};
         if (exec_path.isEmpty())
         {
             continue;
@@ -144,7 +144,7 @@ void SteamProcessTracker::slotCheckState()
             continue;
         }
 
-        m_data.m_start_time = m_process_handler.getStartTime(pid);
+        m_data.m_start_time = m_process_handler.getStartTime(pid).value_or(QDateTime{});
         if (!m_data.m_start_time.isValid())
         {
             qCWarning(lc::steam) << "Could not resolve start time for running Steam process! PID:" << pid;
