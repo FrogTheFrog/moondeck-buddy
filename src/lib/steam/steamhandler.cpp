@@ -182,7 +182,26 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
         != enums::AppState::Stopped};
     if (!is_app_running)
     {
-        if (!m_command_proxy.launchApp(app_id, env_overrides))
+        bool launcher_relaunched{false};
+        if (app_id.isGameId() && log_trackers->getGameProcessLog().isAnyProcessRunning(app_id))
+        {
+            if (const auto entries{
+                    ShortcutsVdfEntry::scrapeShortcutsVdf(m_steam_process_tracker.getSteamDir(), *current_steam_id)})
+            {
+                const auto entry{std::ranges::find_if(*entries, [&app_id](const auto& item)
+                                                      { return item.m_app_id.getGameId() == app_id.getGameId(); })};
+                if (entry != entries->end())
+                {
+                    launcher_relaunched = m_command_proxy.relaunchLauncherShortcut(*entry, env_overrides);
+                    if (launcher_relaunched)
+                    {
+                        qCInfo(lc::steam)
+                            << "Relaunched game through the retained launcher for AppID:" << app_id.getId();
+                    }
+                }
+            }
+        }
+        if (!launcher_relaunched && !m_command_proxy.launchApp(app_id, env_overrides))
         {
             qCWarning(lc::steam) << "Failed to perform app launch for AppID: " << app_id.getId();
             return false;

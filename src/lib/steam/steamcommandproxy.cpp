@@ -10,6 +10,8 @@
 // local includes
 #include "common/appsettings.h"
 #include "common/loggingcategories.h"
+#include "steam/nonsteamprocesstarget.h"
+#include "steam/shortcutsvdf.h"
 
 namespace
 {
@@ -195,6 +197,26 @@ bool SteamCommandProxy::launchApp(const AppId& app_id, const QMap<QString, QStri
                                    ? QStringList{"steam://rungameid/" + QString::number(app_id.getId())}
                                    : QStringList{"steam://launch/" + QString::number(app_id.getId()) + "/dialog"},
                                env_overrides);
+}
+
+bool SteamCommandProxy::relaunchLauncherShortcut(const ShortcutsVdfEntry&      shortcut,
+                                                 const QMap<QString, QString>& env_overrides)
+{
+    auto executable{shortcut.m_executable.trimmed()};
+    if (executable.startsWith('"') && executable.endsWith('"'))
+    {
+        executable = executable.mid(1, executable.size() - 2);
+    }
+    executable = QDir::fromNativeSeparators(executable);
+    const auto filename{QFileInfo(executable).fileName().toLower()};
+    if ((filename != "ubisoftconnect.exe" && filename != "upc.exe" && filename != "epicgameslauncher.exe")
+        || !QFileInfo(executable).isAbsolute() || !NonSteamProcessTarget::fromShortcut(shortcut))
+    {
+        return false;
+    }
+    // Steam can retain the launcher after its game has closed. Send its game URI
+    // again without killing the shared launcher or asking Steam to launch it twice.
+    return executeDetached(executable, QProcess::splitCommand(shortcut.m_launch_options), env_overrides);
 }
 
 bool SteamCommandProxy::close()
