@@ -2,11 +2,11 @@
 #include "os/win/nativeprocesshandler.h"
 
 // A SEPARATE WINDOWS INCLUDE BECAUSE OF THE SMELL!
-#include <appmodel.h>
 #include <windows.h>
 
 // system/Qt includes
 #include <QTimeZone>
+#include <appmodel.h>
 #include <psapi.h>
 
 // local includes
