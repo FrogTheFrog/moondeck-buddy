@@ -134,6 +134,12 @@ std::optional<std::tuple<AppId, enums::AppState>> SteamHandler::getAppData(const
 
 bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides)
 {
+    if (m_app_reapers.contains(app_id))
+    {
+        qCWarning(lc::steam) << "App" << app_id.getId() << "is being closed!";
+        return false;
+    }
+
     if (!m_command_proxy.canExecuteCommands())
     {
         qCWarning(lc::steam) << "Steam commands cannot be executed yet!";
@@ -220,11 +226,84 @@ bool SteamHandler::closeApp(const AppId& app_id)
     const auto& pids_data_it{app_id_data.find(app_id)};
     if (pids_data_it == std::end(app_id_data))
     {
-        qCWarning(lc::steam) << "Steam app does not have PIDS:" << app_id.getId();
+        qCWarning(lc::steam) << "Steam app does not have PIDs:" << app_id.getId();
         return false;
     }
 
-    // TODO
+    const auto& original_pids{pids_data_it->second};
+    auto        pid_data{os::ProcessReaper::preparePidData(
+        original_pids.asKeyValueRange() | std::views::keys | std::ranges::to<std::set<uint>>(), true)};
+    if (static_cast<int>(pid_data.size()) != original_pids.size())
+    {
+        qCInfo(lc::steam) << "Not all PIDs can be killed for Steam app:" << app_id.getId();
+    }
+
+    for (auto it = std::begin(pid_data); it != std::end(pid_data);)
+    {
+        auto& [pid, data] = *it;
+        const auto& original_timestamp{original_pids.value(pid)};
+        if (!original_timestamp.isValid())
+        {
+            qCWarning(lc::steam) << "PID" << pid
+                                 << "does not have a valid original timestamp! Refusing to close Steam app:"
+                                 << app_id.getId();
+            return false;
+        }
+
+        if (!data.m_timestamp.isValid())
+        {
+            qCWarning(lc::steam) << "PID" << pid
+                                 << "does not have a valid process timestamp! Refusing to close Steam app:"
+                                 << app_id.getId();
+            return false;
+        }
+
+        if (original_timestamp.addSecs(1) <= data.m_timestamp)
+        {
+            qCDebug(lc::steam) << "Skipping PID" << pid << "because the timestamp is older than log timestamp";
+            it = pid_data.erase(it);
+            continue;
+        }
+
+        static const QRegularExpression excluded_execs{R"(steam(?:\.exe)?$)"  //
+                                                       "|"                    //
+                                                       R"(steamwebhelper(?:\.exe)?$)"
+                                                       "|"                  //
+                                                       R"(Steam.+reaper$)"  //
+                                                       "|"                  //
+                                                       R"(SteamLinuxRuntime)"};
+        if (data.m_exec_path && excluded_execs.match(*data.m_exec_path).hasMatch())
+        {
+            data.m_wait_to_end_only = true;
+            qCDebug(lc::steam) << "Skipping PID" << pid << "with exec" << *data.m_exec_path;
+        }
+
+        ++it;
+    }
+
+    auto app_reaper{std::make_unique<os::ProcessReaper>(pid_data)};
+    connect(app_reaper.get(), &os::ProcessReaper::signalFinishedReaping, this,
+            [this, app_id](const auto& remaining_pids)
+            {
+                if (!remaining_pids.empty())
+                {
+                    qCWarning(lc::steam) << "Failed to completely close Steam app:" << app_id.getId();
+                    for (const auto& [pid, data] : remaining_pids)
+                    {
+                        qCWarning(lc::steam) << "  Could not close PID" << pid << "with exec path" << data.m_exec_path;
+                    }
+                }
+
+                m_app_reapers.erase(app_id);
+            });
+
+    if (!app_reaper->start())
+    {
+        qCWarning(lc::steam) << "Failed to start process reaper for Steam app:" << app_id.getId();
+        return false;
+    }
+
+    m_app_reapers[app_id] = std::move(app_reaper);
     return true;
 }
 

@@ -7,14 +7,14 @@
 
 namespace
 {
-const int INTERVAL_MS{1000};
+const int INTERVAL_MS{1500};
 const int FORCED_TERMINATE_ON_COUNT{3};
 const int MAX_LOOP{FORCED_TERMINATE_ON_COUNT * 2};
 }  // namespace
 
 namespace os
 {
-ProcessReaper::PidsWithData ProcessReaper::getCurrentTimestamps(const std::set<uint>& pids, bool with_exec_path)
+ProcessReaper::PidsWithData ProcessReaper::preparePidData(const std::set<uint>& pids, bool with_exec_path)
 {
     const ProcessHandler process_handler;
 
@@ -24,7 +24,7 @@ ProcessReaper::PidsWithData ProcessReaper::getCurrentTimestamps(const std::set<u
         const auto& timestamp{process_handler.getStartTime(pid)};
         if (!timestamp)
         {
-            qCWarning(lc::os) << "failed to retrieve timestamp for PID" << pid;
+            qCDebug(lc::os) << "failed to retrieve timestamp for PID" << pid;
             continue;
         }
 
@@ -46,7 +46,7 @@ ProcessReaper::PidsWithData ProcessReaper::getCurrentTimestamps(const std::set<u
 }
 
 ProcessReaper::ProcessReaper(const std::set<uint>& pids)
-    : ProcessReaper(getCurrentTimestamps(pids))
+    : ProcessReaper(preparePidData(pids))
 {
     if (m_pids_with_data.size() != pids.size())
     {
@@ -58,6 +58,7 @@ ProcessReaper::ProcessReaper(const std::set<uint>& pids)
 ProcessReaper::ProcessReaper(PidsWithData pids_with_data)
     : m_pids_with_data{std::move(pids_with_data)}
 {
+    connect(&m_timer, &QTimer::timeout, this, &ProcessReaper::slotPerformReaping);
     m_timer.setSingleShot(true);
     m_timer.setInterval(INTERVAL_MS);
 }
@@ -80,7 +81,7 @@ bool ProcessReaper::start()
     }
 
     m_already_reaping = true;
-    m_timer.start();
+    QTimer::singleShot(0, this, [this]() { slotPerformReaping(); });
     return true;
 }
 
@@ -96,8 +97,8 @@ void ProcessReaper::slotPerformReaping()
         if (const auto& current_timestamp{process_handler.getStartTime(pid)};
             current_timestamp && current_timestamp == data.m_timestamp)
         {
-            const bool try_close{m_repeat_counter == 0};
-            bool       try_terminate{m_repeat_counter == FORCED_TERMINATE_ON_COUNT};
+            const bool try_close{m_repeat_counter == 0 && !data.m_wait_to_end_only};
+            bool       try_terminate{m_repeat_counter == FORCED_TERMINATE_ON_COUNT && !data.m_wait_to_end_only};
 
             if (try_close && process_handler.close(pid) != true)
             {
@@ -111,6 +112,7 @@ void ProcessReaper::slotPerformReaping()
                 // We cannot do anything to this PID.
             }
 
+            ++it;
             continue;
         }
 

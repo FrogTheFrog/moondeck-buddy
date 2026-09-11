@@ -16,12 +16,13 @@ class ProcessReaper : public QObject
 public:
     struct PidData
     {
+        bool                   m_wait_to_end_only{false};
         QDateTime              m_timestamp;
         std::optional<QString> m_exec_path;
     };
 
     using PidsWithData = std::map<uint, PidData>;
-    static PidsWithData getCurrentTimestamps(const std::set<uint>& pids, bool with_exec_path = false);
+    static PidsWithData preparePidData(const std::set<uint>& pids, bool with_exec_path = false);
 
     explicit ProcessReaper(const std::set<uint>& pids);
     explicit ProcessReaper(PidsWithData pids_with_timestamps);

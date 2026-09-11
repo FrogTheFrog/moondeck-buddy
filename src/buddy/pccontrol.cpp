@@ -62,6 +62,11 @@ bool PcControl::launchSteamApp(const steam::AppId& app_id)
     return m_steam_handler.launchApp(app_id, m_cached_env);
 }
 
+bool PcControl::closeSteamApp(const steam::AppId& app_id)
+{
+    return m_steam_handler.closeApp(app_id);
+}
+
 std::optional<std::tuple<steam::AppId, enums::AppState>>
     PcControl::getAppData(const std::optional<steam::AppId>& app_id) const
 {
