@@ -17,8 +17,10 @@ public:
 
     static std::optional<enums::AppState> getAppState(const SteamProcessTracker& process_tracker, const AppId& app_id);
 
-    enums::AppState getAppState() const;
-    const AppId&    getAppId() const;
+    enums::AppState           getAppState() const;
+    const AppId&              getAppId() const;
+    bool                      hasRun() const;
+    std::map<uint, QDateTime> getTrackedProcesses() const;
 
 signals:
     void signalTrackedAppDataChanged();
@@ -47,5 +49,6 @@ private:
     enums::AppState m_current_state{enums::AppState::Stopped};
     QTimer          m_check_timer;
     bool            m_connected_to_log_trackers{false};
+    bool            m_has_run{false};
 };
 }  // namespace steam

@@ -22,6 +22,7 @@ public:
     bool               closeSteamBigPictureMode();
 
     bool launchSteamApp(const steam::AppId& app_id);
+    bool stopSteamApp(const steam::AppId& app_id);
     std::optional<std::tuple<steam::AppId, enums::AppState>>
          getAppData(const std::optional<steam::AppId>& app_id) const;
     bool clearAppData();

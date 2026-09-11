@@ -84,6 +84,12 @@ ENDIF()
 
 add_subdirectory(src)
 
+option(BUILD_TRACKING_TESTS "Build Steam process tracking regression tests" OFF)
+if(BUILD_TRACKING_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 #----------------------------------------------------------------------------------------------------------------------
 # Install
 #----------------------------------------------------------------------------------------------------------------------
