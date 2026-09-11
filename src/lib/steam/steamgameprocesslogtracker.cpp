@@ -31,6 +31,22 @@ bool SteamGameProcessLogTracker::isAnyProcessRunning(const AppId& app_id) const
     return m_app_id_to_process_ids.contains(app_id);
 }
 
+std::map<uint, QDateTime> SteamGameProcessLogTracker::getTrackedProcesses(const AppId& app_id) const
+{
+    std::map<uint, QDateTime> result;
+    if (const auto it{m_app_id_to_process_ids.find(app_id)}; it != m_app_id_to_process_ids.end())
+    {
+        for (const uint pid : it->second)
+        {
+            if (const auto time{m_process_added_at.find(pid)}; time != m_process_added_at.end())
+            {
+                result.emplace(pid, time->second);
+            }
+        }
+    }
+    return result;
+}
+
 void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_lines)
 {
     const auto try_emplace_pid_list{[](std::map<AppId, QSet<uint>>& container, const AppId& app_id,
@@ -61,6 +77,9 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
 
             try_emplace_pid_list(initial_entries, *app_id, current_pids);
             current_pids.insert(pid);
+            // Steam timestamps have one-second precision. Keep the registration time
+            // so a stale log entry cannot identify a newer, recycled process ID.
+            m_process_added_at[pid] = QDateTime::fromString(line.mid(1, 19), "yyyy-MM-dd HH:mm:ss");
             continue;
         }
 
@@ -76,6 +95,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<QString>& new_li
             }
 
             qCDebug(lc::steam) << "Removing PID" << pid << "from all tracked AppIDs";
+            m_process_added_at.erase(pid);
             for (auto& [app_id, current_pids] : m_app_id_to_process_ids)
             {
                 try_emplace_pid_list(initial_entries, app_id, current_pids);

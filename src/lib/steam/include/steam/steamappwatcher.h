@@ -19,6 +19,7 @@ public:
 
     enums::AppState getAppState() const;
     const AppId&    getAppId() const;
+    bool            hasRun() const;
 
 signals:
     void signalTrackedAppDataChanged();
@@ -47,5 +48,6 @@ private:
     enums::AppState m_current_state{enums::AppState::Stopped};
     QTimer          m_check_timer;
     bool            m_connected_to_log_trackers{false};
+    bool            m_has_run{false};
 };
 }  // namespace steam

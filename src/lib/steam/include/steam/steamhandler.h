@@ -30,6 +30,7 @@ public:
 
     std::optional<std::tuple<AppId, enums::AppState>> getAppData(const std::optional<AppId>& app_id) const;
     bool launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides);
+    bool stopApp(const AppId& app_id);
     void clearSessionData();
 
     std::optional<std::map<AppId, QString>> getNonSteamAppData(const SteamId& user_id) const;
@@ -53,5 +54,6 @@ private:
     SteamCommandProxy   m_command_proxy;
     SteamProcessTracker m_steam_process_tracker;
     SessionData         m_session_data;
+    os::ProcessHandler  m_app_process_handler;
 };
 }  // namespace steam

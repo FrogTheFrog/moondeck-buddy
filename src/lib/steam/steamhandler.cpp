@@ -6,6 +6,10 @@
 #include "common/loggingcategories.h"
 #include "steam/shortcutsvdf.h"
 #include "steam/steamappwatcher.h"
+#include <QCoreApplication>
+#include <QFileInfo>
+#include <QPointer>
+#include <QTimer>
 
 namespace steam
 {
@@ -190,6 +194,74 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     connect(m_session_data.m_steam_app_watcher.get(), &SteamAppWatcher::signalTrackedAppDataChanged, this,
             &SteamHandler::signalTrackedAppDataChanged, Qt::QueuedConnection);
     m_session_data.m_steam_app_watcher->slotCheckState();
+    return true;
+}
+
+bool SteamHandler::stopApp(const AppId& app_id)
+{
+    QPointer<SteamAppWatcher> watcher{m_session_data.m_steam_app_watcher.get()};
+    if (!watcher || watcher->getAppId() != app_id || app_id.getIdType() != AppId::IdType::SteamApp)
+    {
+        qCWarning(lc::steam) << "Refusing stop request for an untracked native Steam app:" << app_id.getId();
+        return false;
+    }
+    if (watcher->getAppState() == enums::AppState::Stopped)
+    {
+        // Do not report a pending launch as successfully stopped.
+        return watcher->hasRun();
+    }
+    const auto* logs{m_steam_process_tracker.getSteamLogTrackers()};
+    if (!logs)
+    {
+        return false;
+    }
+
+    std::map<uint, QDateTime> targets;
+    for (const auto& [pid, added_at] : logs->getGameProcessLog().getTrackedProcesses(app_id))
+    {
+        const auto started_at{m_app_process_handler.getStartTime(pid)};
+        const auto executable{QFileInfo(m_app_process_handler.getExecPath(pid)).fileName().toLower()};
+        if (!added_at.isValid() || !started_at.isValid() || started_at >= added_at.addSecs(1) || executable.isEmpty()
+            || executable == "steam.exe" || executable == "steam" || executable == "steamwebhelper.exe"
+            || executable == "steamwebhelper" || executable == "explorer.exe"
+            || static_cast<qint64>(pid) == QCoreApplication::applicationPid())
+        {
+            qCWarning(lc::steam) << "Ignoring invalid or protected stop target:" << pid;
+            continue;
+        }
+        targets.emplace(pid, started_at);
+    }
+    if (targets.empty())
+    {
+        qCWarning(lc::steam) << "No verified processes to stop for AppID:" << app_id.getId();
+        return false;
+    }
+    qCInfo(lc::steam) << "Client explicitly requested stop for AppID:" << app_id.getId();
+    for (const auto& [pid, started_at] : targets)
+    {
+        if (m_app_process_handler.getStartTime(pid) == started_at)
+        {
+            m_app_process_handler.close(pid);
+        }
+    }
+    QTimer::singleShot(1500, this,
+                       [this, watcher, targets, app_id]()
+                       {
+                           // A new session or a reused PID must never inherit an earlier stop request.
+                           if (!watcher || watcher.data() != m_session_data.m_steam_app_watcher.get())
+                           {
+                               return;
+                           }
+                           for (const auto& [pid, started_at] : targets)
+                           {
+                               if (m_app_process_handler.getStartTime(pid) == started_at)
+                               {
+                                   qCInfo(lc::steam)
+                                       << "Terminating remaining process" << pid << "for AppID:" << app_id.getId();
+                                   m_app_process_handler.terminate(pid);
+                               }
+                           }
+                       });
     return true;
 }
 

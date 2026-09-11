@@ -108,6 +108,11 @@ enums::AppState SteamAppWatcher::getAppState() const
     return m_current_state;
 }
 
+bool SteamAppWatcher::hasRun() const
+{
+    return m_has_run;
+}
+
 const AppId& SteamAppWatcher::getAppId() const
 {
     return m_app_id;
@@ -151,6 +156,7 @@ void SteamAppWatcher::slotCheckState()
                           << "detected:" << enums::qEnumToString(m_current_state) << "->"
                           << enums::qEnumToString(new_state);
         m_current_state = new_state;
+        m_has_run       = m_has_run || new_state == enums::AppState::Running;
         emit signalTrackedAppDataChanged();
     }
 }
