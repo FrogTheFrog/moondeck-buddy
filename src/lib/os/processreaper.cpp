@@ -103,6 +103,9 @@ void ProcessReaper::slotPerformReaping()
             if (try_close && process_handler.close(pid) != true)
             {
                 qCDebug(lc::os) << "Failed to invoke 'close' for PID" << pid;
+                // Treat the case where its "not applicable" and "cannot close" the same way, since on Windows
+                // you cannot close applications this way that does not implement the messaging loop, e.g. terminals or
+                // runner scripts.
                 try_terminate = true;
             }
 

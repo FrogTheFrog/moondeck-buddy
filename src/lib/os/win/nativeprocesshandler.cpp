@@ -28,7 +28,7 @@ auto useProcHandle(const uint pid, Getter&& getter)
 
     if (proc_handle)
     {
-        DWORD exit_code = 0;
+        DWORD exit_code{0};
         if (GetExitCodeProcess(proc_handle, &exit_code) == TRUE)
         {
             if (exit_code == STILL_ACTIVE)
@@ -123,7 +123,7 @@ std::optional<QString> NativeProcessHandler::getExecPath(uint pid) const
                                       << "| ERROR:" << lc::getErrorString(GetLastError());
             }
 
-            return QString{};
+            return std::nullopt;
         });
 }
 
@@ -170,7 +170,7 @@ std::optional<QDateTime> NativeProcessHandler::getStartTime(uint pid) const
                                                        << "| ERROR:" << lc::getErrorString(GetLastError());
                              }
 
-                             return QDateTime{};
+                             return std::nullopt;
                          });
 }
 

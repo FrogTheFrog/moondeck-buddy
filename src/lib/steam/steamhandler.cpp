@@ -201,6 +201,12 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
 
 bool SteamHandler::closeApp(const AppId& app_id)
 {
+    if (m_app_reapers.contains(app_id))
+    {
+        qCWarning(lc::steam) << "App" << app_id.getId() << "is already being closed!";
+        return false;
+    }
+
     if (app_id.getId() == 0)
     {
         qCWarning(lc::steam) << "Will not close app with 0 ID!";
@@ -267,15 +273,15 @@ bool SteamHandler::closeApp(const AppId& app_id)
         }
 
         // Skip the Steam related executables so that Steam can do some proper cleanup
-        static const QRegularExpression excluded_execs{
-            R"(steam(?:\.exe)?$)"           //
-            "|"                             //
-            R"(steamwebhelper(?:\.exe)?$)"  //
-            "|"                             //
-            R"(Steam.+reaper$)"             //
-            "|"                             //
-            R"(SteamLinuxRuntime)"          //
-        };
+        static const QRegularExpression excluded_execs{R"(steam(?:\.exe)?$)"           //
+                                                       "|"                             //
+                                                       R"(steamwebhelper(?:\.exe)?$)"  //
+                                                       "|"                             //
+                                                       R"(Steam.+reaper$)"             //
+                                                       "|"                             //
+                                                       R"(SteamLinuxRuntime)"          //
+                                                       ,
+                                                       QRegularExpression::CaseInsensitiveOption};
         if (data.m_exec_path && excluded_execs.match(*data.m_exec_path).hasMatch())
         {
             data.m_wait_to_end_only = true;

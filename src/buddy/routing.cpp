@@ -394,7 +394,7 @@ struct CloseSteamAppRequest
 void closeSteamApp(server::RestServer& server, PcControl& pc_control)
 {
     server.httpRoute("/closeSteamApp", QHttpServerRequest::Method::Post,
-                     [&pc_control](const LaunchSteamAppRequest& request)
+                     [&pc_control](const CloseSteamAppRequest& request)
                          -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
                      {
                          const auto app_id{steam::AppId::fromString(request.m_app_id)};
