@@ -26,7 +26,25 @@ auto useProcHandle(const uint pid, Getter&& getter)
             }
         });
 
-    return getter(proc_handle);
+    if (proc_handle)
+    {
+        DWORD exit_code = 0;
+        if (GetExitCodeProcess(proc_handle, &exit_code) == TRUE)
+        {
+            if (exit_code == STILL_ACTIVE)
+            {
+                return getter(proc_handle);
+            }
+            // To reduce false-positives, skip non-active processes
+        }
+        else
+        {
+            qDebug(lc::osVerbose) << "GetExitCodeProcess failed - PID:" << pid
+                                  << "| ERROR:" << lc::getErrorString(GetLastError());
+        }
+    }
+
+    return getter(nullptr);
 }
 }  // namespace
 

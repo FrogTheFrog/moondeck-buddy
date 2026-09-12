@@ -258,24 +258,32 @@ bool SteamHandler::closeApp(const AppId& app_id)
             return false;
         }
 
-        if (original_timestamp.addSecs(1) <= data.m_timestamp)
+        if (const auto shifted_ts{original_timestamp.addSecs(3)}; shifted_ts <= data.m_timestamp)
         {
-            qCDebug(lc::steam) << "Skipping PID" << pid << "because the timestamp is older than log timestamp";
+            qCInfo(lc::steam) << "Skipping PID" << pid << "because the process timestamp" << data.m_timestamp
+                              << "is older than log timestamp (+3s)" << shifted_ts << "for exec" << data.m_exec_path;
             it = pid_data.erase(it);
             continue;
         }
 
-        static const QRegularExpression excluded_execs{R"(steam(?:\.exe)?$)"  //
-                                                       "|"                    //
-                                                       R"(steamwebhelper(?:\.exe)?$)"
-                                                       "|"                  //
-                                                       R"(Steam.+reaper$)"  //
-                                                       "|"                  //
-                                                       R"(SteamLinuxRuntime)"};
+        // Skip the Steam related executables so that Steam can do some proper cleanup
+        static const QRegularExpression excluded_execs{
+            R"(steam(?:\.exe)?$)"           //
+            "|"                             //
+            R"(steamwebhelper(?:\.exe)?$)"  //
+            "|"                             //
+            R"(Steam.+reaper$)"             //
+            "|"                             //
+            R"(SteamLinuxRuntime)"          //
+        };
         if (data.m_exec_path && excluded_execs.match(*data.m_exec_path).hasMatch())
         {
             data.m_wait_to_end_only = true;
-            qCDebug(lc::steam) << "Skipping PID" << pid << "with exec" << *data.m_exec_path;
+            qCInfo(lc::steam) << "Skipping PID" << pid << "|" << *data.m_exec_path;
+        }
+        else
+        {
+            qCInfo(lc::steam) << "Closing PID" << pid << "|" << data.m_exec_path;
         }
 
         ++it;
