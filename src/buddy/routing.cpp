@@ -462,7 +462,7 @@ void streamState(server::RestServer& server, PcControl& pc_control)
 
 struct AppDataRequest
 {
-    std::optional<QString> m_app_id;
+    QString m_app_id;
 };
 
 struct AppDataResponse
@@ -495,22 +495,22 @@ struct AppDataResponse
 
 void appData(server::RestServer& server, PcControl& pc_control)
 {
-    server.httpRoute(
-        "/appData", QHttpServerRequest::Method::Get,
-        [&pc_control](const AppDataRequest& request) -> std::variant<QHttpServerResponse::StatusCode, AppDataResponse>
-        {
-            std::optional<steam::AppId> opt_app_id;
-            if (request.m_app_id)
-            {
-                opt_app_id = steam::AppId::fromString(*request.m_app_id);
-                if (!opt_app_id)
-                {
-                    return QHttpServerResponse::StatusCode::BadRequest;
-                }
-            }
+    server.httpRoute("/appData", QHttpServerRequest::Method::Get,
+                     [&pc_control](const std::optional<AppDataRequest>& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, AppDataResponse>
+                     {
+                         std::optional<steam::AppId> opt_app_id;
+                         if (request)
+                         {
+                             opt_app_id = steam::AppId::fromString(request->m_app_id);
+                             if (!opt_app_id)
+                             {
+                                 return QHttpServerResponse::StatusCode::BadRequest;
+                             }
+                         }
 
-            return AppDataResponse::makeInstance(pc_control, opt_app_id);
-        });
+                         return AppDataResponse::makeInstance(pc_control, opt_app_id);
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
