@@ -307,7 +307,8 @@ bool SteamHandler::closeApp(const AppId& app_id)
                     }
                 }
 
-                m_app_reapers.erase(app_id);
+                // Defer the deletion to the next loop
+                QTimer::singleShot(0, this, [this, app_id]() { m_app_reapers.erase(app_id); });
             });
 
     if (!app_reaper->start())
