@@ -241,7 +241,7 @@ bool SteamHandler::closeApp(const AppId& app_id)
     auto                 pid_data{os::ProcessReaper::preparePidData(original_pids, true)};
     if (pid_data.size() != original_pids.size())
     {
-        std::set<uint> diff;
+        QSet<uint> diff;
         for (const auto& pid : original_pids)
         {
             if (!pid_data.contains(pid))
