@@ -236,17 +236,28 @@ bool SteamHandler::closeApp(const AppId& app_id)
         return false;
     }
 
-    const auto& original_pids{pids_data_it->second};
-    auto        pid_data{os::ProcessReaper::preparePidData({original_pids.keyBegin(), original_pids.keyEnd()}, true)};
-    if (static_cast<int>(pid_data.size()) != original_pids.size())
+    const auto&          original_data{pids_data_it->second};
+    const std::set<uint> original_pids{original_data.keyBegin(), original_data.keyEnd()};
+    auto                 pid_data{os::ProcessReaper::preparePidData(original_pids, true)};
+    if (pid_data.size() != original_pids.size())
     {
-        qCInfo(lc::steam) << "Not all PIDs can be killed for Steam app:" << app_id.getId();
+        std::set<uint> diff;
+        for (const auto& pid : original_pids)
+        {
+            if (!pid_data.contains(pid))
+            {
+                diff.insert(pid);
+            }
+        }
+
+        qCInfo(lc::steam) << "Not all PIDs can be killed for Steam app (probably already dead). App ID:"
+                          << app_id.getId() << "| Unkillable PIDs:" << diff;
     }
 
     for (auto it{std::begin(pid_data)}; it != std::end(pid_data);)
     {
         auto& [pid, data] = *it;
-        const auto& original_timestamp{original_pids.value(pid)};
+        const auto& original_timestamp{original_data.value(pid)};
         if (!original_timestamp.isValid())
         {
             qCWarning(lc::steam) << "PID" << pid
