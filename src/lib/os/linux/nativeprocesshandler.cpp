@@ -9,6 +9,7 @@
 #include <csignal>
 #include <libproc2/pids.h>
 #include <libproc2/stat.h>
+#include <ranges>
 #include <sys/types.h>
 
 // local includes
@@ -78,15 +79,15 @@ uint getParentPid(const uint pid)
                       [](const auto& result) { return result.s_int >= 0 ? static_cast<uint>(result.s_int) : 0u; });
 }
 
-QDateTime getStartTime(const uint pid)
+std::optional<QDateTime> getStartTime(const uint pid)
 {
-    return getPidItem(pid, PIDS_TIME_START, QDateTime{},
-                      [](const auto& result)
+    return getPidItem(pid, PIDS_TIME_START, std::optional<QDateTime>{std::nullopt},
+                      [](const auto& result) -> std::optional<QDateTime>
                       {
                           const auto boot_time{getBootTime()};
                           if (!boot_time)
                           {
-                              return QDateTime{};
+                              return std::nullopt;
                           }
 
                           const auto milliseconds{static_cast<int>(std::round((result.real) * 1000.0))};
@@ -134,8 +135,11 @@ std::vector<uint> getRelatedPids(uint pid)
     Q_ASSERT(all_pids.size() == parent_pids.size());
     std::vector<uint> related_pids;
 
-    // Start searching for children from current pid
-    related_pids.push_back(pid);
+    if (std::ranges::contains(all_pids, pid))
+    {
+        // Start searching for children from current pid
+        related_pids.push_back(pid);
+    }
 
     for (std::size_t i = 0; i < related_pids.size(); ++i)
     {
@@ -170,20 +174,31 @@ std::vector<uint> NativeProcessHandler::getPids() const
     return ::getPids();
 }
 
-QString NativeProcessHandler::getExecPath(uint pid) const
+std::optional<QString> NativeProcessHandler::getExecPath(uint pid) const
 {
     const QFileInfo info{"/proc/" + QString::number(pid) + "/exe"};
+    if (!info.exists())
+    {
+        return std::nullopt;
+    }
+
     return QFileInfo{info.symLinkTarget()}.canonicalFilePath();
 }
 
-QDateTime NativeProcessHandler::getStartTime(uint pid) const
+std::optional<QDateTime> NativeProcessHandler::getStartTime(uint pid) const
 {
     return ::getStartTime(pid);
 }
 
-void NativeProcessHandler::close(uint pid) const
+std::optional<bool> NativeProcessHandler::close(uint pid) const
 {
     const auto related_pids{getRelatedPids(pid)};
+    if (related_pids.empty())
+    {
+        return std::nullopt;
+    }
+
+    bool complete_success{true};
     for (const auto related_pid : related_pids)
     {
         if (kill(static_cast<pid_t>(related_pid), SIGTERM) < 0)
@@ -192,14 +207,22 @@ void NativeProcessHandler::close(uint pid) const
             if (error != ESRCH)
             {
                 qWarning(lc::os) << "Failed to close process" << related_pid << "-" << lc::getErrorString(error);
+                complete_success = false;
             }
         }
     }
+    return complete_success;
 }
 
-void NativeProcessHandler::terminate(uint pid) const
+std::optional<bool> NativeProcessHandler::terminate(uint pid) const
 {
     const auto related_pids{getRelatedPids(pid)};
+    if (related_pids.empty())
+    {
+        return std::nullopt;
+    }
+
+    bool complete_success{true};
     for (const auto related_pid : related_pids)
     {
         if (kill(static_cast<pid_t>(related_pid), SIGKILL) < 0)
@@ -208,8 +231,10 @@ void NativeProcessHandler::terminate(uint pid) const
             if (error != ESRCH)
             {
                 qWarning(lc::os) << "Failed to terminate process" << related_pid << "-" << lc::getErrorString(error);
+                complete_success = false;
             }
         }
     }
+    return complete_success;
 }
 }  // namespace os

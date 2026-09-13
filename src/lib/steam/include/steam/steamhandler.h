@@ -2,6 +2,7 @@
 
 // local includes
 #include "common/enums.h"
+#include "os/processreaper.h"
 #include "steamcommandproxy.h"
 #include "steamid.h"
 #include "steamprocesstracker.h"
@@ -30,6 +31,7 @@ public:
 
     std::optional<std::tuple<AppId, enums::AppState>> getAppData(const std::optional<AppId>& app_id) const;
     bool launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides);
+    bool closeApp(const AppId& app_id);
     void clearSessionData();
 
     std::optional<std::map<AppId, QString>> getNonSteamAppData(const SteamId& user_id) const;
@@ -50,8 +52,9 @@ private:
         std::unique_ptr<SteamAppWatcher> m_steam_app_watcher;
     };
 
-    SteamCommandProxy   m_command_proxy;
-    SteamProcessTracker m_steam_process_tracker;
-    SessionData         m_session_data;
+    SteamCommandProxy                                   m_command_proxy;
+    SteamProcessTracker                                 m_steam_process_tracker;
+    SessionData                                         m_session_data;
+    std::map<AppId, std::unique_ptr<os::ProcessReaper>> m_app_reapers;
 };
 }  // namespace steam

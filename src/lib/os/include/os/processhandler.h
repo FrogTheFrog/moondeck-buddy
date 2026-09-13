@@ -1,5 +1,8 @@
 #pragma once
 
+// system/Qt includes
+#include <QDateTime>
+
 // local includes
 #include "common/enums.h"
 
@@ -20,11 +23,11 @@ public:
     explicit ProcessHandler();
     ~ProcessHandler() override;
 
-    std::vector<uint> getPids() const;
-    QString           getExecPath(uint pid) const;
-    QDateTime         getStartTime(uint pid) const;
-    void              close(uint pid) const;
-    void              terminate(uint pid) const;
+    std::vector<uint>        getPids() const;
+    std::optional<QString>   getExecPath(uint pid) const;
+    std::optional<QDateTime> getStartTime(uint pid) const;
+    std::optional<bool>      close(uint pid) const;
+    std::optional<bool>      terminate(uint pid) const;
 
 private:
     std::unique_ptr<NativeProcessHandlerInterface> m_native_handler;

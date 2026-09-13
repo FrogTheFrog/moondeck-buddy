@@ -51,6 +51,9 @@ public:
 };
 
 template<typename T>
+constexpr bool IsOptionalType = requires(T value) { []<typename U>(std::optional<U>&) {}(value); };
+
+template<typename T>
 std::optional<T> fromJson(const QString& value)
 {
     auto result{json::fromJson<T>(value)};
@@ -291,6 +294,11 @@ std::optional<T> RestServer::fromHttpRequest(const QHttpServerRequest& request)
     const auto& body{request.body()};
     if (body.isEmpty())
     {
+        if constexpr (internal::IsOptionalType<T>)
+        {
+            return T{std::nullopt};
+        }
+
         qCWarning(lc::server) << "Request is missing body!";
         return std::nullopt;
     }

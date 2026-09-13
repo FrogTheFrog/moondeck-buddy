@@ -386,6 +386,30 @@ void launchSteamApp(server::RestServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
+struct CloseSteamAppRequest
+{
+    QString m_app_id;
+};
+
+void closeSteamApp(server::RestServer& server, PcControl& pc_control)
+{
+    server.httpRoute("/closeSteamApp", QHttpServerRequest::Method::Post,
+                     [&pc_control](const CloseSteamAppRequest& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, ResultResponse>
+                     {
+                         const auto app_id{steam::AppId::fromString(request.m_app_id)};
+                         if (!app_id)
+                         {
+                             return QHttpServerResponse::StatusCode::BadRequest;
+                         }
+
+                         const bool result{pc_control.closeSteamApp(*app_id)};
+                         return ResultResponse{.m_result = result};
+                     });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 struct CloseSteamRequest
 {
     bool m_keep_stream_alive;
@@ -436,7 +460,12 @@ void streamState(server::RestServer& server, PcControl& pc_control)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-struct StreamedAppDataResponse
+struct AppDataRequest
+{
+    QString m_app_id;
+};
+
+struct AppDataResponse
 {
     struct Data
     {
@@ -446,11 +475,12 @@ struct StreamedAppDataResponse
         enums::AppState m_app_state;
     };
 
-    auto operator<=>(const StreamedAppDataResponse&) const = default;
+    auto operator<=>(const AppDataResponse&) const = default;
 
-    static StreamedAppDataResponse makeInstance(const PcControl& pc_control)
+    static AppDataResponse makeInstance(const PcControl&                   pc_control,
+                                        const std::optional<steam::AppId>& requested_app_id)
     {
-        const auto data{pc_control.getAppData(std::nullopt)};
+        const auto data{pc_control.getAppData(requested_app_id)};
         if (!data)
         {
             return {.m_data = std::nullopt};
@@ -463,10 +493,24 @@ struct StreamedAppDataResponse
     std::optional<Data> m_data;
 };
 
-void streamedAppData(server::RestServer& server, PcControl& pc_control)
+void appData(server::RestServer& server, PcControl& pc_control)
 {
-    server.httpRoute("/streamedAppData", QHttpServerRequest::Method::Get,
-                     [&pc_control]() { return StreamedAppDataResponse::makeInstance(pc_control); });
+    server.httpRoute("/appData", QHttpServerRequest::Method::Get,
+                     [&pc_control](const std::optional<AppDataRequest>& request)
+                         -> std::variant<QHttpServerResponse::StatusCode, AppDataResponse>
+                     {
+                         std::optional<steam::AppId> opt_app_id;
+                         if (request)
+                         {
+                             opt_app_id = steam::AppId::fromString(request->m_app_id);
+                             if (!opt_app_id)
+                             {
+                                 return QHttpServerResponse::StatusCode::BadRequest;
+                             }
+                         }
+
+                         return AppDataResponse::makeInstance(pc_control, opt_app_id);
+                     });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -513,7 +557,7 @@ using ResultResponse = http_api::ResultResponse;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-using StreamedAppData  = http_api::StreamedAppDataResponse;
+using StreamedAppData  = http_api::AppDataResponse;
 using SteamUiMode      = http_api::SteamUiModeResponse;
 using CurrentUser      = http_api::CurrentUserResponse;
 using StreamState      = http_api::StreamStateResponse;
@@ -578,7 +622,7 @@ public slots:
             switch (topic)
             {
                 case NotificationTopic::StreamedAppData:
-                    new_data.emplace_back(StreamedAppData::makeInstance(m_pc_control));
+                    new_data.emplace_back(StreamedAppData::makeInstance(m_pc_control, std::nullopt));
                     break;
                 case NotificationTopic::SteamUiMode:
                     new_data.emplace_back(SteamUiMode::makeInstance(m_pc_control));
@@ -664,11 +708,12 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
     http_api::currentUser(server, pc_control);
     http_api::launchSteam(server, pc_control);
     http_api::launchSteamApp(server, pc_control);
+    http_api::closeSteamApp(server, pc_control);
     http_api::closeSteam(server, pc_control);
     http_api::closeSteamBigPictureMode(server, pc_control);
 
     http_api::streamState(server, pc_control);
-    http_api::streamedAppData(server, pc_control);
+    http_api::appData(server, pc_control);
     http_api::clearStreamedAppData(server, pc_control);
     http_api::endStream(server, pc_control);
 

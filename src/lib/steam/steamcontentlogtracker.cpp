@@ -90,7 +90,7 @@ SteamContentLogTracker::AppState SteamContentLogTracker::getAppState(const AppId
     return it != std::end(m_app_states) ? it->second : AppState::Stopped;
 }
 
-void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
+void SteamContentLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 {
     static const auto known_states{[]()
                                    {
@@ -109,16 +109,16 @@ void SteamContentLogTracker::onLogChanged(const std::vector<QString>& new_lines)
                                    }()};
 
     std::map<AppId, QVector<AppStateChange>> new_change_states;
-    for (const QString& line : new_lines)
+    for (const auto& line : new_lines)
     {
         static const QRegularExpression mode_regex{R"(AppID\s(\d+)\sstate\schanged\s:\s(.*),)"};
-        const auto                      match{mode_regex.match(line)};
+        const auto                      match{mode_regex.match(line.m_text)};
         if (match.hasMatch())
         {
             const auto app_id{AppId::fromString(match.captured(1))};
             if (!app_id)
             {
-                qCWarning(lc::steam) << "Failed to get AppID from" << line;
+                qCWarning(lc::steam) << "Failed to get AppID from" << line.m_text;
                 continue;
             }
 
