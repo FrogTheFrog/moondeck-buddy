@@ -1,9 +1,6 @@
 // header file include
 #include "include/steam/steamhandler.h"
 
-// system/Qt includes
-#include <ranges>
-
 // local includes
 #include "common/appsettings.h"
 #include "common/loggingcategories.h"
@@ -240,14 +237,13 @@ bool SteamHandler::closeApp(const AppId& app_id)
     }
 
     const auto& original_pids{pids_data_it->second};
-    auto        pid_data{os::ProcessReaper::preparePidData(
-        original_pids.asKeyValueRange() | std::views::keys | std::ranges::to<std::set<uint>>(), true)};
+    auto        pid_data{os::ProcessReaper::preparePidData({original_pids.keyBegin(), original_pids.keyEnd()}, true)};
     if (static_cast<int>(pid_data.size()) != original_pids.size())
     {
         qCInfo(lc::steam) << "Not all PIDs can be killed for Steam app:" << app_id.getId();
     }
 
-    for (auto it = std::begin(pid_data); it != std::end(pid_data);)
+    for (auto it{std::begin(pid_data)}; it != std::end(pid_data);)
     {
         auto& [pid, data] = *it;
         const auto& original_timestamp{original_pids.value(pid)};

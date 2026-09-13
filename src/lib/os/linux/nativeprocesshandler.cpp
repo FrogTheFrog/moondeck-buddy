@@ -9,6 +9,7 @@
 #include <csignal>
 #include <libproc2/pids.h>
 #include <libproc2/stat.h>
+#include <ranges>
 #include <sys/types.h>
 
 // local includes
@@ -134,8 +135,11 @@ std::vector<uint> getRelatedPids(uint pid)
     Q_ASSERT(all_pids.size() == parent_pids.size());
     std::vector<uint> related_pids;
 
-    // Start searching for children from current pid
-    related_pids.push_back(pid);
+    if (std::ranges::contains(all_pids, pid))
+    {
+        // Start searching for children from current pid
+        related_pids.push_back(pid);
+    }
 
     for (std::size_t i = 0; i < related_pids.size(); ++i)
     {

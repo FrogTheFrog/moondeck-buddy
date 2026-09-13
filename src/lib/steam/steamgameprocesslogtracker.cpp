@@ -4,7 +4,6 @@
 // system/Qt includes
 #include <QDebug>
 #include <QRegularExpression>
-#include <ranges>
 
 // local includes
 #include "common/loggingcategories.h"
@@ -36,9 +35,8 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_li
 {
     static const auto get_or_create_pid_data{[](AppIdToPidDataMap& container, const AppId& app_id) -> PidDataMap&
                                              { return container.try_emplace(app_id, PidDataMap{}).first->second; }};
-    static const auto get_pids{
-        [](const PidDataMap& pid_data)
-        { return pid_data.asKeyValueRange() | std::views::keys | std::ranges::to<QSet<uint>>(); }};
+    static const auto get_pids{[](const PidDataMap& pid_data)
+                               { return QSet<uint>{pid_data.keyBegin(), pid_data.keyEnd()}; }};
     static const auto try_emplace_pid_list{[](auto& container, const AppId& app_id, const PidDataMap& pid_data)
                                            {
                                                // Small optimization to avoid getting keys from data
