@@ -1,6 +1,9 @@
 // header file include
 #include "include/steam/steamhandler.h"
 
+// system/Qt includes
+#include <ranges>
+
 // local includes
 #include "common/appsettings.h"
 #include "common/loggingcategories.h"
