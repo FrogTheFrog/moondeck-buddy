@@ -29,22 +29,22 @@ std::vector<uint> ProcessHandler::getPids() const
     return m_native_handler->getPids();
 }
 
-QString ProcessHandler::getExecPath(uint pid) const
+std::optional<QString> ProcessHandler::getExecPath(uint pid) const
 {
     return m_native_handler->getExecPath(pid);
 }
 
-QDateTime ProcessHandler::getStartTime(uint pid) const
+std::optional<QDateTime> ProcessHandler::getStartTime(uint pid) const
 {
     return m_native_handler->getStartTime(pid);
 }
 
-void ProcessHandler::close(uint pid) const
+std::optional<bool> ProcessHandler::close(uint pid) const
 {
     return m_native_handler->close(pid);
 }
 
-void ProcessHandler::terminate(uint pid) const
+std::optional<bool> ProcessHandler::terminate(uint pid) const
 {
     return m_native_handler->terminate(pid);
 }

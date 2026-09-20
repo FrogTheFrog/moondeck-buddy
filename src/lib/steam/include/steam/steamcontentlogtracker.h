@@ -44,7 +44,7 @@ public:
     AppState getAppState(const AppId& app_id) const;
 
 protected:
-    void onLogChanged(const std::vector<QString>& new_lines) override;
+    void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
     std::map<AppId, AppState> m_app_states;

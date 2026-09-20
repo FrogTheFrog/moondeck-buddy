@@ -134,6 +134,12 @@ std::optional<std::tuple<AppId, enums::AppState>> SteamHandler::getAppData(const
 
 bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides)
 {
+    if (m_app_reapers.contains(app_id))
+    {
+        qCWarning(lc::steam) << "App" << app_id.getId() << "is being closed!";
+        return false;
+    }
+
     if (!m_command_proxy.canExecuteCommands())
     {
         qCWarning(lc::steam) << "Steam commands cannot be executed yet!";
@@ -190,6 +196,139 @@ bool SteamHandler::launchApp(const AppId& app_id, const QMap<QString, QString>& 
     connect(m_session_data.m_steam_app_watcher.get(), &SteamAppWatcher::signalTrackedAppDataChanged, this,
             &SteamHandler::signalTrackedAppDataChanged, Qt::QueuedConnection);
     m_session_data.m_steam_app_watcher->slotCheckState();
+    return true;
+}
+
+bool SteamHandler::closeApp(const AppId& app_id)
+{
+    if (m_app_reapers.contains(app_id))
+    {
+        qCWarning(lc::steam) << "App" << app_id.getId() << "is already being closed!";
+        return false;
+    }
+
+    if (app_id.getId() == 0)
+    {
+        qCWarning(lc::steam) << "Will not close app with 0 ID!";
+        return false;
+    }
+
+    m_steam_process_tracker.slotCheckState();
+    const auto* log_trackers{m_steam_process_tracker.getSteamLogTrackers()};
+    if (log_trackers == nullptr)
+    {
+        qCWarning(lc::steam) << "Steam is not running or the log trackers have not been initialized yet!";
+        return false;
+    }
+
+    if (const auto app_state{SteamAppWatcher::getAppState(m_steam_process_tracker, app_id)};
+        !app_state || *app_state == enums::AppState::Stopped)
+    {
+        qCWarning(lc::steam) << "Steam app is not running:" << app_id.getId();
+        return false;
+    }
+
+    const auto& app_id_data{log_trackers->getGameProcessLog().getAppIdData()};
+    const auto& pids_data_it{app_id_data.find(app_id)};
+    if (pids_data_it == std::end(app_id_data))
+    {
+        qCWarning(lc::steam) << "Steam app does not have PIDs:" << app_id.getId();
+        return false;
+    }
+
+    const auto&          original_data{pids_data_it->second};
+    const std::set<uint> original_pids{original_data.keyBegin(), original_data.keyEnd()};
+    auto                 pid_data{os::ProcessReaper::preparePidData(original_pids, true)};
+    if (pid_data.size() != original_pids.size())
+    {
+        QSet<uint> diff;
+        for (const auto& pid : original_pids)
+        {
+            if (!pid_data.contains(pid))
+            {
+                diff.insert(pid);
+            }
+        }
+
+        qCInfo(lc::steam) << "Not all PIDs can be killed for Steam app (probably already dead). App ID:"
+                          << app_id.getId() << "| Unkillable PIDs:" << diff;
+    }
+
+    for (auto it{std::begin(pid_data)}; it != std::end(pid_data);)
+    {
+        auto& [pid, data] = *it;
+        const auto& original_timestamp{original_data.value(pid)};
+        if (!original_timestamp.isValid())
+        {
+            qCWarning(lc::steam) << "PID" << pid
+                                 << "does not have a valid original timestamp! Refusing to close Steam app:"
+                                 << app_id.getId();
+            return false;
+        }
+
+        if (!data.m_timestamp.isValid())
+        {
+            qCWarning(lc::steam) << "PID" << pid
+                                 << "does not have a valid process timestamp! Refusing to close Steam app:"
+                                 << app_id.getId();
+            return false;
+        }
+
+        if (const auto shifted_ts{original_timestamp.addSecs(3)}; shifted_ts <= data.m_timestamp)
+        {
+            qCInfo(lc::steam) << "Skipping PID" << pid << "because the process timestamp" << data.m_timestamp
+                              << "is older than log timestamp (+3s)" << shifted_ts << "for exec" << data.m_exec_path;
+            it = pid_data.erase(it);
+            continue;
+        }
+
+        // Skip the Steam related executables so that Steam can do some proper cleanup
+        static const QRegularExpression excluded_execs{R"(steam(?:\.exe)?$)"           //
+                                                       "|"                             //
+                                                       R"(steamwebhelper(?:\.exe)?$)"  //
+                                                       "|"                             //
+                                                       R"(Steam.+reaper$)"             //
+                                                       "|"                             //
+                                                       R"(SteamLinuxRuntime)"          //
+                                                       ,
+                                                       QRegularExpression::CaseInsensitiveOption};
+        if (data.m_exec_path && excluded_execs.match(*data.m_exec_path).hasMatch())
+        {
+            data.m_wait_to_end_only = true;
+            qCInfo(lc::steam) << "Skipping PID" << pid << "|" << *data.m_exec_path;
+        }
+        else
+        {
+            qCInfo(lc::steam) << "Closing PID" << pid << "|" << data.m_exec_path;
+        }
+
+        ++it;
+    }
+
+    auto app_reaper{std::make_unique<os::ProcessReaper>(pid_data)};
+    connect(app_reaper.get(), &os::ProcessReaper::signalFinishedReaping, this,
+            [this, app_id](const auto& remaining_pids)
+            {
+                if (!remaining_pids.empty())
+                {
+                    qCWarning(lc::steam) << "Failed to completely close Steam app:" << app_id.getId();
+                    for (const auto& [pid, data] : remaining_pids)
+                    {
+                        qCWarning(lc::steam) << "  Could not close PID" << pid << "with exec path" << data.m_exec_path;
+                    }
+                }
+
+                // Defer the deletion to the next loop
+                QTimer::singleShot(0, this, [this, app_id]() { m_app_reapers.erase(app_id); });
+            });
+
+    if (!app_reaper->start())
+    {
+        qCWarning(lc::steam) << "Failed to start process reaper for Steam app:" << app_id.getId();
+        return false;
+    }
+
+    m_app_reapers[app_id] = std::move(app_reaper);
     return true;
 }
 

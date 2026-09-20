@@ -20,7 +20,7 @@ public:
     bool isAppCompilingShaders(const AppId& app_id) const;
 
 protected:
-    void onLogChanged(const std::vector<QString>& new_lines) override;
+    void onLogChanged(const std::vector<LogLine>& new_lines) override;
 
 private:
     std::set<AppId> m_apps_with_compiling_shaders;
