@@ -13,7 +13,6 @@
 #include "server/clientids.h"
 #include "server/pairingmanager.h"
 #include "server/restserver.h"
-#include "sunshineapps.h"
 #include "systemtray.h"
 #include "utils/heartbeat.h"
 #include "utils/logsettings.h"
@@ -178,7 +177,6 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
 
     const common::AppSettings app_settings{.m_app_metadata = app_meta, .m_user_settings = user_settings};
     PcControl                 pc_control{app_settings};
-    SunshineApps              sunshine_apps{user_settings.m_sunshine_apps_filepath};
 
     std::unique_ptr<QIcon>               icon;
     std::unique_ptr<SystemTray>          tray;
@@ -220,7 +218,7 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     }
 
     // HERE WE GO!!! (a.k.a. starting point)
-    setupRoutes(new_server, pairing_manager, pc_control, sunshine_apps, user_settings.m_mac_address_override);
+    setupRoutes(new_server, pairing_manager, pc_control, user_settings.m_mac_address_override);
 
     client_ids.load();
     if (!new_server.startServer(user_settings.m_port, ":/ssl/moondeck_cert.pem", ":/ssl/moondeck_key.pem",

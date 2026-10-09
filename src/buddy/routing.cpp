@@ -536,19 +536,6 @@ void endStream(server::RestServer& server, PcControl& pc_control)
                          return ResultResponse{.m_result = result};
                      });
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-
-struct GameStreamAppNamesResponse
-{
-    std::optional<std::set<QString>> m_app_names;
-};
-
-void gameStreamAppNames(server::RestServer& server, SunshineApps& sunshine_apps)
-{
-    server.httpRoute("/gameStreamAppNames", QHttpServerRequest::Method::Get,
-                     [&sunshine_apps]() { return GameStreamAppNamesResponse{.m_app_names = sunshine_apps.load()}; });
-}
 }  // namespace http_api
 
 namespace websocket_api
@@ -686,7 +673,7 @@ void notifyOnChanges(server::RestServer& server, PcControl& pc_control)
 }  // namespace websocket_api
 
 void setupRoutes(server::RestServer& server, server::PairingManager& pairing_manager, PcControl& pc_control,
-                 SunshineApps& sunshine_apps, const QString& mac_address_override)
+                 const QString& mac_address_override)
 {
     http_api::apiVersion(server);
 
@@ -716,8 +703,6 @@ void setupRoutes(server::RestServer& server, server::PairingManager& pairing_man
     http_api::appData(server, pc_control);
     http_api::clearStreamedAppData(server, pc_control);
     http_api::endStream(server, pc_control);
-
-    http_api::gameStreamAppNames(server, sunshine_apps);
 
     websocket_api::notifyOnChanges(server, pc_control);
 
