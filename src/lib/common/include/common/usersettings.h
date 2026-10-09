@@ -24,7 +24,6 @@ public:
 
     quint16            m_port{59999};
     QString            m_logging_rules;
-    QString            m_sunshine_apps_filepath;
     SslProtocol        m_ssl_protocol{SslProtocol::SecureProtocols};
     QString            m_steam_exec_override;
     QString            m_mac_address_override;
