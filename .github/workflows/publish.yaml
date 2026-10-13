@@ -27,28 +27,42 @@ jobs:
         id: tagstatus
         run: echo "TAG_EXISTS=$(git show-ref --tags --verify --quiet -- 'refs/tags/v${{ steps.project_version.outputs.VERSION }}' && echo 1 || echo 0)" >> $GITHUB_OUTPUT
 
+      - name: Get release status
+        id: releasestatus
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "IS_PRERELEASE=$(gh release view 'v${{ steps.project_version.outputs.VERSION }}' --json isPrerelease --jq 'if .isPrerelease then 1 else 0 end' 2>/dev/null || echo 0)" >> $GITHUB_OUTPUT
+
+      - name: Get publish status
+        id: publishstatus
+        run: echo "CAN_PUBLISH=${{ (steps.tagstatus.outputs.TAG_EXISTS == 0 || steps.releasestatus.outputs.IS_PRERELEASE == 1) && 1 || 0 }}" >> $GITHUB_OUTPUT
+
       - name: Print version and status
         run: |
           echo "Version: ${{ steps.project_version.outputs.VERSION }}"
           echo "Aready exists: ${{ steps.tagstatus.outputs.TAG_EXISTS }}"
+          echo "Is pre-release: ${{ steps.releasestatus.outputs.IS_PRERELEASE }}"
+          echo "Can publish: ${{ steps.publishstatus.outputs.CAN_PUBLISH }}"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
-        if: steps.tagstatus.outputs.TAG_EXISTS == 0
+        if: steps.publishstatus.outputs.CAN_PUBLISH == 1
         with:
           path: dist
           merge-multiple: true
 
       - name: Tag release
         uses: rickstaa/action-create-tag@v1
-        if: steps.tagstatus.outputs.TAG_EXISTS == 0
+        if: steps.publishstatus.outputs.CAN_PUBLISH == 1
         with:
           tag: "v${{ steps.project_version.outputs.VERSION }}"
+          force_push_tag: ${{ steps.releasestatus.outputs.IS_PRERELEASE == 1 }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
-        if: steps.tagstatus.outputs.TAG_EXISTS == 0
+        uses: softprops/action-gh-release@v3
+        if: steps.publishstatus.outputs.CAN_PUBLISH == 1
         with: 
           tag_name: "v${{ steps.project_version.outputs.VERSION }}"
           files: dist/*
-          draft: true
+          draft: ${{ steps.releasestatus.outputs.IS_PRERELEASE == 0 }}
+          prerelease: ${{ steps.releasestatus.outputs.IS_PRERELEASE == 1 }}
