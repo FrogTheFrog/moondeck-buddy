@@ -102,7 +102,7 @@ void SteamProcessTracker::slotCheckState()
         }
 
         m_data = {};
-        emit signalProcessStateChanged();
+        Q_EMIT signalProcessStateChanged();
     }
 
     const auto pids{m_process_handler.getPids()};
@@ -163,7 +163,7 @@ void SteamProcessTracker::slotCheckState()
 
         m_data.m_log_trackers->slotCheckLogs();
 
-        emit signalProcessStateChanged();
+        Q_EMIT signalProcessStateChanged();
         break;
     }
 }

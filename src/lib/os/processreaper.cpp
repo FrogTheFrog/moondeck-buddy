@@ -124,7 +124,7 @@ void ProcessReaper::slotPerformReaping()
 
     if (m_pids_with_data.empty() || m_repeat_counter == MAX_LOOP)
     {
-        emit signalFinishedReaping(m_pids_with_data);
+        Q_EMIT signalFinishedReaping(m_pids_with_data);
         return;
     }
 

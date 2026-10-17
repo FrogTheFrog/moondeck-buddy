@@ -29,7 +29,7 @@ SystemTray::SystemTray(const QIcon& icon, QString app_name, PcControl& pc_contro
                 }
                 else if (m_pc_control.isServiceSupported() && m_autostart_action.isChecked())
                 {
-                    QTimer::singleShot(0, this, [this]() { emit signalRestartIntoService(); });
+                    QTimer::singleShot(0, this, [this]() { Q_EMIT signalRestartIntoService(); });
                 }
             });
     connect(&m_menu, &QMenu::aboutToShow, this,

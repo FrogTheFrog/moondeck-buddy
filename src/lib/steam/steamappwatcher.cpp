@@ -85,7 +85,7 @@ SteamAppWatcher::~SteamAppWatcher()
     if (m_current_state != enums::AppState::Stopped)
     {
         m_current_state = enums::AppState::Stopped;
-        emit signalTrackedAppDataChanged();
+        Q_EMIT signalTrackedAppDataChanged();
     }
 }
 
@@ -151,7 +151,7 @@ void SteamAppWatcher::slotCheckState()
                           << "detected:" << enums::qEnumToString(m_current_state) << "->"
                           << enums::qEnumToString(new_state);
         m_current_state = new_state;
-        emit signalTrackedAppDataChanged();
+        Q_EMIT signalTrackedAppDataChanged();
     }
 }
 

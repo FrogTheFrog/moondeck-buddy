@@ -20,7 +20,7 @@ SteamShaderLogTracker::~SteamShaderLogTracker()
     if (!m_apps_with_compiling_shaders.empty())
     {
         m_apps_with_compiling_shaders.clear();
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 
@@ -76,7 +76,7 @@ void SteamShaderLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 
     if (current_state_changed)
     {
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 }  // namespace steam

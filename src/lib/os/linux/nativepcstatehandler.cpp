@@ -77,7 +77,7 @@ NativePcStateHandler::NativePcStateHandler()
             {
                 if (!going_to_sleep)
                 {
-                    emit signalWokeUp();
+                    Q_EMIT signalWokeUp();
                 }
             });
 }

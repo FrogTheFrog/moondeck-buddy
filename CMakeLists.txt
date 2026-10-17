@@ -30,6 +30,9 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
+# Disable the "emit" keyword for Qt
+add_compile_definitions(QT_NO_EMIT)
+
 #----------------------------------------------------------------------------------------------------------------------
 # Build type parsing
 #----------------------------------------------------------------------------------------------------------------------

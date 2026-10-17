@@ -203,7 +203,7 @@ void Heartbeat::slotBeating(const bool fresh_start)
     if (!fresh_start && memory.getShouldTerminate())
     {
         restart_timer.dismiss();
-        emit signalShouldTerminate();
+        Q_EMIT signalShouldTerminate();
         return;
     }
 
@@ -229,7 +229,7 @@ void Heartbeat::slotListening()
     if (is_alive != m_is_alive)
     {
         m_is_alive = is_alive;
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 }  // namespace utils

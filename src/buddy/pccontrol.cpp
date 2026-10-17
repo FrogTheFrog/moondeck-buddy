@@ -192,5 +192,5 @@ void PcControl::slotHandleStreamStateChange()
         }
     }
 
-    emit signalStreamStateChanged();
+    Q_EMIT signalStreamStateChanged();
 }

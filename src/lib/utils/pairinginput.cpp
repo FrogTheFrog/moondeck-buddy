@@ -16,13 +16,13 @@ PairingInput::PairingInput()
             [this]()
             {
                 m_timeout.stop();
-                emit signalPairingRejected();
+                Q_EMIT signalPairingRejected();
             });
     connect(&m_dialog, &QInputDialog::accepted, this,
             [this]()
             {
                 m_timeout.stop();
-                emit signalFinishPairing(m_dialog.intValue());
+                Q_EMIT signalFinishPairing(m_dialog.intValue());
             });
     m_dialog.setInputMode(QInputDialog::IntInput);
     m_dialog.setIntMinimum(MIN_PIN_VALUE);

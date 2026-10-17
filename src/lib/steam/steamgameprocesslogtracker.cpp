@@ -22,7 +22,7 @@ SteamGameProcessLogTracker::~SteamGameProcessLogTracker()
     if (!m_app_id_to_process_ids.empty())
     {
         m_app_id_to_process_ids.clear();
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 
@@ -133,7 +133,7 @@ void SteamGameProcessLogTracker::onLogChanged(const std::vector<LogLine>& new_li
 
     if (current_state_changed)
     {
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 }  // namespace steam

@@ -56,7 +56,7 @@ bool PairingManager::startPairing(const QString& id, const QString& hashed_id)
     }
 
     m_pairing_data = {id, hashed_id};
-    emit signalRequestUserInputForPairing();
+    Q_EMIT signalRequestUserInputForPairing();
     return true;
 }
 
@@ -75,7 +75,7 @@ bool PairingManager::abortPairing(const QString& id)
     }
 
     qCDebug(lc::server) << "Aborting pairing for" << id;
-    emit signalAbortPairing();
+    Q_EMIT signalAbortPairing();
     m_pairing_data = std::nullopt;
     return true;
 }

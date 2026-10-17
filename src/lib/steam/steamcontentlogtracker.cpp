@@ -80,7 +80,7 @@ SteamContentLogTracker::~SteamContentLogTracker()
     if (!m_app_states.empty())
     {
         m_app_states.clear();
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 
@@ -180,7 +180,7 @@ void SteamContentLogTracker::onLogChanged(const std::vector<LogLine>& new_lines)
 
     if (current_state_changed)
     {
-        emit signalStateChanged();
+        Q_EMIT signalStateChanged();
     }
 }
 }  // namespace steam

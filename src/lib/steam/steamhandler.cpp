@@ -388,7 +388,7 @@ void SteamHandler::slotSteamProcessStateChanged()
     {
         qCInfo(lc::steam) << "Steam is no longer running!";
         m_session_data = {};
-        emit signalSteamClosed();
+        Q_EMIT signalSteamClosed();
     }
 }
 }  // namespace steam

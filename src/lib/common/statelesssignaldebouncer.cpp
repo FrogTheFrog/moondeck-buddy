@@ -18,7 +18,7 @@ StatelessSignalDebouncer::StatelessSignalDebouncer(const int debounce_time_ms)
                                        [this]()
                                        {
                                            m_pending = false;
-                                           emit signalOutput();
+                                           Q_EMIT signalOutput();
                                        });
                 }
             });

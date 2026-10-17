@@ -52,7 +52,7 @@ bool PcStateHandler::shutdownPC(const uint grace_period_in_sec)
     if (doChangeState(grace_period_in_sec, "shut down", "shutdown", &NativePcStateHandlerInterface::canShutdownPC,
                       &NativePcStateHandlerInterface::shutdownPC, enums::PcState::ShuttingDown))
     {
-        emit signalShowTrayMessage(
+        Q_EMIT signalShowTrayMessage(
             "Shutdown in progress", "Shutting down in " + QString::number(grace_period_in_sec) + " second(s)",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
         return true;
@@ -66,7 +66,7 @@ bool PcStateHandler::restartPC(const uint grace_period_in_sec)
     if (doChangeState(grace_period_in_sec, "restarted", "restart", &NativePcStateHandlerInterface::canRestartPC,
                       &NativePcStateHandlerInterface::restartPC, enums::PcState::Restarting))
     {
-        emit signalShowTrayMessage(
+        Q_EMIT signalShowTrayMessage(
             "Restart in progress", "Restarting in " + QString::number(grace_period_in_sec) + " second(s)",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
         return true;
@@ -80,7 +80,7 @@ bool PcStateHandler::suspendPC(const uint grace_period_in_sec)
     if (doChangeState(grace_period_in_sec, "suspended", "suspend", &NativePcStateHandlerInterface::canSuspendPC,
                       &NativePcStateHandlerInterface::suspendPC, enums::PcState::Suspending))
     {
-        emit signalShowTrayMessage(
+        Q_EMIT signalShowTrayMessage(
             "Suspend in progress", "Suspending in " + QString::number(grace_period_in_sec) + " second(s)",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
         return true;
@@ -94,7 +94,7 @@ bool PcStateHandler::hibernatePC(const uint grace_period_in_sec)
     if (doChangeState(grace_period_in_sec, "hibernated", "hibernate", &NativePcStateHandlerInterface::canHibernatePC,
                       &NativePcStateHandlerInterface::hibernatePC, enums::PcState::Hibernating))
     {
-        emit signalShowTrayMessage(
+        Q_EMIT signalShowTrayMessage(
             "Hibernation in progress", "Hibernating in " + QString::number(grace_period_in_sec) + " second(s)",
             QSystemTrayIcon::MessageIcon::Information, static_cast<int>(grace_period_in_sec) * 1000);
         return true;
@@ -111,7 +111,7 @@ bool PcStateHandler::abortPcStateChange()
     if (m_pending_change)
     {
         qCInfo(lc::os) << "State change aborted.";
-        emit signalShowTrayMessage("Operation cancelled", "", QSystemTrayIcon::MessageIcon::Information, 3000);
+        Q_EMIT signalShowTrayMessage("Operation cancelled", "", QSystemTrayIcon::MessageIcon::Information, 3000);
 
         m_pending_change = {};
         m_state          = enums::PcState::Normal;
@@ -143,7 +143,7 @@ bool PcStateHandler::doChangeState(const uint grace_period_in_sec, const QString
     {
         qCInfo(lc::os) << "Setting PC state to transient.";
         m_state = enums::PcState::Transient;
-        emit signalTransientPcState();
+        Q_EMIT signalTransientPcState();
 
         qCInfo(lc::os).nospace().noquote() << "Trying to " << failed_to_do_entry << " PC.";
         if (!(m_native_handler.get()->*do_method)())

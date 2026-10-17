@@ -21,8 +21,8 @@ SteamWebHelperLogTracker::~SteamWebHelperLogTracker()
     if (m_ui_mode != enums::SteamUiMode::Unknown)
     {
         m_ui_mode = enums::SteamUiMode::Unknown;
-        emit signalStateChanged();
-        emit signalSteamUiModeChanged();
+        Q_EMIT signalStateChanged();
+        Q_EMIT signalSteamUiModeChanged();
     }
 }
 
@@ -55,8 +55,8 @@ void SteamWebHelperLogTracker::onLogChanged(const std::vector<LogLine>& new_line
         qCInfo(lc::steam) << "Steam UI mode change:" << enums::qEnumToString(m_ui_mode) << "->"
                           << enums::qEnumToString(new_ui_mode);
         m_ui_mode = new_ui_mode;
-        emit signalStateChanged();
-        emit signalSteamUiModeChanged();
+        Q_EMIT signalStateChanged();
+        Q_EMIT signalSteamUiModeChanged();
     }
 }
 }  // namespace steam

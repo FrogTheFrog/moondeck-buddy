@@ -15,7 +15,7 @@ bool StreamStateHandler::endStream()
     {
         m_helper_heartbeat.terminate();
         m_state = enums::StreamState::StreamEnding;
-        emit signalStreamStateChanged();
+        Q_EMIT signalStreamStateChanged();
     }
 
     return true;
@@ -41,7 +41,7 @@ void StreamStateHandler::slotHandleProcessStateChanges()
             if (m_helper_heartbeat.isAlive())
             {
                 m_state = enums::StreamState::Streaming;
-                emit signalStreamStateChanged();
+                Q_EMIT signalStreamStateChanged();
             }
             break;
         }
@@ -53,11 +53,11 @@ void StreamStateHandler::slotHandleProcessStateChanges()
                 if (m_state == enums::StreamState::Streaming)
                 {
                     m_state = enums::StreamState::StreamEnding;
-                    emit signalStreamStateChanged();
+                    Q_EMIT signalStreamStateChanged();
                 }
 
                 m_state = enums::StreamState::NotStreaming;
-                emit signalStreamStateChanged();
+                Q_EMIT signalStreamStateChanged();
             }
             break;
         }
