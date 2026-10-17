@@ -1,3 +1,7 @@
 [submodule "resources/ssl"]
 	path = resources/ssl
 	url = https://github.com/FrogTheFrog/moondeck-keys.git
+[submodule "src/lib/json/glaze"]
+	path = src/lib/json/glaze
+	url = https://github.com/stephenberry/glaze.git
+	shallow = true

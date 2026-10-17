@@ -11,14 +11,7 @@ set(LIBNAME jsonlib)
 find_package(Qt6 COMPONENTS Core REQUIRED)
 qt_standard_project_setup()
 
-include(FetchContent)
-FetchContent_Declare(
-        glaze
-        GIT_REPOSITORY https://github.com/stephenberry/glaze.git
-        GIT_TAG v7.7.1
-        GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(glaze)
+add_subdirectory(glaze)
 
 #----------------------------------------------------------------------------------------------------------------------
 # Header/Source files

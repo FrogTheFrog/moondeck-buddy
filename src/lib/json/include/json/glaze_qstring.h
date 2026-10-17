@@ -24,7 +24,9 @@ struct to<JSON, QString>
     template<auto Opts>
     static void op(const QString& value, is_context auto&& ctx, auto&& b, auto&& ix) noexcept
     {
-        serialize<JSON>::op<Opts>(value.toUtf8(), ctx, b, ix);
+        const QByteArray utf8{value.toUtf8()};
+        serialize<JSON>::op<Opts>(std::string_view{utf8.constData(), static_cast<std::size_t>(utf8.size())}, ctx, b,
+                                  ix);
     }
 };
 
