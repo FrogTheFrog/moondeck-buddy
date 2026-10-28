@@ -190,11 +190,35 @@ bool SteamCommandProxy::launchSteam(const bool big_picture_mode, const QString& 
 
 bool SteamCommandProxy::launchApp(const AppId& app_id, const QMap<QString, QString>& env_overrides)
 {
-    return executeSteamCommand(m_app_settings,
-                               app_id.isGameId()
-                                   ? QStringList{"steam://rungameid/" + QString::number(app_id.getId())}
-                                   : QStringList{"steam://launch/" + QString::number(app_id.getId()) + "/dialog"},
-                               env_overrides);
+    const auto launch_via_executable{
+        [this, app_id, env_overrides]()
+        {
+            return executeSteamCommand(
+                m_app_settings,
+                app_id.isGameId() ? QStringList{"steam://rungameid/" + QString::number(app_id.getId())}
+                                  : QStringList{"steam://launch/" + QString::number(app_id.getId()) + "/dialog"},
+                env_overrides);
+        }};
+
+    const auto cef_port{m_app_settings.m_user_settings.m_steam_cef_debug_port};
+    if (cef_port == 0)
+    {
+        return launch_via_executable();
+    }
+
+    // Asking the running Steam client directly skips starting another Steam process, which on
+    // some machines takes a long time before the URL is even handed over. The executable stays
+    // as the fallback for when the debugger is not reachable.
+    m_cef_client.runGame(cef_port, QString::number(app_id.getGameId()),
+                         [launch_via_executable](const bool success)
+                         {
+                             if (!success)
+                             {
+                                 qCWarning(lc::steam) << "Falling back to the Steam executable for launching the app.";
+                                 launch_via_executable();
+                             }
+                         });
+    return true;
 }
 
 bool SteamCommandProxy::close()

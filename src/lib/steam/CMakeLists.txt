@@ -8,7 +8,7 @@ set(LIBNAME steamlib)
 # External dependencies
 #----------------------------------------------------------------------------------------------------------------------
 
-find_package(Qt6 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Core Network WebSockets REQUIRED)
 qt_standard_project_setup()
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -23,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core commonlib utilslib oslib)
+target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::Network Qt6::WebSockets commonlib utilslib oslib jsonlib)
 target_include_directories(${LIBNAME} PUBLIC include)

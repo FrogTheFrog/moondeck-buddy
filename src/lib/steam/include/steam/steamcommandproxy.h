@@ -2,6 +2,7 @@
 
 // local includes
 #include "appid.h"
+#include "steamcefclient.h"
 
 // forward declarations
 namespace common
@@ -29,5 +30,6 @@ public:
 
 private:
     const common::AppSettings& m_app_settings;
+    SteamCefClient             m_cef_client;
 };
 }  // namespace steam
