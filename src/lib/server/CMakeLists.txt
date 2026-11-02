@@ -23,5 +23,5 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "*.cpp")
 #----------------------------------------------------------------------------------------------------------------------
 
 add_library(${LIBNAME} ${HEADERS} ${SOURCES})
-target_link_libraries(${LIBNAME} PRIVATE Qt6::Core Qt6::HttpServer Qt6::WebSockets commonlib jsonlib)
+target_link_libraries(${LIBNAME} PUBLIC Qt6::HttpServer Qt6::WebSockets PRIVATE Qt6::Core commonlib jsonlib)
 target_include_directories(${LIBNAME} PUBLIC include)
