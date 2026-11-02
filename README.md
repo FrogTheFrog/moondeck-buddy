@@ -1,6 +1,6 @@
-# MoonDeck Buddy ![Status](https://github.com/FrogTheFrog/moondeck-buddy/actions/workflows/publish.yaml/badge.svg) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt)
+# MoonDeck Buddy ![Status](https://github.com/MoonDeckTeam/moondeck-buddy/actions/workflows/publish.yaml/badge.svg) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt)
 
-A server-side part of the [MoonDeck](https://github.com/FrogTheFrog/moondeck) plugin for the SteamDeck.
+A server-side part of the [MoonDeck](https://github.com/MoonDeckTeam/moondeck) plugin for the SteamDeck.
 
 The main goal is to have reliable information about Steam state:
  * is Steam running or not;
@@ -13,4 +13,4 @@ Additionally, it allows to:
 
 ## How to install it?
 
-See the [wiki](https://github.com/FrogTheFrog/moondeck-buddy/wiki) page for installation steps and other information!
+See the [wiki](https://github.com/MoonDeckTeam/moondeck-buddy/wiki) page for installation steps and other information!
