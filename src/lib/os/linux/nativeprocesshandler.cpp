@@ -90,7 +90,8 @@ std::optional<QDateTime> getStartTime(const uint pid)
                               return std::nullopt;
                           }
 
-                          const auto milliseconds{static_cast<int>(std::round((result.real) * 1000.0))};
+                          // Must be 64-bit, otherwise it overflows when the uptime exceeds ~24.8 days
+                          const auto milliseconds{static_cast<qint64>(std::round((result.real) * 1000.0))};
                           const auto datetime{QDateTime::fromSecsSinceEpoch(*boot_time)};
                           return datetime.addMSecs(milliseconds);
                       });
