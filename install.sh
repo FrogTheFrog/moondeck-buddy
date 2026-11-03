@@ -118,6 +118,10 @@ EOF
     systemctl --user daemon-reload
     systemctl --user enable --now moondeckbuddy-update.timer
 
+    # Safe to repeat, an existing entry is updated instead of added again
+    "$APPIMAGE" --register-stream-app \
+        || echo "Could not add MoonDeckStream to Sunshine, Apollo or Vibepollo, please add it manually." >&2
+
     echo "Done! Start it with: $BIN_DIR/MoonDeckBuddy"
 }
 

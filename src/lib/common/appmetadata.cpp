@@ -94,6 +94,7 @@ AppMetadata::AppMetadata(App app)
                            }
 
                            qCDebug(lc::common) << "getAutoStartExec() >>" << getAutoStartExec();
+                           qCDebug(lc::common) << "getStreamExec() >>" << getStreamExec();
                            qCDebug(lc::common) << "getSharedEnvRegexKey() >>" << getSharedEnvRegexKey();
                            qCDebug(lc::common) << "getSharedEnvMapKey() >>" << getSharedEnvMapKey();
                            qCDebug(lc::common) << "isGuiEnabled() >>" << isGuiEnabled();
@@ -225,6 +226,26 @@ QString AppMetadata::getAutoStartExec() const
     return QCoreApplication::applicationFilePath();
 #elif defined(Q_OS_LINUX)
     return getAppFilePath();
+#else
+    #error OS is not supported!
+#endif
+}
+
+QStringList AppMetadata::getStreamExec() const
+{
+#if defined(Q_OS_WIN)
+    Q_ASSERT(QCoreApplication::instance() != nullptr);
+    return {QDir::toNativeSeparators(QCoreApplication::applicationDirPath() + "/" + getAppName(App::Stream) + ".exe")};
+#elif defined(Q_OS_LINUX)
+    // The AppImage picks the binary to run from the arguments
+    const auto app_image_env = qgetenv("APPIMAGE");
+    if (!app_image_env.isEmpty())
+    {
+        return {QString{app_image_env}, "--exec", getAppName(App::Stream)};
+    }
+
+    Q_ASSERT(QCoreApplication::instance() != nullptr);
+    return {QCoreApplication::applicationDirPath() + "/" + getAppName(App::Stream)};
 #else
     #error OS is not supported!
 #endif

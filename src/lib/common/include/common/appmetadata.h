@@ -2,6 +2,7 @@
 
 // system/Qt includes
 #include <QObject>
+#include <QStringList>
 
 namespace common
 {
@@ -44,6 +45,8 @@ public:
     QString getAutoStartName(AutoStartDelegation type) const;
     QString getAutoStartPath(AutoStartDelegation type) const;
     QString getAutoStartExec() const;
+
+    QStringList getStreamExec() const;
 
     QString getSharedEnvRegexKey() const;
     QString getSharedEnvMapKey() const;

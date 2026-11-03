@@ -3,11 +3,13 @@
 #include <QCommandLineParser>
 #include <QDir>
 #include <QMainWindow>
+#include <algorithm>
 
 // local includes
 #include "common/appsettings.h"
 #include "common/loggingcategories.h"
 #include "os/autostarthandler.h"
+#include "os/streamappregistrar.h"
 #include "pccontrol.h"
 #include "routing.h"
 #include "server/clientids.h"
@@ -38,6 +40,8 @@ std::optional<int> parseArguments(int argc, char* argv[], const common::AppMetad
     const QCommandLineOption enable_autostart_option{"enable-autostart", "Enable the autostart for Buddy."};
     const QCommandLineOption disable_autostart_option{"disable-autostart", "Disable the autostart for Buddy."};
     const QCommandLineOption close_all_option{"close-all", "Close running Buddy and Stream instances."};
+    const QCommandLineOption register_stream_app_option{
+        "register-stream-app", "Add MoonDeckStream to the apps of Sunshine, Apollo or Vibepollo."};
 
     QCommandLineParser parser;
 
@@ -46,6 +50,7 @@ std::optional<int> parseArguments(int argc, char* argv[], const common::AppMetad
     parser.addOption(enable_autostart_option);
     parser.addOption(disable_autostart_option);
     parser.addOption(close_all_option);
+    parser.addOption(register_stream_app_option);
 
     if (!parser.parse(QCoreApplication::arguments()))
     {
@@ -81,6 +86,32 @@ std::optional<int> parseArguments(int argc, char* argv[], const common::AppMetad
         if (enable != auto_start_handler.isAutoStartEnabled())
         {
             qInfo() << "Failed to enable autostart.";
+            return EXIT_FAILURE;
+        }
+
+        return_code = EXIT_SUCCESS;
+    }
+
+    if (parser.isSet(register_stream_app_option))
+    {
+        const auto apps_files{os::StreamAppRegistrar::findAppsFiles()};
+        if (apps_files.isEmpty())
+        {
+            qInfo() << "Failed to find the apps of Sunshine, Apollo or Vibepollo.";
+            return EXIT_FAILURE;
+        }
+
+        // Try all of them, even if one fails
+        const os::StreamAppRegistrar registrar{app_meta};
+        bool                         success{true};
+        for (const auto& apps_file : apps_files)
+        {
+            success = registrar.registerApp(apps_file) && success;
+        }
+
+        if (!success)
+        {
+            qInfo() << "Failed to add MoonDeckStream to the apps of Sunshine, Apollo or Vibepollo.";
             return EXIT_FAILURE;
         }
 
@@ -169,6 +200,17 @@ std::tuple<int, bool> mainLoop(int argc, char* argv[], const common::AppMetadata
     if (!env_regex_serializer.write(user_settings.m_env_capture_regex))
     {
         qCWarning(lc::buddyMain) << "Failed to write ENV regex to the shared memory, still continuing...";
+    }
+
+    // A missing app is the most common setup issue, so point it out early
+    {
+        const os::StreamAppRegistrar registrar{app_meta};
+        if (std::ranges::none_of(os::StreamAppRegistrar::findAppsFiles(),
+                                 [&registrar](const QString& apps_file) { return registrar.isRegistered(apps_file); }))
+        {
+            qCWarning(lc::buddyMain) << "MoonDeckStream was not found in the apps of Sunshine, Apollo or Vibepollo."
+                                     << "Run Buddy with --register-stream-app to add it.";
+        }
     }
 
     server::ClientIds      client_ids{QDir::cleanPath(app_meta.getSettingsDir() + "/clients.json")};

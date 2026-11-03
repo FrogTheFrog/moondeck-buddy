@@ -20,6 +20,12 @@ begin
   end;
 end;
 
+function IsStreamHostInstalled(): Boolean;
+begin
+  // Vibepollo installs into the same directory as Apollo
+  Result := DirExists(ExpandConstant('{commonpf64}\Sunshine\config')) or DirExists(ExpandConstant('{commonpf64}\Apollo\config'));
+end;
+
 function InitializeSetup(): Boolean;
 var PreviousAppDir: string;
 var ResultCode: Integer;
