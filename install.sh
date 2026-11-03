@@ -11,6 +11,7 @@ BIN_DIR="$HOME/.local/bin"
 DESKTOP_FILE="$HOME/.local/share/applications/MoonDeckBuddy.desktop"
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 APPIMAGE="$APP_DIR/MoonDeckBuddy.AppImage"
+UPDATER="$APP_DIR/install.sh"
 
 install_fuse() {
     # The AppImage runtime is static and only needs fusermount
@@ -31,12 +32,19 @@ install_fuse() {
 update() {
     local release url version
     release="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
-    url="$(grep -o '"browser_download_url": *"[^"]*x86_64\.AppImage"' <<<"$release" | cut -d'"' -f4)"
-    version="$(grep -o '"tag_name": *"[^"]*"' <<<"$release" | cut -d'"' -f4)"
+    # `|| true`, otherwise pipefail exits silently before the error below can be printed
+    url="$(grep -o '"browser_download_url": *"[^"]*x86_64\.AppImage"' <<<"$release" | cut -d'"' -f4 || true)"
+    version="$(grep -o '"tag_name": *"[^"]*"' <<<"$release" | cut -d'"' -f4 || true)"
     [ -n "$url" ] || { echo "No AppImage found in the latest release." >&2 && exit 1; }
 
     if [ -x "$APPIMAGE" ] && [ "$(cat "$APP_DIR/version" 2>/dev/null)" = "$version" ]; then
         echo "MoonDeckBuddy $version is up to date."
+        return
+    fi
+
+    # Do not restart Buddy in the middle of a stream, the next run will try again
+    if [ -x "$APPIMAGE" ] && pgrep -x MoonDeckStream >/dev/null; then
+        echo "A stream is running, postponing the update to $version."
         return
     fi
 
@@ -46,10 +54,15 @@ update() {
     mv -f "$APPIMAGE.tmp" "$APPIMAGE"
     echo "$version" >"$APP_DIR/version"
 
-    # Pick up the new version right away, unless a stream is running
-    if ! pgrep -x MoonDeckStream >/dev/null; then
-        systemctl --user try-restart moondeckbuddy.service 2>/dev/null || true
+    # The timer runs the local copy of this script, so only refresh it from a released tag (older ones lack it)
+    if curl -fsSL "https://raw.githubusercontent.com/$REPO/$version/install.sh" -o "$UPDATER.tmp" 2>/dev/null; then
+        mv -f "$UPDATER.tmp" "$UPDATER"
+    else
+        rm -f "$UPDATER.tmp"
     fi
+
+    # Pick up the new version right away
+    systemctl --user try-restart moondeckbuddy.service 2>/dev/null || true
 }
 
 install_buddy() {
@@ -57,6 +70,14 @@ install_buddy() {
     install_fuse
     mkdir -p "$APP_DIR" "$BIN_DIR" "$UNIT_DIR" "$(dirname "$DESKTOP_FILE")"
     update
+
+    # Keep a local copy for the update timer, so it never runs unreleased code from main
+    if [ -f "${BASH_SOURCE[0]:-}" ]; then
+        cp -f "${BASH_SOURCE[0]}" "$UPDATER.tmp"
+    else
+        curl -fsSL "$SCRIPT_URL" -o "$UPDATER.tmp"
+    fi
+    mv -f "$UPDATER.tmp" "$UPDATER"
 
     # The binary to run is picked by the symlink name
     ln -sf "$APPIMAGE" "$BIN_DIR/MoonDeckBuddy"
@@ -78,7 +99,7 @@ Description=Update MoonDeckBuddy
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'curl -fsSL $SCRIPT_URL | bash -s -- --update'
+ExecStart=/bin/bash "$UPDATER" --update
 EOF
 
     cat >"$UNIT_DIR/moondeckbuddy-update.timer" <<EOF
@@ -101,7 +122,13 @@ EOF
 }
 
 uninstall() {
-    systemctl --user disable --now moondeckbuddy-update.timer moondeckbuddy.service moondeckbuddy-gui-session.service 2>/dev/null || true
+    # Also stops instances that were not started by systemd
+    "$APPIMAGE" --close-all >/dev/null 2>&1 || true
+
+    # One by one, as systemctl skips stopping all of them if any unit does not exist
+    for unit in moondeckbuddy-update.timer moondeckbuddy.service moondeckbuddy-gui-session.service; do
+        systemctl --user disable --now "$unit" 2>/dev/null || true
+    done
     rm -rf "$APP_DIR" "$BIN_DIR/MoonDeckBuddy" "$BIN_DIR/MoonDeckStream" "$DESKTOP_FILE" \
         "$UNIT_DIR"/moondeckbuddy{,-gui-session,-update}.service "$UNIT_DIR/moondeckbuddy-update.timer"
     systemctl --user daemon-reload
