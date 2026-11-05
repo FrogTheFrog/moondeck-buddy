@@ -346,21 +346,46 @@ auto RestServer::httpRouteFunctorWrapper(const bool secure, Functor&& functor)
                                  return std::nullopt;
                              }};
 
+    // Note: the functor must only be invoked after the authenticator has passed, therefore `value_or` cannot be used
+    // here as it would evaluate the functor eagerly.
     if constexpr (std::is_same_v<FirstArgType, void>)
     {
-        return [authenticator, functor = std::forward<Functor>(functor)](const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toHttpResponse<ReturnType>(functor())); };
+        return [authenticator,
+                functor = std::forward<Functor>(functor)](const QHttpServerRequest& http_request) -> QHttpServerResponse
+        {
+            if (auto result{authenticator(http_request)})
+            {
+                return std::move(*result);
+            }
+
+            return toHttpResponse<ReturnType>(functor());
+        };
     }
     else if constexpr (std::is_same_v<FirstArgType, QString>)
     {
-        return [authenticator, functor = std::forward<Functor>(functor)](const QString&            arg,
-                                                                         const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toHttpResponse<ReturnType>(functor(arg))); };
+        return [authenticator, functor = std::forward<Functor>(functor)](
+                   const QString& arg, const QHttpServerRequest& http_request) -> QHttpServerResponse
+        {
+            if (auto result{authenticator(http_request)})
+            {
+                return std::move(*result);
+            }
+
+            return toHttpResponse<ReturnType>(functor(arg));
+        };
     }
     else if constexpr (std::is_same_v<FirstArgType, QHttpServerRequest>)
     {
-        return [authenticator, functor = std::forward<Functor>(functor)](const QHttpServerRequest& http_request)
-        { return authenticator(http_request).value_or(toHttpResponse<ReturnType>(functor(http_request))); };
+        return [authenticator,
+                functor = std::forward<Functor>(functor)](const QHttpServerRequest& http_request) -> QHttpServerResponse
+        {
+            if (auto result{authenticator(http_request)})
+            {
+                return std::move(*result);
+            }
+
+            return toHttpResponse<ReturnType>(functor(http_request));
+        };
     }
     else
     {

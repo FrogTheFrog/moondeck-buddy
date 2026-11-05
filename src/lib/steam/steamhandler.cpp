@@ -86,8 +86,6 @@ bool SteamHandler::close()
         {
             qCWarning(lc::steam) << "Steam commands cannot be executed yet, using other means of closing!";
         }
-
-        return true;
     }
 
     m_steam_process_tracker.close();

@@ -2,6 +2,7 @@
 #include "steam/steamappwatcher.h"
 
 // system/Qt includes
+#include <QDir>
 #include <QFile>
 
 // local includes
@@ -44,7 +45,14 @@ std::optional<steam::AppId> tryFindAppIdOverrideForNonSteamGame(const steam::Ste
         return app_id;
     }
 
-    QFile file{std::filesystem::path{found_entry->m_start_dir.toStdString()} / "steam_appid.txt"};
+    // Steam usually stores the start dir wrapped in quotes, but they are optional
+    QString start_dir{found_entry->m_start_dir.trimmed()};
+    if (start_dir.size() >= 2 && start_dir.startsWith('"') && start_dir.endsWith('"'))
+    {
+        start_dir = start_dir.sliced(1, start_dir.size() - 2);
+    }
+
+    QFile file{QDir{start_dir}.filePath("steam_appid.txt")};
     if (!file.exists())
     {
         qCInfo(lc::steam) << "AppId override file" << file.filesystemFileName().generic_string() << "does not exist.";

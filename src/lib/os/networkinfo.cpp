@@ -11,6 +11,7 @@
     #include <vector>
 #endif
 #include <QtNetwork/QNetworkInterface>
+#include <algorithm>
 
 // local includes
 #include "common/loggingcategories.h"
@@ -21,18 +22,32 @@ QString getMacAddressGeneric(const QHostAddress& host_address)
 {
     static const QSet allowed_types{QNetworkInterface::Ethernet, QNetworkInterface::Wifi};
 
+    QString fallback_mac;
     for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces())
     {
         if (allowed_types.contains(iface.type()) && iface.flags().testFlag(QNetworkInterface::IsRunning))
         {
-            for (const QHostAddress& address_entry : QNetworkInterface::allAddresses())
+            // Prefer the interface that actually owns the address
+            for (const QNetworkAddressEntry& address_entry : iface.addressEntries())
             {
-                if (address_entry.isEqual(host_address))
+                if (address_entry.ip().isEqual(host_address))
                 {
                     return iface.hardwareAddress();
                 }
             }
+
+            if (fallback_mac.isEmpty())
+            {
+                fallback_mac = iface.hardwareAddress();
+            }
         }
+    }
+
+    // The address belongs to some other interface (e.g. a VPN), so use the first suitable one instead
+    if (std::ranges::any_of(QNetworkInterface::allAddresses(),
+                            [&host_address](const QHostAddress& address) { return address.isEqual(host_address); }))
+    {
+        return fallback_mac;
     }
 
     return {};
